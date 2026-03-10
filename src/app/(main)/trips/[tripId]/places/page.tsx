@@ -62,6 +62,7 @@ interface PlaceCardProps {
   compareMode: boolean;
   onToggleSelect: (id: string) => void;
   onEdit: (place: Place) => void;
+  onDelete: (place: Place) => void;
 }
 
 function PlaceCard({
@@ -70,6 +71,7 @@ function PlaceCard({
   compareMode,
   onToggleSelect,
   onEdit,
+  onDelete,
 }: PlaceCardProps) {
   return (
     <Card
@@ -136,13 +138,23 @@ function PlaceCard({
 
         {/* 액션 */}
         <div className="flex items-center justify-between pt-1">
-          <Button
-            variant="ghost"
-            size="xs"
-            onClick={() => onEdit(place)}
-          >
-            수정
-          </Button>
+          <div className="flex gap-1">
+            <Button
+              variant="ghost"
+              size="xs"
+              onClick={() => onEdit(place)}
+            >
+              수정
+            </Button>
+            <Button
+              variant="ghost"
+              size="xs"
+              className="text-red-500 hover:text-red-700 hover:bg-red-50"
+              onClick={() => onDelete(place)}
+            >
+              삭제
+            </Button>
+          </div>
           {compareMode && (
             <button
               type="button"
@@ -201,6 +213,14 @@ export default function PlacesPage() {
       .order("created_at", { ascending: false });
     setPlaces((data as Place[]) ?? []);
     setLoading(false);
+  }
+
+  async function handleDelete(place: Place) {
+    if (!confirm(`"${place.name}"을(를) 삭제하시겠습니까?`)) return;
+    const { error } = await supabase.from("places").delete().eq("id", place.id);
+    if (!error) {
+      setPlaces((prev) => prev.filter((p) => p.id !== place.id));
+    }
   }
 
   function handleFormSuccess(place: Place) {
@@ -399,6 +419,7 @@ export default function PlacesPage() {
                       setEditingPlace(p);
                       setDialogOpen(true);
                     }}
+                    onDelete={handleDelete}
                   />
                 ))}
               </div>
