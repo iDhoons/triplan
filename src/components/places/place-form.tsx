@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,10 +12,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/auth-store";
 import { PlaceSearch, type PlaceSearchResult } from "@/components/maps/place-search";
 import type { Place, PlaceCategory } from "@/types/database";
+import type { ScrapedPlace } from "@/lib/scraper";
 
 interface PlaceFormProps {
   tripId: string;
@@ -111,6 +113,63 @@ export function PlaceForm({
   const [latitude, setLatitude] = useState<number | null>(place?.latitude ?? null);
   const [longitude, setLongitude] = useState<number | null>(place?.longitude ?? null);
   const [searchImageUrl, setSearchImageUrl] = useState<string | null>(null);
+  const [scrapeUrl, setScrapeUrl] = useState("");
+  const [scraping, setScraping] = useState(false);
+  const [scrapeError, setScrapeError] = useState<string | null>(null);
+
+  const applyScrapeResult = useCallback((data: ScrapedPlace) => {
+    setForm((prev) => ({
+      ...prev,
+      name: data.name || prev.name,
+      category: data.category || prev.category,
+      url: data.url || prev.url,
+      address: data.address || prev.address,
+      rating: data.rating !== null ? String(data.rating) : prev.rating,
+      memo: data.memo || prev.memo,
+      price_per_night: data.price_per_night !== null ? String(data.price_per_night) : prev.price_per_night,
+      cancel_policy: data.cancel_policy || prev.cancel_policy,
+      amenities: data.amenities.length > 0 ? data.amenities.join(", ") : prev.amenities,
+      check_in_time: data.check_in_time || prev.check_in_time,
+      check_out_time: data.check_out_time || prev.check_out_time,
+    }));
+    if (data.imageUrl) {
+      setSearchImageUrl(data.imageUrl);
+    }
+  }, []);
+
+  const fetchAndScrape = useCallback(async (url: string) => {
+    setScraping(true);
+    setScrapeError(null);
+    try {
+      const res = await fetch("/api/scrape", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error ?? "스크래핑에 실패했습니다");
+      }
+      const data: ScrapedPlace = await res.json();
+      applyScrapeResult(data);
+    } catch (err) {
+      setScrapeError(err instanceof Error ? err.message : "스크래핑에 실패했습니다");
+    } finally {
+      setScraping(false);
+    }
+  }, [applyScrapeResult]);
+
+  const handleScrape = useCallback(() => {
+    const url = scrapeUrl.trim();
+    if (!url) return;
+    try {
+      new URL(url);
+    } catch {
+      setScrapeError("올바른 URL을 입력해주세요");
+      return;
+    }
+    fetchAndScrape(url);
+  }, [scrapeUrl, fetchAndScrape]);
 
   function handlePlaceSearchSelect(result: PlaceSearchResult) {
     // 장소 타입으로 카테고리 자동 추론
@@ -240,15 +299,62 @@ export function PlaceForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      {/* 지도 검색 */}
+      {/* 검색 / URL 입력 */}
       {!place && (
-        <div className="flex flex-col gap-1.5 rounded-lg border border-dashed border-primary/30 bg-primary/5 p-3">
-          <Label className="text-xs font-semibold text-primary">지도에서 검색</Label>
-          <PlaceSearch onSelect={handlePlaceSearchSelect} />
-          <p className="text-xs text-muted-foreground">
-            검색하면 이름, 주소, 평점, 카테고리가 자동으로 채워집니다
-          </p>
-        </div>
+        <Tabs defaultValue="search" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="search">지도 검색</TabsTrigger>
+            <TabsTrigger value="url">URL 붙여넣기</TabsTrigger>
+          </TabsList>
+          <TabsContent value="search">
+            <div className="flex flex-col gap-1.5 rounded-lg border border-dashed border-primary/30 bg-primary/5 p-3">
+              <PlaceSearch onSelect={handlePlaceSearchSelect} />
+              <p className="text-xs text-muted-foreground">
+                검색하면 이름, 주소, 평점, 카테고리가 자동으로 채워집니다
+              </p>
+            </div>
+          </TabsContent>
+          <TabsContent value="url">
+            <div className="flex flex-col gap-2 rounded-lg border border-dashed border-orange-300 bg-orange-50/50 p-3 dark:border-orange-800 dark:bg-orange-950/20">
+              <p className="text-xs font-semibold text-orange-700 dark:text-orange-400">
+                호텔 예약 사이트 URL을 붙여넣으세요
+              </p>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="https://www.booking.com/hotel/..."
+                  value={scrapeUrl}
+                  onChange={(e) => {
+                    setScrapeUrl(e.target.value);
+                    setScrapeError(null);
+                  }}
+                  onPaste={(e) => {
+                    const pasted = e.clipboardData.getData("text").trim();
+                    if (pasted && pasted.startsWith("http")) {
+                      setScrapeUrl(pasted);
+                      fetchAndScrape(pasted);
+                    }
+                  }}
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  disabled={scraping || !scrapeUrl.trim()}
+                  onClick={handleScrape}
+                >
+                  {scraping ? "불러오는 중..." : "불러오기"}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                부킹닷컴, 아고다, 야놀자, 여기어때, 에어비앤비 등 지원
+              </p>
+              {scrapeError && (
+                <p className="text-xs text-destructive">{scrapeError}</p>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
       )}
 
       {/* 공통 필드 */}
