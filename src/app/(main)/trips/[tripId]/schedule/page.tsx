@@ -293,29 +293,63 @@ export default function SchedulePage() {
     const activeId = active.id as string;
     const overId = over.id as string;
 
+    // Case 1: 장소 카드를 일정에 드롭
     if (activeId.startsWith("place-")) {
       const place = active.data.current?.place as Place | undefined;
       if (!place) return;
 
-      let targetScheduleId: string | null = null;
+      let dropScheduleId: string | null = null;
 
       if (overId.startsWith("schedule-")) {
-        targetScheduleId = overId.replace("schedule-", "");
+        dropScheduleId = overId.replace("schedule-", "");
       } else {
-        // dropped on an item
         for (const s of schedules) {
           if ((s.items ?? []).some((i) => i.id === overId)) {
-            targetScheduleId = s.id;
+            dropScheduleId = s.id;
             break;
           }
         }
       }
 
-      if (!targetScheduleId) return;
-      const targetSchedule = schedules.find((s) => s.id === targetScheduleId);
+      if (!dropScheduleId) return;
+      const targetSchedule = schedules.find((s) => s.id === dropScheduleId);
       const sortOrder = (targetSchedule?.items?.length ?? 0) + 1;
-      await handleDropPlace(targetScheduleId, place, sortOrder);
+      await handleDropPlace(dropScheduleId, place, sortOrder);
+      return;
     }
+
+    // Case 2: 일정 아이템 재정렬
+    let sourceSchedule: Schedule | undefined;
+    for (const s of schedules) {
+      if ((s.items ?? []).some((i) => i.id === activeId)) {
+        sourceSchedule = s;
+        break;
+      }
+    }
+    if (!sourceSchedule) return;
+
+    let dropScheduleId: string | null = null;
+    if (overId.startsWith("schedule-")) {
+      dropScheduleId = overId.replace("schedule-", "");
+    } else {
+      for (const s of schedules) {
+        if ((s.items ?? []).some((i) => i.id === overId)) {
+          dropScheduleId = s.id;
+          break;
+        }
+      }
+    }
+    if (!dropScheduleId || sourceSchedule.id !== dropScheduleId) return;
+
+    const items = sourceSchedule.items ?? [];
+    const oldIndex = items.findIndex((i) => i.id === activeId);
+    const newIndex = items.findIndex((i) => i.id === overId);
+    if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return;
+
+    const reordered = arrayMove(items, oldIndex, newIndex).map(
+      (item, idx) => ({ ...item, sort_order: idx + 1 })
+    );
+    await handleReorderItems(sourceSchedule.id, reordered);
   };
 
   const activePlaceObj = activePlaceId
@@ -407,8 +441,6 @@ export default function SchedulePage() {
                 onAddItem={handleOpenAddForm}
                 onEditItem={handleOpenEditForm}
                 onDeleteItem={handleDeleteItem}
-                onReorderItems={handleReorderItems}
-                onDropPlace={handleDropPlace}
               />
             ) : viewMode === "timeline" ? (
               <TimelineView schedules={schedules} />

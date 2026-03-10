@@ -1,24 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import { format, parseISO } from "date-fns";
 import { ko } from "date-fns/locale";
 import {
-  DndContext,
-  DragOverlay,
-  PointerSensor,
-  TouchSensor,
-  useSensor,
-  useSensors,
-  closestCenter,
-  type DragStartEvent,
-  type DragEndEvent,
-  type DragOverEvent,
-} from "@dnd-kit/core";
-import {
   SortableContext,
   verticalListSortingStrategy,
-  arrayMove,
 } from "@dnd-kit/sortable";
 import { useDroppable } from "@dnd-kit/core";
 import { Plus } from "lucide-react";
@@ -166,15 +152,6 @@ interface CalendarViewProps {
   onAddItem: (scheduleId: string) => void;
   onEditItem: (item: ScheduleItem) => void;
   onDeleteItem: (itemId: string, scheduleId: string) => void;
-  onReorderItems: (
-    scheduleId: string,
-    orderedItems: ScheduleItem[]
-  ) => Promise<void>;
-  onDropPlace: (
-    scheduleId: string,
-    place: Place,
-    sortOrder: number
-  ) => Promise<void>;
 }
 
 export function CalendarView({
@@ -182,145 +159,19 @@ export function CalendarView({
   onAddItem,
   onEditItem,
   onDeleteItem,
-  onReorderItems,
-  onDropPlace,
 }: CalendarViewProps) {
-  const [activeId, setActiveId] = useState<string | null>(null);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: { distance: 8 },
-    }),
-    useSensor(TouchSensor, {
-      activationConstraint: { delay: 250, tolerance: 5 },
-    })
-  );
-
-  // Find active item across all schedules
-  const activeItem = schedules
-    .flatMap((s) => s.items ?? [])
-    .find((i) => i.id === activeId);
-
-  const handleDragStart = (event: DragStartEvent) => {
-    const id = event.active.id as string;
-    // Only set activeId for schedule items (not places)
-    if (!id.startsWith("place-")) {
-      setActiveId(id);
-    }
-  };
-
-  const handleDragOver = (_event: DragOverEvent) => {
-    // Visual feedback handled by useDroppable isOver
-  };
-
-  const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event;
-    setActiveId(null);
-
-    if (!over) return;
-
-    const activeId = active.id as string;
-    const overId = over.id as string;
-
-    // Case 1: Dragging a place card from sidebar → drop on a schedule zone
-    if (activeId.startsWith("place-")) {
-      const place = active.data.current?.place as Place | undefined;
-      if (!place) return;
-
-      let targetScheduleId: string | null = null;
-
-      if (overId.startsWith("schedule-")) {
-        targetScheduleId = overId.replace("schedule-", "");
-      } else {
-        // Dropped on an item — find which schedule contains it
-        for (const s of schedules) {
-          if ((s.items ?? []).some((i) => i.id === overId)) {
-            targetScheduleId = s.id;
-            break;
-          }
-        }
-      }
-
-      if (!targetScheduleId) return;
-      const targetSchedule = schedules.find((s) => s.id === targetScheduleId);
-      const sortOrder = (targetSchedule?.items?.length ?? 0) + 1;
-      await onDropPlace(targetScheduleId, place, sortOrder);
-      return;
-    }
-
-    // Case 2: Reordering items within or across schedules
-    // Find source schedule
-    let sourceSchedule: Schedule | undefined;
-    for (const s of schedules) {
-      if ((s.items ?? []).some((i) => i.id === activeId)) {
-        sourceSchedule = s;
-        break;
-      }
-    }
-    if (!sourceSchedule) return;
-
-    // Find target schedule
-    let targetScheduleId: string | null = null;
-    if (overId.startsWith("schedule-")) {
-      targetScheduleId = overId.replace("schedule-", "");
-    } else {
-      for (const s of schedules) {
-        if ((s.items ?? []).some((i) => i.id === overId)) {
-          targetScheduleId = s.id;
-          break;
-        }
-      }
-    }
-
-    if (!targetScheduleId) return;
-
-    // Same schedule reorder
-    if (sourceSchedule.id === targetScheduleId) {
-      const items = sourceSchedule.items ?? [];
-      const oldIndex = items.findIndex((i) => i.id === activeId);
-      const newIndex = items.findIndex((i) => i.id === overId);
-      if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return;
-      const reordered = arrayMove(items, oldIndex, newIndex).map(
-        (item, idx) => ({ ...item, sort_order: idx + 1 })
-      );
-      await onReorderItems(sourceSchedule.id, reordered);
-    }
-    // Cross-schedule move: not required by spec but could be added later
-  };
-
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCenter}
-      onDragStart={handleDragStart}
-      onDragOver={handleDragOver}
-      onDragEnd={handleDragEnd}
-    >
-      <div className="space-y-8">
-        {schedules.map((schedule, idx) => (
-          <DayCard
-            key={schedule.id}
-            schedule={schedule}
-            dayIndex={idx}
-            onAddItem={onAddItem}
-            onEditItem={onEditItem}
-            onDeleteItem={onDeleteItem}
-          />
-        ))}
-      </div>
-
-      {/* Drag overlay for item dragging */}
-      <DragOverlay>
-        {activeItem && (
-          <div className="opacity-90 pointer-events-none w-72">
-            <DraggableItem
-              item={activeItem}
-              onEdit={() => {}}
-              onDelete={() => {}}
-            />
-          </div>
-        )}
-      </DragOverlay>
-    </DndContext>
+    <div className="space-y-8">
+      {schedules.map((schedule, idx) => (
+        <DayCard
+          key={schedule.id}
+          schedule={schedule}
+          dayIndex={idx}
+          onAddItem={onAddItem}
+          onEditItem={onEditItem}
+          onDeleteItem={onDeleteItem}
+        />
+      ))}
+    </div>
   );
 }
