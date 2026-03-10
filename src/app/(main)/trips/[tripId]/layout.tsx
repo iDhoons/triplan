@@ -11,13 +11,13 @@ import type { Trip } from "@/types/database";
 import { RealtimeProvider } from "@/components/realtime/realtime-provider";
 import { OnlineMembers } from "@/components/realtime/online-members";
 import { ActivityToast } from "@/components/realtime/activity-toast";
+import { AiChatFab } from "@/components/ai/ai-chat-fab";
 
 const tabs = [
   { href: "places", label: "장소" },
   { href: "schedule", label: "일정" },
   { href: "budget", label: "예산" },
   { href: "journal", label: "후기" },
-  { href: "ai", label: "AI" },
   { href: "members", label: "멤버" },
 ];
 
@@ -95,6 +95,7 @@ export default function TripLayout({
         </nav>
 
         {children}
+        <AiChatFab />
       </div>
     </RealtimeProvider>
   );
