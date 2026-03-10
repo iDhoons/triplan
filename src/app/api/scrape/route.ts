@@ -66,20 +66,74 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "HTTP/HTTPS URL만 지원합니다" }, { status: 400 });
   }
 
-  // 도메인 화이트리스트 검증
-  if (!isAllowedDomain(url)) {
-    return NextResponse.json(
-      { error: "지원하지 않는 사이트입니다. 부킹닷컴, 아고다, 야놀자, 여기어때, 에어비앤비 등을 지원합니다." },
-      { status: 400 }
-    );
+  // 화이트리스트 도메인이면 HTML 스크래핑, 아니면 Places API 폴백으로 처리
+  const isWhitelisted = isAllowedDomain(url);
+
+  if (!isWhitelisted) {
+    // 화이트리스트 외 도메인 → Places API 폴백만 사용
+    try {
+      const { enrichFromUrl } = await import("@/lib/google-places");
+      const enriched = await enrichFromUrl(url);
+      if (enriched) {
+        return NextResponse.json({
+          name: enriched.name,
+          category: enriched.category,
+          url,
+          address: enriched.address,
+          rating: enriched.rating,
+          imageUrl: enriched.image_urls[0] ?? null,
+          price_per_night: null,
+          cancel_policy: null,
+          amenities: [],
+          check_in_time: null,
+          check_out_time: null,
+          memo: enriched.memo,
+        });
+      }
+      return NextResponse.json(
+        { error: "해당 URL에서 장소 정보를 찾을 수 없습니다" },
+        { status: 422 }
+      );
+    } catch (err) {
+      console.error("[scrape] Places API error for non-whitelisted URL:", err);
+      return NextResponse.json(
+        { error: "해당 URL에서 정보를 가져올 수 없습니다" },
+        { status: 422 }
+      );
+    }
   }
 
   try {
     const result = await scrapeUrl(url);
     return NextResponse.json(result);
   } catch (err) {
-    // 내부 에러 정보 노출 방지
-    console.error("[scrape] Error:", err);
+    console.error("[scrape] HTML scrape failed, trying Places API fallback:", err);
+
+    // Places API 폴백: HTML 스크래핑 실패 시 Google Places로 보강
+    try {
+      const { enrichFromUrl } = await import("@/lib/google-places");
+      const enriched = await enrichFromUrl(url);
+      if (enriched) {
+        // ScrapedPlace 형식으로 변환
+        return NextResponse.json({
+          name: enriched.name,
+          category: enriched.category,
+          url,
+          address: enriched.address,
+          rating: enriched.rating,
+          imageUrl: enriched.image_urls[0] ?? null,
+          price_per_night: null,
+          cancel_policy: null,
+          amenities: [],
+          check_in_time: null,
+          check_out_time: null,
+          memo: enriched.memo,
+        });
+      }
+    } catch (placesErr) {
+      console.error("[scrape] Places API fallback also failed:", placesErr);
+    }
+
     return NextResponse.json(
       { error: "해당 URL에서 정보를 가져올 수 없습니다" },
       { status: 422 }

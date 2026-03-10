@@ -65,6 +65,13 @@ export interface Place {
   added_by: string;
   created_at: string;
   updated_at: string;
+  // Enrichment fields
+  source_url: string | null;
+  google_place_id: string | null;
+  enriched: boolean;
+  enriched_at: string | null;
+  enrich_error: string | null;
+  enrich_attempts: number;
 }
 
 export interface PlaceVote {

@@ -339,6 +339,9 @@ export function PlaceForm({
               <p className="text-xs font-semibold text-orange-700 dark:text-orange-400">
                 호텔 예약 사이트 URL을 붙여넣으세요
               </p>
+              <p className="text-xs text-muted-foreground">
+                URL에서 장소 정보를 자동으로 가져옵니다 (Google Places 연동)
+              </p>
               <div className="flex gap-2">
                 <Input
                   placeholder="https://www.booking.com/hotel/..."
@@ -367,7 +370,7 @@ export function PlaceForm({
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
-                부킹닷컴, 아고다, 야놀자, 여기어때, 에어비앤비 등 지원
+                부킹닷컴, 아고다, 야놀자, 여기어때, 에어비앤비, 구글맵 등 대부분의 사이트 지원
               </p>
               {scrapeError && (
                 <p className="text-xs text-destructive">{scrapeError}</p>
