@@ -16,28 +16,28 @@ export interface PlaceSearchResult {
 
 interface PlaceSearchProps {
   onSelect: (result: PlaceSearchResult) => void;
-  placeholder?: string;
 }
 
-export function PlaceSearch({
-  onSelect,
-  placeholder = "장소 검색 (호텔, 관광지, 맛집...)",
-}: PlaceSearchProps) {
+export function PlaceSearch({ onSelect }: PlaceSearchProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [loaded, setLoaded] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [status, setStatus] = useState<"loading" | "ready" | "error">(
+    "loading"
+  );
   const onSelectRef = useRef(onSelect);
   onSelectRef.current = onSelect;
+  const initedRef = useRef(false);
 
   useEffect(() => {
-    if (!hasApiKey() || !containerRef.current) return;
+    if (!hasApiKey() || !containerRef.current || initedRef.current) return;
+    initedRef.current = true;
 
-    let mounted = true;
+    const container = containerRef.current;
 
     async function init() {
       try {
-        const { importLibrary } = await import("@googlemaps/js-api-loader");
-        const { setOptions } = await import("@googlemaps/js-api-loader");
+        const { setOptions, importLibrary } = await import(
+          "@googlemaps/js-api-loader"
+        );
         setOptions({
           key: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "",
           v: "weekly",
@@ -46,24 +46,13 @@ export function PlaceSearch({
 
         await importLibrary("places");
 
-        if (!mounted || !containerRef.current) return;
-
-        // 기존 자식 노드 제거 (안전한 DOM 조작)
-        while (containerRef.current.firstChild) {
-          containerRef.current.removeChild(containerRef.current.firstChild);
-        }
-
-        // 새 PlaceAutocompleteElement API 사용
-        const autocomplete = new (google.maps.places as any).PlaceAutocompleteElement({
-          inputPlaceholder: placeholder,
-        });
+        // PlaceAutocompleteElement 생성
+        const autocomplete = new (
+          google.maps.places as any
+        ).PlaceAutocompleteElement();
 
         autocomplete.style.width = "100%";
-        autocomplete.style.height = "36px";
-        autocomplete.style.borderRadius = "6px";
-        autocomplete.style.fontSize = "14px";
-
-        containerRef.current.appendChild(autocomplete);
+        container.appendChild(autocomplete);
 
         autocomplete.addEventListener("gmp-select", async (event: any) => {
           const placePrediction = event.placePrediction;
@@ -108,45 +97,48 @@ export function PlaceSearch({
           }
         });
 
-        if (mounted) setLoaded(true);
+        setStatus("ready");
       } catch (err) {
         console.error("Google Places init failed:", err);
-        if (mounted)
-          setError(
-            "Google Places API를 로드할 수 없습니다. Google Cloud Console에서 Places API (New)를 활성화하세요."
-          );
+        setStatus("error");
       }
     }
 
     init();
 
+    // cleanup: React가 container의 자식을 건드리지 않도록 수동 정리
     return () => {
-      mounted = false;
+      while (container.firstChild) {
+        container.removeChild(container.firstChild);
+      }
+      initedRef.current = false;
     };
-  }, [placeholder]);
+  }, []);
 
   if (!hasApiKey()) {
     return null;
   }
 
-  if (error) {
-    return <p className="text-xs text-red-500">{error}</p>;
-  }
-
   return (
     <div>
-      <div className="flex items-center gap-2">
-        <span className="text-lg">🔍</span>
-        <div ref={containerRef} className="flex-1">
-          {!loaded && (
-            <div className="h-9 rounded-md border bg-muted animate-pulse flex items-center px-3">
-              <span className="text-sm text-muted-foreground">
-                지도 검색 로딩 중...
-              </span>
-            </div>
-          )}
+      {status === "error" && (
+        <p className="text-xs text-red-500">
+          Google Places API 로드 실패. Cloud Console에서 Places API (New)를
+          확인하세요.
+        </p>
+      )}
+      {status === "loading" && (
+        <div className="h-9 rounded-md border bg-muted animate-pulse flex items-center px-3">
+          <span className="text-sm text-muted-foreground">
+            지도 검색 로딩 중...
+          </span>
         </div>
-      </div>
+      )}
+      {/*
+        React가 이 div의 자식을 관리하지 않음 - Google Web Component가 직접 삽입됨.
+        suppressHydrationWarning으로 React의 DOM 불일치 경고 방지.
+      */}
+      <div ref={containerRef} suppressHydrationWarning />
     </div>
   );
 }
