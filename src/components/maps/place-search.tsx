@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
+import { Input } from "@/components/ui/input";
 import { hasApiKey } from "@/lib/maps/google-maps";
 
 export interface PlaceSearchResult {
@@ -18,20 +19,25 @@ interface PlaceSearchProps {
   onSelect: (result: PlaceSearchResult) => void;
 }
 
+interface Suggestion {
+  placeId: string;
+  mainText: string;
+  secondaryText: string;
+}
+
 export function PlaceSearch({ onSelect }: PlaceSearchProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [status, setStatus] = useState<"loading" | "ready" | "error">(
-    "loading"
-  );
-  const onSelectRef = useRef(onSelect);
-  onSelectRef.current = onSelect;
-  const initedRef = useRef(false);
+  const [query, setQuery] = useState("");
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [apiReady, setApiReady] = useState(false);
+  const serviceRef = useRef<google.maps.places.AutocompleteService | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
+  // Google Places Service 초기화
   useEffect(() => {
-    if (!hasApiKey() || !containerRef.current || initedRef.current) return;
-    initedRef.current = true;
-
-    const container = containerRef.current;
+    if (!hasApiKey()) return;
 
     async function init() {
       try {
@@ -43,102 +49,163 @@ export function PlaceSearch({ onSelect }: PlaceSearchProps) {
           v: "weekly",
           libraries: ["places"],
         });
-
         await importLibrary("places");
-
-        // PlaceAutocompleteElement 생성
-        const autocomplete = new (
-          google.maps.places as any
-        ).PlaceAutocompleteElement();
-
-        autocomplete.style.width = "100%";
-        container.appendChild(autocomplete);
-
-        autocomplete.addEventListener("gmp-select", async (event: any) => {
-          const placePrediction = event.placePrediction;
-          if (!placePrediction) return;
-
-          try {
-            const place = placePrediction.toPlace();
-            await place.fetchFields({
-              fields: [
-                "displayName",
-                "formattedAddress",
-                "location",
-                "rating",
-                "googleMapsURI",
-                "photos",
-                "types",
-              ],
-            });
-
-            const loc = place.location;
-            if (!loc) return;
-
-            let imageUrl: string | null = null;
-            if (place.photos && place.photos.length > 0) {
-              imageUrl = place.photos[0].getURI({ maxWidth: 800 });
-            }
-
-            const result: PlaceSearchResult = {
-              name: place.displayName ?? "",
-              address: place.formattedAddress ?? "",
-              latitude: loc.lat(),
-              longitude: loc.lng(),
-              rating: place.rating ?? null,
-              url: place.googleMapsURI ?? null,
-              imageUrl,
-              placeTypes: place.types ?? [],
-            };
-
-            onSelectRef.current(result);
-          } catch (err) {
-            console.error("Place details fetch failed:", err);
-          }
-        });
-
-        setStatus("ready");
+        serviceRef.current = new google.maps.places.AutocompleteService();
+        setApiReady(true);
       } catch (err) {
         console.error("Google Places init failed:", err);
-        setStatus("error");
       }
     }
 
     init();
-
-    // cleanup: React가 container의 자식을 건드리지 않도록 수동 정리
-    return () => {
-      while (container.firstChild) {
-        container.removeChild(container.firstChild);
-      }
-      initedRef.current = false;
-    };
   }, []);
 
-  if (!hasApiKey()) {
-    return null;
+  // 외부 클릭 시 드롭다운 닫기
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setShowDropdown(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  // 검색어 변경 시 자동완성 요청 (debounce)
+  const handleInputChange = useCallback(
+    (value: string) => {
+      setQuery(value);
+
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+
+      if (!value.trim() || !serviceRef.current) {
+        setSuggestions([]);
+        setShowDropdown(false);
+        return;
+      }
+
+      debounceRef.current = setTimeout(() => {
+        setLoading(true);
+        serviceRef.current!.getPlacePredictions(
+          { input: value, types: ["establishment"] },
+          (predictions, status) => {
+            setLoading(false);
+            if (
+              status === google.maps.places.PlacesServiceStatus.OK &&
+              predictions
+            ) {
+              setSuggestions(
+                predictions.map((p) => ({
+                  placeId: p.place_id,
+                  mainText: p.structured_formatting.main_text,
+                  secondaryText: p.structured_formatting.secondary_text || "",
+                }))
+              );
+              setShowDropdown(true);
+            } else {
+              setSuggestions([]);
+              setShowDropdown(false);
+            }
+          }
+        );
+      }, 300);
+    },
+    []
+  );
+
+  // 장소 선택 시 상세 정보 조회
+  async function handleSelect(suggestion: Suggestion) {
+    setShowDropdown(false);
+    setQuery(suggestion.mainText);
+
+    try {
+      // 상세 정보를 가져오기 위해 임시 div 사용
+      const div = document.createElement("div");
+      const placesService = new google.maps.places.PlacesService(div);
+
+      placesService.getDetails(
+        {
+          placeId: suggestion.placeId,
+          fields: [
+            "name",
+            "formatted_address",
+            "geometry",
+            "rating",
+            "url",
+            "photos",
+            "types",
+          ],
+        },
+        (place, status) => {
+          if (
+            status !== google.maps.places.PlacesServiceStatus.OK ||
+            !place?.geometry?.location
+          ) {
+            return;
+          }
+
+          let imageUrl: string | null = null;
+          if (place.photos && place.photos.length > 0) {
+            imageUrl = place.photos[0].getUrl({ maxWidth: 800 });
+          }
+
+          const result: PlaceSearchResult = {
+            name: place.name ?? "",
+            address: place.formatted_address ?? "",
+            latitude: place.geometry.location.lat(),
+            longitude: place.geometry.location.lng(),
+            rating: place.rating ?? null,
+            url: place.url ?? null,
+            imageUrl,
+            placeTypes: place.types ?? [],
+          };
+
+          onSelect(result);
+        }
+      );
+    } catch (err) {
+      console.error("Place details fetch failed:", err);
+    }
   }
 
+  if (!hasApiKey()) return null;
+
   return (
-    <div>
-      {status === "error" && (
-        <p className="text-xs text-red-500">
-          Google Places API 로드 실패. Cloud Console에서 Places API (New)를
-          확인하세요.
-        </p>
+    <div ref={wrapperRef} className="relative">
+      <Input
+        placeholder={apiReady ? "장소 검색 (호텔, 관광지, 맛집...)" : "지도 검색 로딩 중..."}
+        value={query}
+        onChange={(e) => handleInputChange(e.target.value)}
+        onFocus={() => suggestions.length > 0 && setShowDropdown(true)}
+        disabled={!apiReady}
+        autoComplete="off"
+      />
+
+      {showDropdown && suggestions.length > 0 && (
+        <ul className="absolute left-0 right-0 top-full z-[9999] mt-1 max-h-60 overflow-auto rounded-md border bg-white shadow-lg">
+          {suggestions.map((s) => (
+            <li
+              key={s.placeId}
+              className="cursor-pointer px-3 py-2.5 hover:bg-gray-100 border-b last:border-b-0"
+              onMouseDown={(e) => {
+                e.preventDefault();
+                handleSelect(s);
+              }}
+            >
+              <div className="font-medium text-sm">{s.mainText}</div>
+              <div className="text-xs text-muted-foreground truncate">
+                {s.secondaryText}
+              </div>
+            </li>
+          ))}
+        </ul>
       )}
-      {status === "loading" && (
-        <div className="h-9 rounded-md border bg-muted animate-pulse flex items-center px-3">
-          <span className="text-sm text-muted-foreground">
-            지도 검색 로딩 중...
-          </span>
+
+      {loading && (
+        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
         </div>
       )}
-      {/*
-        React가 이 div의 자식을 관리하지 않음 - Google Web Component가 직접 삽입됨.
-        suppressHydrationWarning으로 React의 DOM 불일치 경고 방지.
-      */}
-      <div ref={containerRef} suppressHydrationWarning />
     </div>
   );
 }
