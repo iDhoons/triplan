@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/auth-store";
-import { UserMenu } from "@/components/layout/user-menu";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -99,9 +98,7 @@ export default function DashboardPage() {
         <h1 className="text-2xl font-bold">내 여행</h1>
         <div className="flex items-center gap-3">
           <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger
-              render={<Button>+ 새 여행</Button>}
-            />
+            <DialogTrigger render={<Button>+ 새 여행</Button>} />
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>새 여행 만들기</DialogTitle>
@@ -151,7 +148,6 @@ export default function DashboardPage() {
               </form>
             </DialogContent>
           </Dialog>
-          <UserMenu />
         </div>
       </header>
 

@@ -25,6 +25,7 @@ interface ChatMessage {
 }
 
 const QUICK_ACTIONS = [
+  { label: "빈 일정 추천", prompt: "비어있는 일정에 할 만한 활동을 추천해주세요.", type: "fill-empty" },
   { label: "맛집 추천", prompt: "이 여행지의 맛집을 추천해주세요.", type: "recommend" },
   { label: "일정 생성", prompt: "여행 일정을 만들어주세요.", type: "generate-schedule" },
   { label: "동선 체크", prompt: "이동 동선을 최적화해주세요.", type: "route-check" },
@@ -109,10 +110,15 @@ export function AiChatFab() {
     setLoading(true);
 
     try {
+      // welcome 메시지 제외, 현재 보낸 userMsg 제외한 이전 대화 히스토리
+      const history = [...messages, userMsg]
+        .filter((m) => m.id !== "welcome")
+        .map((m) => ({ role: m.role, content: m.content }));
+
       const res = await fetch("/api/ai/recommend", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text.trim(), trip_id: tripId, type }),
+        body: JSON.stringify({ message: text.trim(), trip_id: tripId, type, history }),
       });
 
       const data = await res.json();
@@ -148,7 +154,10 @@ export function AiChatFab() {
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger
         render={
-          <button className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-50 flex items-center justify-center w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95" />
+          <button
+            aria-expanded={open}
+            className="fixed bottom-[calc(4rem+1rem)] right-4 md:bottom-6 md:right-6 z-50 flex items-center justify-center w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95"
+          />
         }
       >
         <Sparkles className="w-6 h-6" />
@@ -193,7 +202,7 @@ export function AiChatFab() {
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto space-y-3 px-4 py-3">
+        <div className="flex-1 overflow-y-auto space-y-3 px-4 py-3" aria-live="polite">
           {messages.map((msg) => (
             <MessageBubble
               key={msg.id}
@@ -203,7 +212,7 @@ export function AiChatFab() {
             />
           ))}
           {loading && (
-            <div className="flex gap-2 items-end">
+            <div className="flex gap-2 items-end" role="status" aria-label="AI가 응답을 작성하고 있습니다">
               <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground shrink-0">
                 <Bot className="w-3.5 h-3.5" />
               </div>

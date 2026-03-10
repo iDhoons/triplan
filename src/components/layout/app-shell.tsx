@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/auth-store";
 import { BottomNav } from "./bottom-nav";
+import { Sidebar } from "./sidebar";
 import { OfflineBanner } from "./offline-banner";
 import type { Profile } from "@/types/database";
 
@@ -60,8 +61,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen pb-16 md:pb-0">
+    <div className="min-h-screen pb-16 md:pb-0 md:pl-64">
       <OfflineBanner />
+      <Sidebar />
       <main className="max-w-6xl mx-auto px-4 py-6">{children}</main>
       <BottomNav />
     </div>
