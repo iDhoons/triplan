@@ -1,9 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Input } from "@/components/ui/input";
 import { hasApiKey } from "@/lib/maps/google-maps";
-import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
 
 export interface PlaceSearchResult {
   name: string;
@@ -25,67 +23,98 @@ export function PlaceSearch({
   onSelect,
   placeholder = "장소 검색 (호텔, 관광지, 맛집...)",
 }: PlaceSearchProps) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const onSelectRef = useRef(onSelect);
+  onSelectRef.current = onSelect;
 
   useEffect(() => {
-    if (!hasApiKey() || loaded) return;
+    if (!hasApiKey() || !containerRef.current) return;
 
     let mounted = true;
 
     async function init() {
       try {
+        const { importLibrary } = await import("@googlemaps/js-api-loader");
+        const { setOptions } = await import("@googlemaps/js-api-loader");
         setOptions({
           key: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "",
           v: "weekly",
-          libraries: ["maps", "marker", "places"],
+          libraries: ["places"],
         });
 
         await importLibrary("places");
 
-        if (!mounted || !inputRef.current) return;
+        if (!mounted || !containerRef.current) return;
 
-        const autocomplete = new google.maps.places.Autocomplete(
-          inputRef.current,
-          {
-            fields: [
-              "name",
-              "formatted_address",
-              "geometry",
-              "rating",
-              "url",
-              "photos",
-              "types",
-            ],
-          }
-        );
+        // 기존 자식 노드 제거 (안전한 DOM 조작)
+        while (containerRef.current.firstChild) {
+          containerRef.current.removeChild(containerRef.current.firstChild);
+        }
 
-        autocomplete.addListener("place_changed", () => {
-          const place = autocomplete.getPlace();
-          if (!place.geometry?.location) return;
-
-          const result: PlaceSearchResult = {
-            name: place.name ?? "",
-            address: place.formatted_address ?? "",
-            latitude: place.geometry.location.lat(),
-            longitude: place.geometry.location.lng(),
-            rating: place.rating ?? null,
-            url: place.url ?? null,
-            imageUrl:
-              place.photos && place.photos.length > 0
-                ? place.photos[0].getUrl({ maxWidth: 800 })
-                : null,
-            placeTypes: place.types ?? [],
-          };
-
-          onSelect(result);
+        // 새 PlaceAutocompleteElement API 사용
+        const autocomplete = new (google.maps.places as any).PlaceAutocompleteElement({
+          inputPlaceholder: placeholder,
         });
 
-        autocompleteRef.current = autocomplete;
-        setLoaded(true);
-      } catch {
-        // API 키 에러 등은 무시
+        autocomplete.style.width = "100%";
+        autocomplete.style.height = "36px";
+        autocomplete.style.borderRadius = "6px";
+        autocomplete.style.fontSize = "14px";
+
+        containerRef.current.appendChild(autocomplete);
+
+        autocomplete.addEventListener("gmp-select", async (event: any) => {
+          const placePrediction = event.placePrediction;
+          if (!placePrediction) return;
+
+          try {
+            const place = placePrediction.toPlace();
+            await place.fetchFields({
+              fields: [
+                "displayName",
+                "formattedAddress",
+                "location",
+                "rating",
+                "googleMapsURI",
+                "photos",
+                "types",
+              ],
+            });
+
+            const loc = place.location;
+            if (!loc) return;
+
+            let imageUrl: string | null = null;
+            if (place.photos && place.photos.length > 0) {
+              imageUrl = place.photos[0].getURI({ maxWidth: 800 });
+            }
+
+            const result: PlaceSearchResult = {
+              name: place.displayName ?? "",
+              address: place.formattedAddress ?? "",
+              latitude: loc.lat(),
+              longitude: loc.lng(),
+              rating: place.rating ?? null,
+              url: place.googleMapsURI ?? null,
+              imageUrl,
+              placeTypes: place.types ?? [],
+            };
+
+            onSelectRef.current(result);
+          } catch (err) {
+            console.error("Place details fetch failed:", err);
+          }
+        });
+
+        if (mounted) setLoaded(true);
+      } catch (err) {
+        console.error("Google Places init failed:", err);
+        if (mounted)
+          setError(
+            "Google Places API를 로드할 수 없습니다. Google Cloud Console에서 Places API (New)를 활성화하세요."
+          );
       }
     }
 
@@ -94,28 +123,30 @@ export function PlaceSearch({
     return () => {
       mounted = false;
     };
-  }, [onSelect, loaded]);
+  }, [placeholder]);
 
   if (!hasApiKey()) {
     return null;
   }
 
+  if (error) {
+    return <p className="text-xs text-red-500">{error}</p>;
+  }
+
   return (
-    <div className="relative">
+    <div>
       <div className="flex items-center gap-2">
         <span className="text-lg">🔍</span>
-        <Input
-          ref={inputRef}
-          placeholder={placeholder}
-          className="flex-1"
-          autoComplete="off"
-        />
+        <div ref={containerRef} className="flex-1">
+          {!loaded && (
+            <div className="h-9 rounded-md border bg-muted animate-pulse flex items-center px-3">
+              <span className="text-sm text-muted-foreground">
+                지도 검색 로딩 중...
+              </span>
+            </div>
+          )}
+        </div>
       </div>
-      {!loaded && (
-        <p className="text-xs text-muted-foreground mt-1">
-          지도 검색 로딩 중...
-        </p>
-      )}
     </div>
   );
 }
