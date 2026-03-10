@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useParams } from "next/navigation";
 import { useAuthStore } from "@/stores/auth-store";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,13 +17,10 @@ interface ChatMessage {
 }
 
 const QUICK_ACTIONS = [
-  { label: "맛집 추천", prompt: "이 여행지의 맛집을 추천해주세요." },
-  { label: "일정 생성", prompt: "여행 일정을 만들어주세요." },
-  { label: "동선 체크", prompt: "이동 동선을 최적화해주세요." },
+  { label: "맛집 추천", prompt: "이 여행지의 맛집을 추천해주세요.", type: "recommend" },
+  { label: "일정 생성", prompt: "여행 일정을 만들어주세요.", type: "generate-schedule" },
+  { label: "동선 체크", prompt: "이동 동선을 최적화해주세요.", type: "route-check" },
 ];
-
-const AI_PLACEHOLDER =
-  "AI 기능 준비 중입니다. 곧 여행 계획 도우미로 찾아올게요!";
 
 function MessageBubble({ message, userName, avatarUrl }: {
   message: ChatMessage;
@@ -77,6 +75,7 @@ function MessageBubble({ message, userName, avatarUrl }: {
 }
 
 export default function AiPage() {
+  const { tripId } = useParams<{ tripId: string }>();
   const { user } = useAuthStore();
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -96,7 +95,7 @@ export default function AiPage() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  async function sendMessage(text: string) {
+  async function sendMessage(text: string, type?: string) {
     if (!text.trim() || loading) return;
 
     const userMsg: ChatMessage = {
@@ -109,26 +108,30 @@ export default function AiPage() {
     setInput("");
     setLoading(true);
 
-    // Simulate API call – POST /api/ai/recommend
     try {
-      // When the API is ready, replace this block with:
-      // const res = await fetch("/api/ai/recommend", {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({ message: text, tripId }),
-      // });
-      // const data = await res.json();
-      // aiContent = data.content;
+      const res = await fetch("/api/ai/recommend", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text.trim(), trip_id: tripId, type }),
+      });
 
-      await new Promise((r) => setTimeout(r, 800));
+      const data = await res.json();
 
       const aiMsg: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: AI_PLACEHOLDER,
+        content: res.ok ? data.message : (data.error || "AI 응답에 실패했습니다. 다시 시도해주세요."),
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, aiMsg]);
+    } catch {
+      const errorMsg: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: "네트워크 오류가 발생했습니다. 인터넷 연결을 확인해주세요.",
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMsg]);
     } finally {
       setLoading(false);
     }
@@ -161,7 +164,7 @@ export default function AiPage() {
             key={action.label}
             variant="outline"
             size="sm"
-            onClick={() => sendMessage(action.prompt)}
+            onClick={() => sendMessage(action.prompt, action.type)}
             disabled={loading}
             className="text-xs"
           >
