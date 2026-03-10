@@ -73,12 +73,16 @@ function PlaceCard({
   onEdit,
   onDelete,
 }: PlaceCardProps) {
+  const router = useRouter();
+  const { tripId } = useParams();
+
   return (
     <Card
       className={cn(
-        "relative cursor-default transition-shadow hover:shadow-md",
+        "relative cursor-pointer transition-shadow hover:shadow-md",
         selected && "ring-2 ring-primary"
       )}
+      onClick={() => router.push(`/trips/${tripId}/places/${place.id}`)}
     >
       {/* 이미지 */}
       {place.image_urls?.length > 0 && (
@@ -137,7 +141,7 @@ function PlaceCard({
         )}
 
         {/* 액션 */}
-        <div className="flex items-center justify-between pt-1">
+        <div className="flex items-center justify-between pt-1" onClick={(e) => e.stopPropagation()}>
           <div className="flex gap-1">
             <Button
               variant="ghost"
