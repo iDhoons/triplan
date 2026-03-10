@@ -10,8 +10,12 @@ export interface PlaceSearchResult {
   latitude: number;
   longitude: number;
   rating: number | null;
+  userRatingsTotal: number | null;
   url: string | null;
-  imageUrl: string | null;
+  website: string | null;
+  phoneNumber: string | null;
+  imageUrls: string[];
+  openingHours: Record<string, string> | null;
   placeTypes: string[];
 }
 
@@ -131,9 +135,14 @@ export function PlaceSearch({ onSelect }: PlaceSearchProps) {
             "formatted_address",
             "geometry",
             "rating",
+            "user_ratings_total",
             "url",
+            "website",
+            "formatted_phone_number",
+            "international_phone_number",
             "photos",
             "types",
+            "opening_hours",
           ],
         },
         (place, status) => {
@@ -144,9 +153,25 @@ export function PlaceSearch({ onSelect }: PlaceSearchProps) {
             return;
           }
 
-          let imageUrl: string | null = null;
-          if (place.photos && place.photos.length > 0) {
-            imageUrl = place.photos[0].getUrl({ maxWidth: 800 });
+          // 사진 최대 3장
+          const imageUrls: string[] = [];
+          if (place.photos) {
+            const max = Math.min(place.photos.length, 3);
+            for (let i = 0; i < max; i++) {
+              imageUrls.push(place.photos[i].getUrl({ maxWidth: 800 }));
+            }
+          }
+
+          // 영업시간 파싱
+          let openingHours: Record<string, string> | null = null;
+          if (place.opening_hours?.weekday_text) {
+            openingHours = {};
+            for (const line of place.opening_hours.weekday_text) {
+              const parts = line.split(": ");
+              if (parts.length === 2) {
+                openingHours[parts[0]] = parts[1];
+              }
+            }
           }
 
           const result: PlaceSearchResult = {
@@ -155,8 +180,12 @@ export function PlaceSearch({ onSelect }: PlaceSearchProps) {
             latitude: place.geometry.location.lat(),
             longitude: place.geometry.location.lng(),
             rating: place.rating ?? null,
+            userRatingsTotal: place.user_ratings_total ?? null,
             url: place.url ?? null,
-            imageUrl,
+            website: place.website ?? null,
+            phoneNumber: place.international_phone_number ?? place.formatted_phone_number ?? null,
+            imageUrls,
+            openingHours,
             placeTypes: place.types ?? [],
           };
 
