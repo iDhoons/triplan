@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/auth-store";
+import { PlaceSearch, type PlaceSearchResult } from "@/components/maps/place-search";
 import type { Place, PlaceCategory } from "@/types/database";
 
 interface PlaceFormProps {
@@ -107,6 +108,36 @@ export function PlaceForm({
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [latitude, setLatitude] = useState<number | null>(place?.latitude ?? null);
+  const [longitude, setLongitude] = useState<number | null>(place?.longitude ?? null);
+  const [searchImageUrl, setSearchImageUrl] = useState<string | null>(null);
+
+  function handlePlaceSearchSelect(result: PlaceSearchResult) {
+    // 장소 타입으로 카테고리 자동 추론
+    let category: PlaceCategory = "other";
+    const types = result.placeTypes;
+    if (types.some((t) => ["lodging", "hotel", "resort_hotel"].includes(t))) {
+      category = "accommodation";
+    } else if (types.some((t) => ["restaurant", "cafe", "bakery", "bar", "food", "meal_delivery", "meal_takeaway"].includes(t))) {
+      category = "restaurant";
+    } else if (types.some((t) => ["tourist_attraction", "museum", "amusement_park", "park", "zoo", "aquarium", "art_gallery", "stadium", "church", "temple"].includes(t))) {
+      category = "attraction";
+    }
+
+    setForm((prev) => ({
+      ...prev,
+      name: result.name,
+      address: result.address,
+      rating: result.rating !== null ? String(result.rating) : prev.rating,
+      url: result.url ?? prev.url,
+      category,
+    }));
+    setLatitude(result.latitude);
+    setLongitude(result.longitude);
+    if (result.imageUrl) {
+      setSearchImageUrl(result.imageUrl);
+    }
+  }
 
   function set(key: keyof FormData, value: string) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -136,12 +167,19 @@ export function PlaceForm({
         imageUrls = [...imageUrls, publicUrl];
       }
 
+      // Google 검색으로 가져온 이미지가 있고 직접 업로드 안 했으면 추가
+      if (searchImageUrl && !imageFile && !imageUrls.includes(searchImageUrl)) {
+        imageUrls = [...imageUrls, searchImageUrl];
+      }
+
       const payload = {
         trip_id: tripId,
         category: form.category,
         name: form.name.trim(),
         url: form.url.trim() || null,
         address: form.address.trim() || null,
+        latitude,
+        longitude,
         rating: form.rating ? Number(form.rating) : null,
         memo: form.memo.trim() || null,
         image_urls: imageUrls,
@@ -202,6 +240,17 @@ export function PlaceForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      {/* 지도 검색 */}
+      {!place && (
+        <div className="flex flex-col gap-1.5 rounded-lg border border-dashed border-primary/30 bg-primary/5 p-3">
+          <Label className="text-xs font-semibold text-primary">지도에서 검색</Label>
+          <PlaceSearch onSelect={handlePlaceSearchSelect} />
+          <p className="text-xs text-muted-foreground">
+            검색하면 이름, 주소, 평점, 카테고리가 자동으로 채워집니다
+          </p>
+        </div>
+      )}
+
       {/* 공통 필드 */}
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="pf-name">장소명 *</Label>
