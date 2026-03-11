@@ -165,8 +165,8 @@ export default function DashboardPage() {
 
       {/* Share Target 온보딩 배너 */}
       {showShareTip && !loading && trips.length > 0 && (
-        <div className="mb-6 flex items-start gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4 animate-fade-in-up">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+        <div className="mb-6 flex items-start gap-3 rounded-2xl glass-card p-4 animate-ios-spring">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 glass-light">
             <Share2 className="h-4.5 w-4.5 text-primary" />
           </div>
           <div className="flex-1 min-w-0">
@@ -195,7 +195,7 @@ export default function DashboardPage() {
         </div>
       ) : trips.length === 0 ? (
         <div className="flex flex-col items-center gap-4 py-20 text-center animate-fade-in-up">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 glass-light">
             <Compass className="h-8 w-8 text-primary/60" />
           </div>
           <div className="space-y-1">
@@ -210,7 +210,7 @@ export default function DashboardPage() {
           {trips.map((trip) => (
             <Card
               key={trip.id}
-              className="cursor-pointer hover:shadow-lg hover:ring-primary/20 hover:-translate-y-0.5"
+              className="cursor-pointer hover:-translate-y-1 active:scale-[0.97] transition-all duration-300"
               onClick={() => router.push(`/trips/${trip.id}/places`)}
             >
               <CardContent className="p-5">
@@ -222,11 +222,11 @@ export default function DashboardPage() {
                       <span className="text-sm truncate">{trip.destination}</span>
                     </div>
                   </div>
-                  <span className="shrink-0 bg-primary/10 text-primary text-xs font-medium px-2.5 py-1 rounded-full">
+                  <span className="shrink-0 bg-primary/12 text-primary text-xs font-semibold px-2.5 py-1 rounded-full glass-light">
                     {getDaysLabel(trip)}
                   </span>
                 </div>
-                <div className="flex items-center gap-1.5 mt-4 pt-3 border-t border-border/50 text-xs text-muted-foreground">
+                <div className="flex items-center gap-1.5 mt-4 pt-3 border-t border-glass-border text-xs text-muted-foreground">
                   <CalendarDays className="h-3.5 w-3.5" />
                   <span>
                     {formatDate(trip.start_date)} ~ {formatDate(trip.end_date)}

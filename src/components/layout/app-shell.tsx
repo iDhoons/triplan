@@ -61,7 +61,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen pb-16 md:pb-0 md:pl-64">
+    <div className="min-h-screen pb-[calc(50px+env(safe-area-inset-bottom,0px))] md:pb-0 md:pl-64">
       <OfflineBanner />
       <Sidebar />
       <main className="max-w-6xl mx-auto px-4 py-6">{children}</main>

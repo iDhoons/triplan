@@ -13,10 +13,10 @@ export function Sidebar() {
   const currentTripId = tripMatch?.[1] ?? null;
 
   return (
-    <aside className="hidden md:flex flex-col w-64 fixed left-0 top-0 bottom-0 border-r bg-background z-30">
+    <aside className="hidden md:flex flex-col w-64 fixed left-0 top-0 bottom-0 border-r glass-nav z-30">
       {/* Logo */}
-      <div className="h-14 px-4 flex items-center border-b shrink-0">
-        <Link href="/dashboard" className="text-lg font-bold">
+      <div className="h-14 px-5 flex items-center border-b border-glass-border shrink-0">
+        <Link href="/dashboard" className="text-lg font-semibold tracking-tight">
           여행 플래너
         </Link>
       </div>
@@ -35,13 +35,16 @@ export function Sidebar() {
               href={item.href}
               aria-current={isActive ? "page" : undefined}
               className={cn(
-                "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200",
+                "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-300",
                 isActive
-                  ? "bg-primary/10 text-primary font-medium shadow-sm shadow-primary/5"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted active:scale-[0.98]"
+                  ? "glass-card text-primary font-medium"
+                  : "text-muted-foreground hover:text-foreground hover:bg-glass-light active:scale-[0.98]"
               )}
             >
-              <Icon className={cn("w-5 h-5 transition-transform duration-200", isActive && "scale-110")} />
+              <Icon
+                className="w-5 h-5"
+                strokeWidth={isActive ? 2 : 1.5}
+              />
               {item.label}
             </Link>
           );
@@ -50,7 +53,7 @@ export function Sidebar() {
         {/* Trip Local Nav */}
         {currentTripId && (
           <>
-            <div className="border-t my-3" />
+            <div className="border-t border-glass-border my-3" />
             <nav aria-label="여행 탭" className="space-y-1">
               <p className="px-3 text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wider">
                 현재 여행
@@ -67,13 +70,13 @@ export function Sidebar() {
                     href={href}
                     aria-current={isActive ? "page" : undefined}
                     className={cn(
-                      "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200",
+                      "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-300",
                       isActive
-                        ? "bg-primary/10 text-primary font-medium shadow-sm shadow-primary/5"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted active:scale-[0.98]"
+                        ? "glass-card text-primary font-medium"
+                        : "text-muted-foreground hover:text-foreground hover:bg-glass-light active:scale-[0.98]"
                     )}
                   >
-                    <Icon className="w-4 h-4" />
+                    <Icon className="w-4 h-4" strokeWidth={isActive ? 2 : 1.5} />
                     {tab.label}
                   </Link>
                 );
@@ -84,7 +87,7 @@ export function Sidebar() {
       </nav>
 
       {/* User Menu */}
-      <div className="border-t px-4 py-3 shrink-0">
+      <div className="border-t border-glass-border px-4 py-3 shrink-0">
         <UserMenu />
       </div>
     </aside>

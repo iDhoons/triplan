@@ -49,17 +49,19 @@ export default function LoginPage() {
   return (
     <div className="min-h-svh flex items-center justify-center relative overflow-hidden bg-gradient-to-br from-auth-gradient-from to-auth-gradient-to px-4 py-8">
       {/* Decorative Elements */}
-      <Plane className="absolute top-12 left-8 sm:top-20 sm:left-20 h-16 w-16 sm:h-24 sm:w-24 text-primary opacity-15 -rotate-12" />
-      <Cloud className="absolute bottom-12 right-8 sm:bottom-20 sm:right-20 h-16 w-16 sm:h-24 sm:w-24 text-chart-2 opacity-15" />
-      <Cloud className="absolute top-1/4 right-1/4 hidden sm:block h-12 w-12 text-chart-2 opacity-10" />
-      <Plane className="absolute bottom-1/3 left-1/4 hidden sm:block h-10 w-10 text-primary opacity-10 rotate-45" />
+      <Plane className="absolute top-12 left-8 sm:top-20 sm:left-20 h-16 w-16 sm:h-24 sm:w-24 text-primary opacity-10 -rotate-12" />
+      <Cloud className="absolute bottom-12 right-8 sm:bottom-20 sm:right-20 h-16 w-16 sm:h-24 sm:w-24 text-chart-2 opacity-10" />
+      <Cloud className="absolute top-1/4 right-1/4 hidden sm:block h-12 w-12 text-chart-2 opacity-8" />
+      <Plane className="absolute bottom-1/3 left-1/4 hidden sm:block h-10 w-10 text-primary opacity-8 rotate-45" />
 
       {/* Login Card */}
-      <div className="relative w-full max-w-[440px] bg-card/95 backdrop-blur-sm rounded-2xl shadow-2xl p-6 sm:p-10 border border-card/50">
+      <div className="relative w-full max-w-[440px] glass-card glass-shine rounded-3xl p-6 sm:p-10 animate-ios-spring">
         {/* Header */}
         <div className="flex flex-col items-center mb-6 sm:mb-8">
           <div className="flex items-center gap-2.5 mb-3">
-            <Globe className="h-8 w-8 sm:h-9 sm:w-9 text-primary" />
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/12 glass-light">
+              <Globe className="h-6 w-6 text-primary" />
+            </div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
               여행 플래너
             </h1>
@@ -73,7 +75,7 @@ export default function LoginPage() {
         <Button
           variant="outline"
           onClick={handleGoogleLogin}
-          className="w-full py-5 sm:py-6 text-sm sm:text-base font-semibold transition-colors cursor-pointer"
+          className="w-full py-5 sm:py-6 text-sm sm:text-base font-semibold transition-all duration-300 rounded-2xl glass-light border-glass-border cursor-pointer hover:scale-[1.01] active:scale-[0.98]"
         >
           <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
             <path
@@ -98,9 +100,9 @@ export default function LoginPage() {
 
         {/* Divider */}
         <div className="relative flex items-center my-5 sm:my-6">
-          <div className="flex-grow border-t border-border" />
+          <div className="flex-grow border-t border-glass-border" />
           <span className="flex-shrink-0 px-4 text-sm text-muted-foreground">또는</span>
-          <div className="flex-grow border-t border-border" />
+          <div className="flex-grow border-t border-glass-border" />
         </div>
 
         {/* Form */}
@@ -115,7 +117,7 @@ export default function LoginPage() {
                 placeholder="이메일을 입력하세요"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="pl-10 py-5"
+                className="pl-10 py-5 rounded-xl bg-glass-light border-glass-border"
                 required
               />
             </div>
@@ -131,7 +133,7 @@ export default function LoginPage() {
                 placeholder="비밀번호를 입력하세요"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="pl-10 py-5"
+                className="pl-10 py-5 rounded-xl bg-glass-light border-glass-border"
                 required
               />
             </div>
@@ -143,7 +145,7 @@ export default function LoginPage() {
 
           <Button
             type="submit"
-            className="w-full py-5 sm:py-6 text-sm sm:text-base font-bold cursor-pointer"
+            className="w-full py-5 sm:py-6 text-sm sm:text-base font-bold cursor-pointer rounded-2xl transition-all duration-300 hover:scale-[1.01] active:scale-[0.98]"
             disabled={loading}
           >
             {loading ? "로그인 중..." : "로그인"}
