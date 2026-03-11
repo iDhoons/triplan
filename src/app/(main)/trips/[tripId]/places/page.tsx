@@ -10,6 +10,7 @@ import {
   SlidersHorizontalIcon,
   ListIcon,
   Map,
+  YoutubeIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,6 +30,7 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { createClient } from "@/lib/supabase/client";
 import { PlaceForm } from "@/components/places/place-form";
+import { YouTubePlacePicker } from "@/components/places/youtube-place-picker";
 import dynamic from "next/dynamic";
 
 const PlaceMap = dynamic(
@@ -45,15 +47,8 @@ const PlaceMap = dynamic(
 import { usePlaces } from "@/hooks/use-places";
 import { PlaceCardSkeleton } from "@/components/layout/loading-skeleton";
 import { cn } from "@/lib/utils";
+import { PLACE_CATEGORY_LABEL } from "@/config/categories";
 import type { Place, PlaceCategory } from "@/types/database";
-
-const CATEGORY_LABEL: Record<PlaceCategory | "all", string> = {
-  all: "전체",
-  accommodation: "숙소",
-  attraction: "관광지",
-  restaurant: "맛집",
-  other: "기타",
-};
 
 const CATEGORY_BADGE_CLASS: Record<PlaceCategory, string> = {
   accommodation:
@@ -118,7 +113,7 @@ function PlaceCard({
             )}
             variant="outline"
           >
-            {CATEGORY_LABEL[place.category]}
+            {PLACE_CATEGORY_LABEL[place.category]}
           </Badge>
         </div>
       </CardHeader>
@@ -218,6 +213,7 @@ export default function PlacesPage() {
   const [editingPlace, setEditingPlace] = useState<Place | null>(null);
   const [compareMode, setCompareMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [youtubePickerOpen, setYoutubePickerOpen] = useState(false);
 
   async function handleDelete(place: Place) {
     if (!confirm(`"${place.name}"을(를) 삭제하시겠습니까?`)) return;
@@ -295,6 +291,14 @@ export default function PlacesPage() {
             <SlidersHorizontalIcon className="size-3.5" />
             비교하기
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setYoutubePickerOpen(true)}
+          >
+            <YoutubeIcon className="size-3.5 text-red-500" />
+            YouTube
+          </Button>
           <Dialog
             open={dialogOpen}
             onOpenChange={(open) => {
@@ -368,7 +372,7 @@ export default function PlacesPage() {
         <TabsList variant="line" className="w-full justify-start overflow-x-auto">
           {TAB_VALUES.map((tab) => (
             <TabsTrigger key={tab} value={tab}>
-              {CATEGORY_LABEL[tab]}
+              {PLACE_CATEGORY_LABEL[tab]}
               {tab !== "all" && (
                 <span className="ml-1 text-xs text-muted-foreground">
                   ({places.filter((p) => p.category === tab).length})
@@ -395,15 +399,24 @@ export default function PlacesPage() {
                   <p className="font-medium text-foreground/80">아직 등록된 장소가 없어요</p>
                   <p className="text-sm text-muted-foreground">가보고 싶은 장소를 추가해보세요!</p>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setDialogOpen(true)}
-                  className="mt-1"
-                >
-                  <PlusIcon className="size-3.5" />
-                  장소 추가하기
-                </Button>
+                <div className="flex gap-2 mt-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setDialogOpen(true)}
+                  >
+                    <PlusIcon className="size-3.5" />
+                    장소 추가하기
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setYoutubePickerOpen(true)}
+                  >
+                    <YoutubeIcon className="size-3.5 text-red-500" />
+                    YouTube에서 가져오기
+                  </Button>
+                </div>
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 animate-stagger">
@@ -426,6 +439,13 @@ export default function PlacesPage() {
           </TabsContent>
         ))}
       </Tabs>
+
+      {/* YouTube 장소 가져오기 */}
+      <YouTubePlacePicker
+        tripId={tripId}
+        open={youtubePickerOpen}
+        onOpenChange={setYoutubePickerOpen}
+      />
     </div>
   );
 }
