@@ -267,7 +267,7 @@ export default function PlacesPage() {
   const supabase = createClient();
   const queryClient = useQueryClient();
 
-  const { data: places = [], isLoading: loading } = usePlaces(tripId);
+  const { data: places = [], isLoading: loading, isError, error: queryError } = usePlaces(tripId);
   const [activeTab, setActiveTab] = useState<TabValue>("all");
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -314,6 +314,18 @@ export default function PlacesPage() {
     activeTab === "all"
       ? places
       : places.filter((p) => p.category === activeTab);
+
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center gap-4 py-20 text-center">
+        <p className="text-sm text-destructive">장소 목록을 불러오지 못했습니다</p>
+        <p className="text-xs text-muted-foreground">{queryError?.message}</p>
+        <Button size="sm" variant="outline" onClick={() => window.location.reload()}>
+          새로고침
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-4">

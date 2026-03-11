@@ -48,12 +48,16 @@ const SITE_PATTERNS: {
       if (!m) return null;
       // _숫자 접미사 제거 (Agoda 내부 식별자, 예: hotel-eden_2 → hotel eden)
       let name = decodeAndClean(m[1]).replace(/\s*\d+$/, "").trim();
-      // 도시 정보 추가 (jeju-island-kr → jeju)
+      // 도시 정보 추가 (jeju-island-kr → jeju island)
       const citySlug = m[2];
       if (citySlug) {
         const city = citySlug.replace(/-(?:kr|jp|th|vn|id|tw|cn|sg|my|ph|us|uk|au|all)\b.*$/i, "")
           .replace(/[-_]/g, " ").trim();
-        if (city && !name.toLowerCase().includes(city.toLowerCase())) {
+        // 도시의 핵심 단어가 이름에 이미 포함되어 있는지 확인
+        const cityWords = city.toLowerCase().split(/\s+/);
+        const nameLower = name.toLowerCase();
+        const alreadyHasCity = cityWords.some((w) => w.length > 2 && nameLower.includes(w));
+        if (city && !alreadyHasCity) {
           name = `${name} ${city}`;
         }
       }
@@ -121,14 +125,14 @@ const SITE_PATTERNS: {
     extract: () => null, // Short URL — 리다이렉트 필요
   },
   {
-    // Naver Map
-    match: /naver\.(com|me)\/.*map/i,
+    // Naver Map / Place (서브도메인: map.naver.com, m.place.naver.com, place.naver.com, naver.me)
+    match: /(?:map|place)\.naver\.com|naver\.me/i,
     site: "naver-map",
     extract: () => null,
   },
   {
-    // Kakao Map
-    match: /kakao\.(com|co\.kr)\/.*map/i,
+    // Kakao Map / Place (서브도메인: map.kakao.com, place.map.kakao.com)
+    match: /(?:map|place)\.?kakao\.com/i,
     site: "kakao-map",
     extract: () => null,
   },

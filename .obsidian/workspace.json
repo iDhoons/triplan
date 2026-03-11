@@ -4,21 +4,17 @@
     "type": "split",
     "children": [
       {
-        "id": "2a89c252cd863fe0",
+        "id": "470e362f6628504f",
         "type": "tabs",
         "children": [
           {
-            "id": "98f517f4fd16ae0b",
+            "id": "3c5b90b13a387333",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "CLAUDE.md",
-                "mode": "source",
-                "source": false
-              },
+              "type": "empty",
+              "state": {},
               "icon": "lucide-file",
-              "title": "CLAUDE"
+              "title": "새 탭"
             }
           }
         ]
@@ -94,7 +90,6 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "CLAUDE.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -104,7 +99,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "CLAUDE 의 백링크"
+              "title": "백링크"
             }
           },
           {
@@ -113,12 +108,11 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "CLAUDE.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "CLAUDE 의 나가는 링크"
+              "title": "나가는 링크"
             }
           },
           {
@@ -156,13 +150,12 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "CLAUDE.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "CLAUDE 의 개요"
+              "title": "개요"
             }
           }
         ]
@@ -183,26 +176,51 @@
       "bases:새 베이스 생성하기": false
     }
   },
-  "active": "98f517f4fd16ae0b",
+  "active": "3c5b90b13a387333",
   "lastOpenFiles": [
-    "skills-lock.json",
-    "docs/README.md",
-    "docs/PRD.md",
-    "docs/GUIDE-DEVELOPMENT.md",
-    "docs/DEVELOPMENT-CHECKLIST.md",
     "CLAUDE.md",
-    "docs/plans/MASTER_PLAN.md",
-    "docs/SPEC.md",
-    "docs/research/web-app-development-process-2026-03-11.md",
-    "docs/templates/progress.md",
-    "docs/templates/research.md",
-    "docs/templates/plan.md",
-    "docs/TASKS.md",
-    "docs/report",
-    "docs/archive",
-    "docs/research",
-    "docs/templates",
-    "docs/TRD.md",
+    "src/components/layout/install-banner.tsx",
+    "src/lib/google-places/resolve-input.ts",
+    "src/lib/error-messages.ts",
+    "docs/plans/ux-improvements/design-ux-priority-improvements-2026-03-11.md",
+    "docs/plans/ux-improvements",
+    "docs/plans/smart-text-parser/plan-smart-text-parser-2026-03-11.md",
+    "docs/plans/smart-text-parser",
+    "docs/plans/url-enrichment/plan-url-enrichment-2026-03-11.md",
+    "docs/plans/url-enrichment",
+    "phase3-login-final.png",
+    "src/app/(main)/trips/[tripId]/error.tsx",
+    "src/app/(main)/trips/[tripId]/trip-layout-client.tsx",
+    "src/lib/api/schemas.ts",
+    "src/lib/services/ai-context.ts",
+    "final-login.png",
+    "signup-after-phase1.png",
+    "login-after-phase1.png",
+    "node_modules/@esbuild/darwin-arm64/README.md",
+    "node_modules/vitest/README.md",
+    "node_modules/vitest/LICENSE.md",
+    "node_modules/rollup/README.md",
+    "node_modules/rollup/LICENSE.md",
+    "node_modules/vite/README.md",
+    "node_modules/vite/LICENSE.md",
+    "node_modules/istanbul-reports/README.md",
+    "node_modules/istanbul-reports/CHANGELOG.md",
+    "node_modules/make-dir/node_modules/semver/README.md",
+    "node_modules/@vitest/mocker/README.md",
+    "node_modules/magicast/README.md",
+    "node_modules/@bcoe/v8-coverage/README.md",
+    "node_modules/@bcoe/v8-coverage/LICENSE.md",
+    "node_modules/istanbul-lib-report/README.md",
+    "node_modules/istanbul-lib-report/CHANGELOG.md",
+    "node_modules/vite/node_modules/picomatch/README.md",
+    "node_modules/vitest/node_modules/picomatch/README.md",
+    "node_modules/istanbul-lib-coverage/README.md",
+    "node_modules/es-module-lexer/README.md",
+    "node_modules/expect-type/SECURITY.md",
+    "node_modules/istanbul-lib-coverage/CHANGELOG.md",
+    "node_modules/istanbul-reports/lib/html-spa/assets/sort-arrow-sprite.png",
+    "node_modules/istanbul-reports/lib/html/assets/sort-arrow-sprite.png",
+    "node_modules/istanbul-reports/lib/html/assets/favicon.png",
     "screen_7076eda9f15f4d4d896ecaa6cc8ebacb.png",
     "screen_7c1e44d970da4c07b8ecc5ed1cacec80.png",
     "screen_3d05ba6634894d2a929226376babd4ae.png"
