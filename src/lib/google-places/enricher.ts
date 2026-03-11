@@ -162,3 +162,21 @@ export async function enrichFromUrl(
     return null;
   }
 }
+
+/**
+ * 텍스트 쿼리를 직접 Places API로 검색하여 풍부화 데이터를 반환.
+ * URL 없이 장소명만 공유된 경우 사용.
+ * 실패 시 null 반환 (에러를 던지지 않음).
+ */
+export async function enrichFromText(
+  query: string
+): Promise<EnrichedPlaceData | null> {
+  try {
+    const results = await textSearch(query, { maxResultCount: 1 });
+    if (results.length === 0) return null;
+    return mapPlaceResult(results[0], "");
+  } catch (err) {
+    console.error("[enricher] Text search error:", err);
+    return null;
+  }
+}

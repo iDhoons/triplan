@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +13,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ChevronDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/auth-store";
 import { PlaceSearch, type PlaceSearchResult } from "@/components/maps/place-search";
@@ -117,24 +119,41 @@ export function PlaceForm({
   const [scrapeUrl, setScrapeUrl] = useState("");
   const [scraping, setScraping] = useState(false);
   const [scrapeError, setScrapeError] = useState<string | null>(null);
+  const [showDetails, setShowDetails] = useState(!!place);
+  const [autoFilledFields, setAutoFilledFields] = useState<Set<string>>(new Set());
+
+  // 자동채움 하이라이트 2초 후 제거
+  useEffect(() => {
+    if (autoFilledFields.size === 0) return;
+    const timer = setTimeout(() => setAutoFilledFields(new Set()), 2000);
+    return () => clearTimeout(timer);
+  }, [autoFilledFields]);
 
   const applyScrapeResult = useCallback((data: ScrapedPlace) => {
-    setForm((prev) => ({
-      ...prev,
-      name: data.name || prev.name,
-      category: data.category || prev.category,
-      url: data.url || prev.url,
-      address: data.address || prev.address,
-      rating: data.rating !== null ? String(data.rating) : prev.rating,
-      memo: data.memo || prev.memo,
-      price_per_night: data.price_per_night !== null ? String(data.price_per_night) : prev.price_per_night,
-      cancel_policy: data.cancel_policy || prev.cancel_policy,
-      amenities: data.amenities.length > 0 ? data.amenities.join(", ") : prev.amenities,
-      check_in_time: data.check_in_time || prev.check_in_time,
-      check_out_time: data.check_out_time || prev.check_out_time,
-    }));
+    const filled = new Set<string>();
+    setForm((prev) => {
+      const next = { ...prev };
+      if (data.name) { next.name = data.name; filled.add("name"); }
+      if (data.category) { next.category = data.category; filled.add("category"); }
+      if (data.url) { next.url = data.url; filled.add("url"); }
+      if (data.address) { next.address = data.address; filled.add("address"); }
+      if (data.rating !== null) { next.rating = String(data.rating); filled.add("rating"); }
+      if (data.memo) { next.memo = data.memo; filled.add("memo"); }
+      if (data.price_per_night !== null) { next.price_per_night = String(data.price_per_night); filled.add("price_per_night"); }
+      if (data.cancel_policy) { next.cancel_policy = data.cancel_policy; filled.add("cancel_policy"); }
+      if (data.amenities.length > 0) { next.amenities = data.amenities.join(", "); filled.add("amenities"); }
+      if (data.check_in_time) { next.check_in_time = data.check_in_time; filled.add("check_in_time"); }
+      if (data.check_out_time) { next.check_out_time = data.check_out_time; filled.add("check_out_time"); }
+      return next;
+    });
     if (data.imageUrl) {
       setSearchImageUrl(data.imageUrl);
+    }
+    setAutoFilledFields(filled);
+    // 상세 섹션에 채워진 필드가 있으면 자동 펼침
+    const detailFields = ["rating", "url", "address", "price_per_night", "cancel_policy", "amenities", "check_in_time", "check_out_time", "admission_fee", "estimated_duration"];
+    if (detailFields.some((f) => filled.has(f))) {
+      setShowDetails(true);
     }
   }, []);
 
@@ -337,14 +356,14 @@ export function PlaceForm({
           <TabsContent value="url">
             <div className="flex flex-col gap-2 rounded-lg border border-dashed border-orange-300 bg-orange-50/50 p-3 dark:border-orange-800 dark:bg-orange-950/20">
               <p className="text-xs font-semibold text-orange-700 dark:text-orange-400">
-                호텔 예약 사이트 URL을 붙여넣으세요
+                장소 URL을 붙여넣으세요
               </p>
               <p className="text-xs text-muted-foreground">
-                URL에서 장소 정보를 자동으로 가져옵니다 (Google Places 연동)
+                URL에서 이름, 주소, 이미지, 평점 등을 자동으로 가져옵니다
               </p>
               <div className="flex gap-2">
                 <Input
-                  placeholder="https://www.booking.com/hotel/..."
+                  placeholder="네이버 지도, 구글맵, 부킹닷컴 등 URL"
                   value={scrapeUrl}
                   onChange={(e) => {
                     setScrapeUrl(e.target.value);
@@ -380,7 +399,7 @@ export function PlaceForm({
         </Tabs>
       )}
 
-      {/* 공통 필드 */}
+      {/* 기본 필드 — 항상 노출 */}
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="pf-name">장소명 *</Label>
         <Input
@@ -389,6 +408,7 @@ export function PlaceForm({
           placeholder="장소 이름을 입력하세요"
           value={form.name}
           onChange={(e) => set("name", e.target.value)}
+          className={cn(autoFilledFields.has("name") && "ring-2 ring-primary/50 bg-primary/5 transition-all")}
         />
       </div>
 
@@ -398,7 +418,7 @@ export function PlaceForm({
           value={form.category}
           onValueChange={(v) => set("category", v as PlaceCategory)}
         >
-          <SelectTrigger id="pf-category" className="w-full">
+          <SelectTrigger id="pf-category" className={cn("w-full", autoFilledFields.has("category") && "ring-2 ring-primary/50 bg-primary/5 transition-all")}>
             <SelectValue placeholder="카테고리 선택" />
           </SelectTrigger>
           <SelectContent>
@@ -411,42 +431,6 @@ export function PlaceForm({
         </Select>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="pf-rating">평점 (1-5)</Label>
-          <Input
-            id="pf-rating"
-            type="number"
-            min="1"
-            max="5"
-            step="0.1"
-            placeholder="4.5"
-            value={form.rating}
-            onChange={(e) => set("rating", e.target.value)}
-          />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="pf-url">URL</Label>
-          <Input
-            id="pf-url"
-            type="url"
-            placeholder="https://"
-            value={form.url}
-            onChange={(e) => set("url", e.target.value)}
-          />
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="pf-address">주소</Label>
-        <Input
-          id="pf-address"
-          placeholder="주소를 입력하세요"
-          value={form.address}
-          onChange={(e) => set("address", e.target.value)}
-        />
-      </div>
-
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="pf-memo">메모</Label>
         <Textarea
@@ -454,131 +438,188 @@ export function PlaceForm({
           placeholder="장소에 대한 메모를 남겨주세요"
           value={form.memo}
           onChange={(e) => set("memo", e.target.value)}
-          className="resize-none"
-          rows={3}
+          className={cn("resize-none", autoFilledFields.has("memo") && "ring-2 ring-primary/50 bg-primary/5 transition-all")}
+          rows={2}
         />
       </div>
 
-      {/* 이미지 업로드 */}
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="pf-image">이미지 업로드</Label>
-        <Input
-          id="pf-image"
-          type="file"
-          accept="image/*"
-          onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
-          className="cursor-pointer"
-        />
-      </div>
+      {/* 영업시간 (자동 수집된 경우 읽기 전용 표시) */}
+      {form.opening_hours && (() => {
+        try {
+          const hours = JSON.parse(form.opening_hours) as Record<string, string>;
+          return (
+            <div className="rounded-lg border border-muted bg-muted/30 p-3">
+              <p className="text-xs font-medium text-muted-foreground mb-1">영업시간 (자동 수집)</p>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 text-xs">
+                {Object.entries(hours).map(([day, time]) => (
+                  <p key={day}><span className="font-medium">{day}</span> {String(time)}</p>
+                ))}
+              </div>
+            </div>
+          );
+        } catch {
+          return null;
+        }
+      })()}
 
-      {/* 숙소 전용 필드 */}
-      {isAccommodation && (
-        <div className="flex flex-col gap-3 rounded-lg border border-blue-200 bg-blue-50/50 p-3 dark:border-blue-900 dark:bg-blue-950/20">
-          <p className="text-xs font-semibold text-blue-700 dark:text-blue-400">
-            숙소 정보
-          </p>
+      {/* 상세 정보 토글 */}
+      <button
+        type="button"
+        onClick={() => setShowDetails(!showDetails)}
+        className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors py-1"
+      >
+        <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", showDetails && "rotate-180")} />
+        {showDetails ? "상세 정보 접기" : "상세 정보 펼치기"}
+        {autoFilledFields.size > 0 && !showDetails && (
+          <span className="text-primary font-medium ml-1">(자동 입력됨)</span>
+        )}
+      </button>
 
+      {showDetails && (
+        <div className="flex flex-col gap-3 animate-in slide-in-from-top-2 duration-200">
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="pf-ppn">1박 가격 (원)</Label>
+              <Label htmlFor="pf-rating">평점 (1-5)</Label>
               <Input
-                id="pf-ppn"
+                id="pf-rating"
                 type="number"
-                min="0"
-                placeholder="150000"
-                value={form.price_per_night}
-                onChange={(e) => set("price_per_night", e.target.value)}
+                min="1"
+                max="5"
+                step="0.1"
+                placeholder="4.5"
+                value={form.rating}
+                onChange={(e) => set("rating", e.target.value)}
+                className={cn(autoFilledFields.has("rating") && "ring-2 ring-primary/50 bg-primary/5 transition-all")}
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="pf-cancel">취소 정책</Label>
+              <Label htmlFor="pf-url">URL</Label>
               <Input
-                id="pf-cancel"
-                placeholder="무료취소 7일 전까지"
-                value={form.cancel_policy}
-                onChange={(e) => set("cancel_policy", e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="pf-checkin">체크인</Label>
-              <Input
-                id="pf-checkin"
-                type="time"
-                value={form.check_in_time}
-                onChange={(e) => set("check_in_time", e.target.value)}
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="pf-checkout">체크아웃</Label>
-              <Input
-                id="pf-checkout"
-                type="time"
-                value={form.check_out_time}
-                onChange={(e) => set("check_out_time", e.target.value)}
+                id="pf-url"
+                type="url"
+                placeholder="https://"
+                value={form.url}
+                onChange={(e) => set("url", e.target.value)}
               />
             </div>
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="pf-amenities">부대시설 (쉼표로 구분)</Label>
+            <Label htmlFor="pf-address">주소</Label>
             <Input
-              id="pf-amenities"
-              placeholder="수영장, 피트니스, 레스토랑"
-              value={form.amenities}
-              onChange={(e) => set("amenities", e.target.value)}
+              id="pf-address"
+              placeholder="주소를 입력하세요"
+              value={form.address}
+              onChange={(e) => set("address", e.target.value)}
+              className={cn(autoFilledFields.has("address") && "ring-2 ring-primary/50 bg-primary/5 transition-all")}
             />
           </div>
-        </div>
-      )}
 
-      {/* 관광지 / 맛집 전용 필드 */}
-      {isAttractionOrRestaurant && (
-        <div className="flex flex-col gap-3 rounded-lg border border-green-200 bg-green-50/50 p-3 dark:border-green-900 dark:bg-green-950/20">
-          <p className="text-xs font-semibold text-green-700 dark:text-green-400">
-            {form.category === "attraction" ? "관광지 정보" : "맛집 정보"}
-          </p>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="pf-fee">입장료 (원)</Label>
-              <Input
-                id="pf-fee"
-                type="number"
-                min="0"
-                placeholder="10000"
-                value={form.admission_fee}
-                onChange={(e) => set("admission_fee", e.target.value)}
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="pf-duration">소요시간 (분)</Label>
-              <Input
-                id="pf-duration"
-                type="number"
-                min="0"
-                placeholder="120"
-                value={form.estimated_duration}
-                onChange={(e) => set("estimated_duration", e.target.value)}
-              />
-            </div>
-          </div>
-
+          {/* 이미지 업로드 */}
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="pf-hours">
-              영업시간 (JSON 형식, 예: {"{'월':'09:00-18:00'}"})
-            </Label>
-            <Textarea
-              id="pf-hours"
-              placeholder='{"월": "09:00-18:00", "화": "09:00-18:00"}'
-              value={form.opening_hours}
-              onChange={(e) => set("opening_hours", e.target.value)}
-              className="resize-none font-mono text-xs"
-              rows={3}
+            <Label htmlFor="pf-image">이미지 업로드</Label>
+            <Input
+              id="pf-image"
+              type="file"
+              accept="image/*"
+              onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
+              className="cursor-pointer"
             />
           </div>
+
+          {/* 숙소 전용 필드 */}
+          {isAccommodation && (
+            <div className="flex flex-col gap-3 rounded-lg border border-blue-200 bg-blue-50/50 p-3 dark:border-blue-900 dark:bg-blue-950/20">
+              <p className="text-xs font-semibold text-blue-700 dark:text-blue-400">
+                숙소 정보
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="pf-ppn">1박 가격 (원)</Label>
+                  <Input
+                    id="pf-ppn"
+                    type="number"
+                    min="0"
+                    placeholder="150000"
+                    value={form.price_per_night}
+                    onChange={(e) => set("price_per_night", e.target.value)}
+                    className={cn(autoFilledFields.has("price_per_night") && "ring-2 ring-primary/50 bg-primary/5 transition-all")}
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="pf-cancel">취소 정책</Label>
+                  <Input
+                    id="pf-cancel"
+                    placeholder="무료취소 7일 전까지"
+                    value={form.cancel_policy}
+                    onChange={(e) => set("cancel_policy", e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="pf-checkin">체크인</Label>
+                  <Input
+                    id="pf-checkin"
+                    type="time"
+                    value={form.check_in_time}
+                    onChange={(e) => set("check_in_time", e.target.value)}
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="pf-checkout">체크아웃</Label>
+                  <Input
+                    id="pf-checkout"
+                    type="time"
+                    value={form.check_out_time}
+                    onChange={(e) => set("check_out_time", e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="pf-amenities">부대시설 (쉼표로 구분)</Label>
+                <Input
+                  id="pf-amenities"
+                  placeholder="수영장, 피트니스, 레스토랑"
+                  value={form.amenities}
+                  onChange={(e) => set("amenities", e.target.value)}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* 관광지 / 맛집 전용 필드 */}
+          {isAttractionOrRestaurant && (
+            <div className="flex flex-col gap-3 rounded-lg border border-green-200 bg-green-50/50 p-3 dark:border-green-900 dark:bg-green-950/20">
+              <p className="text-xs font-semibold text-green-700 dark:text-green-400">
+                {form.category === "attraction" ? "관광지 정보" : "맛집 정보"}
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="pf-fee">입장료 (원)</Label>
+                  <Input
+                    id="pf-fee"
+                    type="number"
+                    min="0"
+                    placeholder="10000"
+                    value={form.admission_fee}
+                    onChange={(e) => set("admission_fee", e.target.value)}
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="pf-duration">소요시간 (분)</Label>
+                  <Input
+                    id="pf-duration"
+                    type="number"
+                    min="0"
+                    placeholder="120"
+                    value={form.estimated_duration}
+                    onChange={(e) => set("estimated_duration", e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { Trip } from "@/types/database";
 import { nanoid } from "nanoid";
-import { MapPin, CalendarDays, Compass } from "lucide-react";
+import { MapPin, CalendarDays, Compass, Share2, X } from "lucide-react";
 import { TripCardSkeleton } from "@/components/layout/loading-skeleton";
 
 export default function DashboardPage() {
@@ -28,6 +28,16 @@ export default function DashboardPage() {
   const supabase = createClient();
   const router = useRouter();
   const { user } = useAuthStore();
+
+  const [showShareTip, setShowShareTip] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return !localStorage.getItem("hide-share-tip");
+  });
+
+  function dismissShareTip() {
+    localStorage.setItem("hide-share-tip", "1");
+    setShowShareTip(false);
+  }
 
   // 폼 상태
   const [title, setTitle] = useState("");
@@ -153,6 +163,30 @@ export default function DashboardPage() {
         </div>
       </header>
 
+      {/* Share Target 온보딩 배너 */}
+      {showShareTip && !loading && trips.length > 0 && (
+        <div className="mb-6 flex items-start gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4 animate-fade-in-up">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+            <Share2 className="h-4.5 w-4.5 text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-foreground">
+              네이버 지도, 구글맵에서 공유 버튼만 누르면 장소가 자동 저장됩니다
+            </p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              앱을 설치하면 다른 앱에서 바로 공유할 수 있어요
+            </p>
+          </div>
+          <button
+            onClick={dismissShareTip}
+            className="shrink-0 rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            aria-label="닫기"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
       {loading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map((i) => (
@@ -166,7 +200,9 @@ export default function DashboardPage() {
           </div>
           <div className="space-y-1">
             <p className="font-medium text-foreground/80">아직 여행이 없어요</p>
-            <p className="text-sm text-muted-foreground">새 여행을 만들어 보세요!</p>
+            <p className="text-sm text-muted-foreground">
+              새 여행을 만들고, 네이버 지도나 구글맵에서 장소를 공유해보세요
+            </p>
           </div>
         </div>
       ) : (

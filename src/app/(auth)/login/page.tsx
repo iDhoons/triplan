@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plane, Cloud, Globe, Mail, Lock } from "lucide-react";
+import { humanizeError } from "@/lib/error-messages";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -28,7 +29,7 @@ export default function LoginPage() {
     });
 
     if (error) {
-      setError(error.message);
+      setError(humanizeError(error.message));
       setLoading(false);
       return;
     }

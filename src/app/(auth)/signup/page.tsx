@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { humanizeError } from "@/lib/error-messages";
 import { Plane, Cloud, Globe, User, Mail, Lock } from "lucide-react";
 
 export default function SignupPage() {
@@ -35,7 +36,7 @@ export default function SignupPage() {
     });
 
     if (error) {
-      setError(error.message);
+      setError(humanizeError(error.message));
       setLoading(false);
       return;
     }

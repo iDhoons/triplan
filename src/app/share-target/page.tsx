@@ -57,14 +57,17 @@ function ShareTargetContent() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
 
-  const sharedUrl =
+  // title 폴백 추가 (E20 대응)
+  const sharedInput =
     searchParams.get("url") ||
     searchParams.get("text") ||
+    searchParams.get("title") ||
     "";
 
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [savedPlaceName, setSavedPlaceName] = useState<string | null>(null);
   const [savedTripName, setSavedTripName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [duplicate, setDuplicate] = useState<{
@@ -105,7 +108,7 @@ function ShareTargetContent() {
 
   // 여행 1개 또는 점착성 맥락 → 자동 저장
   useEffect(() => {
-    if (loading || !sharedUrl || trips.length === 0) return;
+    if (loading || !sharedInput || trips.length === 0) return;
 
     if (trips.length === 1) {
       handleSave(trips[0]);
@@ -121,11 +124,11 @@ function ShareTargetContent() {
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading, trips, sharedUrl]);
+  }, [loading, trips, sharedInput]);
 
   const handleSave = useCallback(
     async (trip: Trip) => {
-      if (!sharedUrl || saving) return;
+      if (!sharedInput || saving) return;
       setSaving(true);
       setError(null);
 
@@ -133,7 +136,7 @@ function ShareTargetContent() {
         const res = await fetch("/api/places/share", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url: sharedUrl, trip_id: trip.id }),
+          body: JSON.stringify({ url: sharedInput, trip_id: trip.id }),
         });
 
         const data = await res.json();
@@ -150,13 +153,15 @@ function ShareTargetContent() {
 
         setStickyTrip(trip.id);
         setSavedTripName(trip.title);
+        // 서버 응답의 name 필드 활용
+        setSavedPlaceName(data.name ?? null);
       } catch (err) {
         setError(err instanceof Error ? err.message : "저장에 실패했습니다");
       } finally {
         setSaving(false);
       }
     },
-    [sharedUrl, saving]
+    [sharedInput, saving]
   );
 
   // 미인증 → 로그인
@@ -171,7 +176,7 @@ function ShareTargetContent() {
             <Button
               onClick={() =>
                 router.push(
-                  `/login?redirect=${encodeURIComponent(`/share-target?url=${encodeURIComponent(sharedUrl)}`)}`
+                  `/login?redirect=${encodeURIComponent(`/share-target?url=${encodeURIComponent(sharedInput)}`)}`
                 )
               }
             >
@@ -183,14 +188,14 @@ function ShareTargetContent() {
     );
   }
 
-  // URL 없음
-  if (!sharedUrl) {
+  // 입력 없음
+  if (!sharedInput) {
     return (
       <div className="flex min-h-screen items-center justify-center p-4">
         <Card className="w-full max-w-sm">
           <CardContent className="flex flex-col items-center gap-4 pt-6">
             <p className="text-sm text-muted-foreground">
-              공유된 URL이 없습니다
+              공유된 내용이 없습니다
             </p>
             <Button onClick={() => router.push("/dashboard")}>
               대시보드로 이동
@@ -212,6 +217,11 @@ function ShareTargetContent() {
 
   // 저장 완료
   if (savedTripName) {
+    // URL인지 텍스트인지에 따라 표시 내용 결정
+    const displayText = savedPlaceName && savedPlaceName !== "불러오는 중..."
+      ? savedPlaceName
+      : sharedInput;
+
     return (
       <div className="flex min-h-screen items-center justify-center p-4">
         <Card className="w-full max-w-sm">
@@ -223,7 +233,7 @@ function ShareTargetContent() {
               &ldquo;{savedTripName}&rdquo;에 저장됨
             </p>
             <p className="max-w-[250px] truncate text-xs text-muted-foreground">
-              {sharedUrl}
+              {displayText}
             </p>
             <div className="flex gap-2">
               <Button
@@ -232,6 +242,7 @@ function ShareTargetContent() {
                 onClick={() => {
                   // 점착성 맥락 해제 + 여행 선택 UI 표시
                   setSavedTripName(null);
+                  setSavedPlaceName(null);
                 }}
               >
                 다른 여행으로
@@ -249,7 +260,7 @@ function ShareTargetContent() {
     );
   }
 
-  // 중복 URL
+  // 중복
   if (duplicate) {
     return (
       <div className="flex min-h-screen items-center justify-center p-4">
@@ -307,7 +318,7 @@ function ShareTargetContent() {
         <CardContent className="flex flex-col gap-3 pt-6">
           <p className="text-sm font-medium">어떤 여행에 저장할까요?</p>
           <p className="max-w-full truncate text-xs text-muted-foreground">
-            {sharedUrl}
+            {sharedInput}
           </p>
 
           <div className="flex flex-col gap-2">
@@ -342,7 +353,27 @@ function ShareTargetContent() {
           )}
 
           {error && (
-            <p className="text-center text-xs text-destructive">{error}</p>
+            <div className="flex flex-col items-center gap-2">
+              <p className="text-center text-xs text-destructive">{error}</p>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    navigator.clipboard.writeText(sharedInput);
+                  }}
+                >
+                  텍스트 복사
+                </Button>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => router.push("/dashboard")}
+                >
+                  직접 추가하기
+                </Button>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>
