@@ -430,10 +430,14 @@ export default function SchedulePage() {
           {/* Main schedule area */}
           <div className="flex-1 min-w-0">
             {schedules.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground">
-                <CalendarDays className="w-10 h-10 opacity-30" />
-                <p className="text-sm">아직 일정이 없습니다.</p>
-                <p className="text-xs">여행 날짜별 일정을 자동 생성 중...</p>
+              <div className="flex flex-col items-center gap-4 py-20 text-center animate-fade-in-up">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
+                  <CalendarDays className="h-8 w-8 text-primary/60" />
+                </div>
+                <div className="space-y-1">
+                  <p className="font-medium text-foreground/80">아직 일정이 없습니다</p>
+                  <p className="text-sm text-muted-foreground">여행 날짜별 일정을 자동 생성 중...</p>
+                </div>
               </div>
             ) : viewMode === "calendar" ? (
               <CalendarView
@@ -489,7 +493,7 @@ export default function SchedulePage() {
                       )
                       .map((item, idx) => (
                         <li key={item.id} className="flex items-center gap-2">
-                          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-500 text-[10px] font-bold text-white">
+                          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
                             {idx + 1}
                           </span>
                           <span>{item.title}</span>

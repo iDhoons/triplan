@@ -216,7 +216,7 @@ function ShareTargetContent() {
       <div className="flex min-h-screen items-center justify-center p-4">
         <Card className="w-full max-w-sm">
           <CardContent className="flex flex-col items-center gap-4 pt-6">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
               <span className="text-xl">✓</span>
             </div>
             <p className="text-sm font-medium">

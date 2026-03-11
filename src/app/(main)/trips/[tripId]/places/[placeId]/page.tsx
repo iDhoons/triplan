@@ -59,10 +59,10 @@ const CATEGORY_LABELS: Record<PlaceCategory, string> = {
 };
 
 const CATEGORY_COLORS: Record<PlaceCategory, string> = {
-  accommodation: "bg-blue-100 text-blue-800",
-  attraction: "bg-green-100 text-green-800",
-  restaurant: "bg-orange-100 text-orange-800",
-  other: "bg-gray-100 text-gray-800",
+  accommodation: "bg-cat-accommodation text-cat-accommodation-fg",
+  attraction: "bg-cat-attraction text-cat-attraction-fg",
+  restaurant: "bg-cat-restaurant text-cat-restaurant-fg",
+  other: "bg-cat-other text-cat-other-fg",
 };
 
 export default function PlaceDetailPage() {

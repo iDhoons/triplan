@@ -198,8 +198,15 @@ export default function BudgetPage() {
     return (
       <div className="space-y-4">
         {[1, 2, 3].map((i) => (
-          <Card key={i} className="animate-pulse">
-            <CardContent className="h-24" />
+          <Card key={i}>
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl animate-shimmer shrink-0" />
+              <div className="flex-1 space-y-2">
+                <div className="h-4 w-1/2 rounded animate-shimmer" />
+                <div className="h-3 w-1/3 rounded animate-shimmer" />
+              </div>
+              <div className="h-5 w-16 rounded animate-shimmer shrink-0" />
+            </CardContent>
           </Card>
         ))}
       </div>
@@ -514,10 +521,14 @@ export default function BudgetPage() {
 
       {/* Expense list grouped by date */}
       {groupedExpenses.length === 0 ? (
-        <div className="text-center py-16 text-muted-foreground">
-          <p className="text-3xl mb-3">💸</p>
-          <p className="font-medium">아직 지출 내역이 없어요</p>
-          <p className="text-sm mt-1">지출을 추가해보세요!</p>
+        <div className="flex flex-col items-center gap-4 py-20 text-center animate-fade-in-up">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
+            <svg className="h-8 w-8 text-primary/60" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg>
+          </div>
+          <div className="space-y-1">
+            <p className="font-medium text-foreground/80">아직 지출 내역이 없어요</p>
+            <p className="text-sm text-muted-foreground">지출을 추가해보세요!</p>
+          </div>
         </div>
       ) : (
         <div className="space-y-4">

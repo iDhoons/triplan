@@ -17,6 +17,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { Trip } from "@/types/database";
 import { nanoid } from "nanoid";
+import { MapPin, CalendarDays, Compass } from "lucide-react";
+import { TripCardSkeleton } from "@/components/layout/loading-skeleton";
 
 export default function DashboardPage() {
   const [trips, setTrips] = useState<Trip[]>([]);
@@ -94,8 +96,8 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <header className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">내 여행</h1>
+      <header className="flex items-center justify-between mb-8">
+        <h1 className="text-2xl sm:text-3xl">내 여행</h1>
         <div className="flex items-center gap-3">
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger render={<Button>+ 새 여행</Button>} />
@@ -154,37 +156,44 @@ export default function DashboardPage() {
       {loading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map((i) => (
-            <Card key={i} className="animate-pulse">
-              <CardContent className="h-32" />
-            </Card>
+            <TripCardSkeleton key={i} />
           ))}
         </div>
       ) : trips.length === 0 ? (
-        <div className="text-center py-20 text-muted-foreground">
-          <p className="text-4xl mb-4">🧳</p>
-          <p className="text-lg font-medium">아직 여행이 없어요</p>
-          <p className="text-sm mt-1">새 여행을 만들어보세요!</p>
+        <div className="flex flex-col items-center gap-4 py-20 text-center animate-fade-in-up">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
+            <Compass className="h-8 w-8 text-primary/60" />
+          </div>
+          <div className="space-y-1">
+            <p className="font-medium text-foreground/80">아직 여행이 없어요</p>
+            <p className="text-sm text-muted-foreground">새 여행을 만들어 보세요!</p>
+          </div>
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 animate-stagger">
           {trips.map((trip) => (
             <Card
               key={trip.id}
-              className="cursor-pointer hover:shadow-md transition-shadow"
+              className="cursor-pointer hover:shadow-lg hover:ring-primary/20 hover:-translate-y-0.5"
               onClick={() => router.push(`/trips/${trip.id}/places`)}
             >
               <CardContent className="p-5">
-                <h3 className="font-semibold text-lg">{trip.title}</h3>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {trip.destination}
-                </p>
-                <div className="flex items-center gap-2 mt-3 text-xs text-muted-foreground">
-                  <span>
-                    {formatDate(trip.start_date)} ~{" "}
-                    {formatDate(trip.end_date)}
-                  </span>
-                  <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <h3 className="font-semibold text-base truncate">{trip.title}</h3>
+                    <div className="flex items-center gap-1.5 mt-1.5 text-muted-foreground">
+                      <MapPin className="h-3.5 w-3.5 shrink-0" />
+                      <span className="text-sm truncate">{trip.destination}</span>
+                    </div>
+                  </div>
+                  <span className="shrink-0 bg-primary/10 text-primary text-xs font-medium px-2.5 py-1 rounded-full">
                     {getDaysLabel(trip)}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5 mt-4 pt-3 border-t border-border/50 text-xs text-muted-foreground">
+                  <CalendarDays className="h-3.5 w-3.5" />
+                  <span>
+                    {formatDate(trip.start_date)} ~ {formatDate(trip.end_date)}
                   </span>
                 </div>
               </CardContent>

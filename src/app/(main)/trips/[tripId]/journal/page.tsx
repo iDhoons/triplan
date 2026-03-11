@@ -17,7 +17,7 @@ import {
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { TripJournal } from "@/types/database";
-import { Plus, Trash2, ImagePlus, X } from "lucide-react";
+import { Plus, Trash2, ImagePlus, X, BookOpen } from "lucide-react";
 
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString("ko-KR", {
@@ -179,8 +179,18 @@ export default function JournalPage() {
     return (
       <div className="space-y-4">
         {[1, 2].map((i) => (
-          <Card key={i} className="animate-pulse">
-            <CardContent className="h-36" />
+          <Card key={i}>
+            <CardContent className="p-5 space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="h-8 w-8 rounded-full animate-shimmer" />
+                <div className="space-y-1.5 flex-1">
+                  <div className="h-4 w-1/3 rounded animate-shimmer" />
+                  <div className="h-3 w-1/5 rounded animate-shimmer" />
+                </div>
+              </div>
+              <div className="h-4 w-full rounded animate-shimmer" />
+              <div className="h-4 w-2/3 rounded animate-shimmer" />
+            </CardContent>
           </Card>
         ))}
       </div>
@@ -293,10 +303,14 @@ export default function JournalPage() {
 
       {/* Journal list */}
       {journals.length === 0 ? (
-        <div className="text-center py-16 text-muted-foreground">
-          <p className="text-4xl mb-3">📖</p>
-          <p className="font-medium">아직 후기가 없어요</p>
-          <p className="text-sm mt-1">여행의 소중한 기억을 기록해보세요!</p>
+        <div className="flex flex-col items-center gap-4 py-20 text-center animate-fade-in-up">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
+            <BookOpen className="h-8 w-8 text-primary/60" />
+          </div>
+          <div className="space-y-1">
+            <p className="font-medium text-foreground/80">아직 후기가 없어요</p>
+            <p className="text-sm text-muted-foreground">여행의 소중한 기억을 기록해보세요!</p>
+          </div>
         </div>
       ) : (
         <div className="space-y-4">

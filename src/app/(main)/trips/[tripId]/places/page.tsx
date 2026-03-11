@@ -31,6 +31,7 @@ import { createClient } from "@/lib/supabase/client";
 import { PlaceForm } from "@/components/places/place-form";
 import { PlaceMap } from "@/components/maps/place-map";
 import { usePlaces } from "@/hooks/use-places";
+import { PlaceCardSkeleton } from "@/components/layout/loading-skeleton";
 import { cn } from "@/lib/utils";
 import type { Place, PlaceCategory } from "@/types/database";
 
@@ -370,27 +371,30 @@ export default function PlacesPage() {
             {loading ? (
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {[...Array(4)].map((_, i) => (
-                  <div
-                    key={i}
-                    className="h-48 animate-pulse rounded-xl bg-muted"
-                  />
+                  <PlaceCardSkeleton key={i} />
                 ))}
               </div>
             ) : filtered.length === 0 ? (
-              <div className="flex flex-col items-center gap-3 py-16 text-center text-muted-foreground">
-                <MapPinIcon className="size-10 opacity-30" />
-                <p className="text-sm">아직 등록된 장소가 없어요</p>
+              <div className="flex flex-col items-center gap-4 py-20 text-center animate-fade-in-up">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
+                  <MapPinIcon className="h-8 w-8 text-primary/60" />
+                </div>
+                <div className="space-y-1">
+                  <p className="font-medium text-foreground/80">아직 등록된 장소가 없어요</p>
+                  <p className="text-sm text-muted-foreground">가보고 싶은 장소를 추가해보세요!</p>
+                </div>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setDialogOpen(true)}
+                  className="mt-1"
                 >
                   <PlusIcon className="size-3.5" />
                   장소 추가하기
                 </Button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 animate-stagger">
                 {filtered.map((place) => (
                   <PlaceCard
                     key={place.id}

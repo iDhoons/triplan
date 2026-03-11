@@ -23,13 +23,13 @@ export function BottomNav() {
               href={item.href}
               aria-current={isActive ? "page" : undefined}
               className={cn(
-                "flex flex-col items-center gap-1 text-xs min-w-0",
+                "flex flex-col items-center gap-1 text-xs min-w-0 transition-all duration-200 active:scale-95",
                 isActive
                   ? "text-primary font-medium"
                   : "text-muted-foreground"
               )}
             >
-              <Icon className="w-5 h-5" />
+              <Icon className={cn("w-5 h-5 transition-transform duration-200", isActive && "scale-110")} />
               <span className="truncate">{item.label}</span>
             </Link>
           );

@@ -48,6 +48,22 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+  /* Auth gradient */
+  --color-auth-gradient-from: var(--auth-gradient-from);
+  --color-auth-gradient-to: var(--auth-gradient-to);
+  /* Category semantic colors */
+  --color-cat-accommodation: var(--category-accommodation);
+  --color-cat-accommodation-fg: var(--category-accommodation-fg);
+  --color-cat-accommodation-border: var(--category-accommodation-border);
+  --color-cat-attraction: var(--category-attraction);
+  --color-cat-attraction-fg: var(--category-attraction-fg);
+  --color-cat-attraction-border: var(--category-attraction-border);
+  --color-cat-restaurant: var(--category-restaurant);
+  --color-cat-restaurant-fg: var(--category-restaurant-fg);
+  --color-cat-restaurant-border: var(--category-restaurant-border);
+  --color-cat-other: var(--category-other);
+  --color-cat-other-fg: var(--category-other-fg);
+  --color-cat-other-border: var(--category-other-border);
 }
 
 :root {
@@ -57,32 +73,48 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.636 0.178 47);
+  --primary-foreground: oklch(1 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.50 0 0);
+  --accent: oklch(0.97 0.005 55);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.58 0.22 27);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.809 0.105 251.813);
+  --ring: oklch(0.636 0.178 47);
+  --chart-1: oklch(0.636 0.178 47);
   --chart-2: oklch(0.623 0.214 259.815);
-  --chart-3: oklch(0.546 0.245 262.881);
+  --chart-3: oklch(0.65 0.18 155);
   --chart-4: oklch(0.488 0.243 264.376);
-  --chart-5: oklch(0.424 0.199 265.638);
+  --chart-5: oklch(0.58 0.22 27);
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-primary: oklch(0.636 0.178 47);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.97 0.005 55);
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar-ring: oklch(0.636 0.178 47);
+  /* Auth gradient */
+  --auth-gradient-from: oklch(0.95 0.04 55);
+  --auth-gradient-to: oklch(0.95 0.04 230);
+  /* Category semantic colors */
+  --category-accommodation: oklch(0.93 0.04 250);
+  --category-accommodation-fg: oklch(0.45 0.12 250);
+  --category-accommodation-border: oklch(0.86 0.06 250);
+  --category-attraction: oklch(0.93 0.04 155);
+  --category-attraction-fg: oklch(0.45 0.12 155);
+  --category-attraction-border: oklch(0.86 0.06 155);
+  --category-restaurant: oklch(0.93 0.05 55);
+  --category-restaurant-fg: oklch(0.50 0.14 47);
+  --category-restaurant-border: oklch(0.86 0.07 55);
+  --category-other: oklch(0.94 0 0);
+  --category-other-fg: oklch(0.45 0 0);
+  --category-other-border: oklch(0.88 0 0);
 }
 
 .dark {
@@ -92,31 +124,47 @@
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.87 0.00 0);
-  --primary-foreground: oklch(0.205 0 0);
+  --primary: oklch(0.72 0.16 47);
+  --primary-foreground: oklch(0.15 0.02 47);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
   --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.371 0 0);
+  --accent: oklch(0.30 0.02 55);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.809 0.105 251.813);
+  --ring: oklch(0.72 0.16 47);
+  --chart-1: oklch(0.72 0.16 47);
   --chart-2: oklch(0.623 0.214 259.815);
-  --chart-3: oklch(0.546 0.245 262.881);
+  --chart-3: oklch(0.70 0.16 155);
   --chart-4: oklch(0.488 0.243 264.376);
-  --chart-5: oklch(0.424 0.199 265.638);
+  --chart-5: oklch(0.704 0.191 22.216);
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-primary: oklch(0.72 0.16 47);
+  --sidebar-primary-foreground: oklch(0.15 0.02 47);
+  --sidebar-accent: oklch(0.30 0.02 55);
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --sidebar-ring: oklch(0.72 0.16 47);
+  /* Auth gradient (dark) */
+  --auth-gradient-from: oklch(0.20 0.03 55);
+  --auth-gradient-to: oklch(0.20 0.03 230);
+  /* Category semantic colors (dark) */
+  --category-accommodation: oklch(0.22 0.04 250);
+  --category-accommodation-fg: oklch(0.78 0.08 250);
+  --category-accommodation-border: oklch(0.32 0.06 250);
+  --category-attraction: oklch(0.22 0.04 155);
+  --category-attraction-fg: oklch(0.78 0.08 155);
+  --category-attraction-border: oklch(0.32 0.06 155);
+  --category-restaurant: oklch(0.22 0.04 55);
+  --category-restaurant-fg: oklch(0.78 0.10 47);
+  --category-restaurant-border: oklch(0.32 0.06 55);
+  --category-other: oklch(0.25 0 0);
+  --category-other-fg: oklch(0.75 0 0);
+  --category-other-border: oklch(0.35 0 0);
 }
 
 @layer base {
@@ -134,8 +182,61 @@
     letter-spacing: -0.01em;
     word-spacing: -0.02em;
   }
-  h1, h2, h3, h4, h5, h6 {
+  h1 {
+    letter-spacing: -0.03em;
+    font-weight: 800;
+  }
+  h2 {
     letter-spacing: -0.025em;
     font-weight: 700;
   }
+  h3, h4, h5, h6 {
+    letter-spacing: -0.02em;
+    font-weight: 600;
+  }
 }
+
+/* ── Animations ── */
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes stagger-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.4s ease-out both;
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--muted) 0%,
+    oklch(0.90 0 0) 20%,
+    var(--muted) 40%,
+    var(--muted) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+}
+
+.animate-stagger > * {
+  opacity: 0;
+  animation: stagger-fade-in 0.35s ease-out forwards;
+}
+.animate-stagger > *:nth-child(1) { animation-delay: 0ms; }
+.animate-stagger > *:nth-child(2) { animation-delay: 60ms; }
+.animate-stagger > *:nth-child(3) { animation-delay: 120ms; }
+.animate-stagger > *:nth-child(4) { animation-delay: 180ms; }
+.animate-stagger > *:nth-child(5) { animation-delay: 240ms; }
+.animate-stagger > *:nth-child(6) { animation-delay: 300ms; }
+.animate-stagger > *:nth-child(n+7) { animation-delay: 350ms; }
