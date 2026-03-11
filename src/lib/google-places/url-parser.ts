@@ -39,11 +39,25 @@ const SITE_PATTERNS: {
   },
   {
     // agoda.com/hotel-name/hotel/city-id.html
+    // agoda.com/ko-kr/hotel-name/hotel/city-id.html (locale prefix)
     match: /agoda\.(com|net)/i,
     site: "agoda",
     extract: (url) => {
-      const m = url.pathname.match(/^\/([^/]+)\/hotel\//);
-      return m ? decodeAndClean(m[1]) : null;
+      // locale prefix (ko-kr, en-gb 등) 선택적 스킵 + 도시 정보도 추출
+      const m = url.pathname.match(/^\/(?:[a-z]{2}(?:-[a-z]{2,4})?\/)?([^/]+)\/hotel\/([^/.]+)/i);
+      if (!m) return null;
+      // _숫자 접미사 제거 (Agoda 내부 식별자, 예: hotel-eden_2 → hotel eden)
+      let name = decodeAndClean(m[1]).replace(/\s*\d+$/, "").trim();
+      // 도시 정보 추가 (jeju-island-kr → jeju)
+      const citySlug = m[2];
+      if (citySlug) {
+        const city = citySlug.replace(/-(?:kr|jp|th|vn|id|tw|cn|sg|my|ph|us|uk|au|all)\b.*$/i, "")
+          .replace(/[-_]/g, " ").trim();
+        if (city && !name.toLowerCase().includes(city.toLowerCase())) {
+          name = `${name} ${city}`;
+        }
+      }
+      return name;
     },
   },
   {

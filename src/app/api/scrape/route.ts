@@ -117,19 +117,26 @@ export async function POST(request: Request) {
 
   try {
     const scraped = await scrapeUrl(url);
+    console.log("[scrape] HTML result:", { name: scraped.name, address: scraped.address, imageUrl: scraped.imageUrl?.substring(0, 50) });
 
     // HTML 스크래핑 성공 후 Places API로 추가 정보 보강 (좌표, 전화 등)
     let enriched: Awaited<ReturnType<typeof import("@/lib/google-places").enrichFromUrl>> = null;
     try {
       const { enrichFromUrl } = await import("@/lib/google-places");
       enriched = await enrichFromUrl(url);
-    } catch {
+      console.log("[scrape] Places enrichment:", { name: enriched?.name, address: enriched?.address });
+    } catch (enrichErr) {
+      console.error("[scrape] Places enrichment failed:", enrichErr);
       // Places API 실패해도 스크래핑 결과는 반환
     }
 
     // 머지: 스크래핑 우선, 빈 필드만 Places API로 채움
+    const finalName = scraped.name ?? enriched?.name ?? null;
+    console.log("[scrape] Final merged name:", finalName);
     return NextResponse.json({
       ...scraped,
+      name: finalName,
+      category: scraped.category ?? enriched?.category ?? null,
       address: scraped.address ?? enriched?.address ?? null,
       rating: scraped.rating ?? enriched?.rating ?? null,
       imageUrl: scraped.imageUrl ?? enriched?.image_urls[0] ?? null,

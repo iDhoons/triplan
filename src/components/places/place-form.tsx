@@ -171,6 +171,11 @@ export function PlaceForm({
         throw new Error(err.error ?? "스크래핑에 실패했습니다");
       }
       const data: ScrapedPlace = await res.json();
+      // 의미 있는 데이터가 없으면 사용자에게 알림
+      if (!data.name && !data.address && !data.imageUrl) {
+        setScrapeError("이 URL에서 정보를 가져오지 못했습니다. 장소명을 직접 입력해주세요.");
+        return;
+      }
       applyScrapeResult(data);
     } catch (err) {
       setScrapeError(err instanceof Error ? err.message : "스크래핑에 실패했습니다");
@@ -227,7 +232,11 @@ export function PlaceForm({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!user) return;
+    console.log("[PlaceForm] handleSubmit called, user:", user?.id ?? "NULL");
+    if (!user) {
+      console.error("[PlaceForm] ⛔ user is NULL — submit 중단됨");
+      return;
+    }
     setSubmitting(true);
     setError(null);
 
@@ -294,6 +303,8 @@ export function PlaceForm({
         added_by: user.id,
       };
 
+      console.log("[PlaceForm] payload:", JSON.stringify(payload, null, 2));
+
       if (place) {
         const { data, error: updateErr } = await supabase
           .from("places")
@@ -301,6 +312,7 @@ export function PlaceForm({
           .eq("id", place.id)
           .select()
           .single();
+        console.log("[PlaceForm] UPDATE result:", { data: !!data, error: updateErr });
         if (updateErr) throw updateErr;
         onSuccess(data as Place);
       } else {
@@ -309,10 +321,12 @@ export function PlaceForm({
           .insert(payload)
           .select()
           .single();
+        console.log("[PlaceForm] INSERT result:", { data: !!data, error: insertErr });
         if (insertErr) throw insertErr;
         onSuccess(data as Place);
       }
     } catch (err) {
+      console.error("[PlaceForm] ⛔ CATCH:", err);
       setError(err instanceof Error ? err.message : "오류가 발생했습니다.");
     } finally {
       setSubmitting(false);
