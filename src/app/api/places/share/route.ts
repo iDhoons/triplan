@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { enrichFromUrl } from "@/lib/google-places";
 import { NextResponse } from "next/server";
+import { after } from "next/server";
 
 // Rate limiter (in-memory, 프로덕션에서는 Upstash Redis 권장)
 const rateLimitMap = new Map<string, { count: number; reset: number }>();
@@ -121,8 +122,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "저장에 실패했습니다" }, { status: 500 });
   }
 
-  // 비동기 풍부화 (best-effort, waitUntil 대체로 fire-and-forget)
-  enrichPlaceInBackground(supabase, place.id, url);
+  // 비동기 풍부화: after()로 응답 반환 후에도 실행을 보장
+  after(async () => {
+    await enrichPlaceInBackground(supabase, place.id, url);
+  });
 
   return NextResponse.json(
     { place_id: place.id, enriched: false },

@@ -38,24 +38,13 @@ import type {
   CurrencyCode,
 } from "@/types/database";
 import { Plus, Pencil, Trash2 } from "lucide-react";
-
-const CATEGORY_LABELS: Record<ExpenseCategory, string> = {
-  accommodation: "숙박",
-  food: "식비",
-  transport: "교통",
-  activity: "액티비티",
-  shopping: "쇼핑",
-  other: "기타",
-};
-
-const CATEGORY_COLORS: Record<ExpenseCategory, string> = {
-  accommodation: "#6366f1",
-  food: "#f59e0b",
-  transport: "#10b981",
-  activity: "#3b82f6",
-  shopping: "#ec4899",
-  other: "#8b5cf6",
-};
+import {
+  CATEGORY_LABELS,
+  CATEGORY_COLORS,
+  calculateSettlement,
+  calculateCategoryTotals,
+  groupExpensesByDate,
+} from "@/lib/services/budget";
 
 const CURRENCY_OPTIONS: CurrencyCode[] = [
   "KRW",
@@ -204,75 +193,22 @@ export default function BudgetPage() {
   const remaining = totalBudget - totalSpent;
 
   // Category totals for pie chart
-  const categoryData = useMemo(() => {
-    const map: Partial<Record<ExpenseCategory, number>> = {};
-    expenses.forEach((e) => {
-      map[e.category] = (map[e.category] ?? 0) + e.amount;
-    });
-    return Object.entries(map).map(([cat, value]) => ({
-      name: CATEGORY_LABELS[cat as ExpenseCategory],
-      value,
-      color: CATEGORY_COLORS[cat as ExpenseCategory],
-    }));
-  }, [expenses]);
+  const categoryData = useMemo(
+    () => calculateCategoryTotals(expenses),
+    [expenses]
+  );
 
   // Group expenses by date
-  const groupedExpenses = useMemo(() => {
-    const map: Record<string, Expense[]> = {};
-    expenses.forEach((e) => {
-      if (!map[e.date]) map[e.date] = [];
-      map[e.date].push(e);
-    });
-    return Object.entries(map).sort(([a], [b]) => b.localeCompare(a));
-  }, [expenses]);
+  const groupedExpenses = useMemo(
+    () => groupExpensesByDate(expenses),
+    [expenses]
+  );
 
   // Settlement calculation
-  const settlement = useMemo(() => {
-    if (members.length === 0) return [];
-    const paid: Record<string, number> = {};
-    members.forEach((m) => {
-      paid[m.user_id] = 0;
-    });
-    expenses.forEach((e) => {
-      paid[e.paid_by] = (paid[e.paid_by] ?? 0) + e.amount;
-    });
-    const avg = totalSpent / members.length;
-    const balances = members.map((m) => ({
-      userId: m.user_id,
-      name: m.profile?.display_name ?? "알 수 없음",
-      balance: (paid[m.user_id] ?? 0) - avg,
-    }));
-
-    // Calculate who pays whom
-    const creditors = balances
-      .filter((b) => b.balance > 0)
-      .sort((a, b) => b.balance - a.balance);
-    const debtors = balances
-      .filter((b) => b.balance < 0)
-      .sort((a, b) => a.balance - b.balance);
-
-    const transactions: { from: string; to: string; amount: number }[] = [];
-    let ci = 0;
-    let di = 0;
-    const c = creditors.map((x) => ({ ...x }));
-    const d = debtors.map((x) => ({ ...x }));
-
-    while (ci < c.length && di < d.length) {
-      const transfer = Math.min(c[ci].balance, -d[di].balance);
-      if (transfer > 1) {
-        transactions.push({
-          from: d[di].name,
-          to: c[ci].name,
-          amount: Math.round(transfer),
-        });
-      }
-      c[ci].balance -= transfer;
-      d[di].balance += transfer;
-      if (Math.abs(c[ci].balance) < 1) ci++;
-      if (Math.abs(d[di].balance) < 1) di++;
-    }
-    return transactions;
-  }, [expenses, members, totalSpent]);
+  const settlement = useMemo(
+    () => calculateSettlement(expenses, members),
+    [expenses, members]
+  );
 
   const getMemberName = (userId: string) => {
     const m = members.find((m) => m.user_id === userId);
