@@ -26,7 +26,7 @@ export function useExpenses(tripId: string) {
       const supabase = createClient();
       const { data, error } = await supabase
         .from("expenses")
-        .select("*, profile:profiles(id, display_name, avatar_url, created_at)")
+        .select("*, profile:profiles(id, display_name, avatar_url)")
         .eq("trip_id", tripId)
         .order("date", { ascending: false });
       if (error) throw error;
@@ -44,7 +44,7 @@ export function useTripMembers(tripId: string) {
       const { data, error } = await supabase
         .from("trip_members")
         .select(
-          "*, profile:profiles(id, display_name, avatar_url, created_at)"
+          "*, profile:profiles(id, display_name, avatar_url)"
         )
         .eq("trip_id", tripId);
       if (error) throw error;

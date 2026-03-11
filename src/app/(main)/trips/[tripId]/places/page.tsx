@@ -29,7 +29,19 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { createClient } from "@/lib/supabase/client";
 import { PlaceForm } from "@/components/places/place-form";
-import { PlaceMap } from "@/components/maps/place-map";
+import dynamic from "next/dynamic";
+
+const PlaceMap = dynamic(
+  () => import("@/components/maps/place-map").then((mod) => mod.PlaceMap),
+  {
+    loading: () => (
+      <div className="h-[500px] w-full rounded-lg bg-muted animate-pulse flex items-center justify-center">
+        <Map className="size-8 text-muted-foreground/40" />
+      </div>
+    ),
+    ssr: false,
+  }
+);
 import { usePlaces } from "@/hooks/use-places";
 import { PlaceCardSkeleton } from "@/components/layout/loading-skeleton";
 import { cn } from "@/lib/utils";

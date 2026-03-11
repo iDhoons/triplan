@@ -23,14 +23,19 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
+import dynamic from "next/dynamic";
+
+const RechartsChart = dynamic(
+  () => import("@/components/budget/category-chart"),
+  {
+    loading: () => (
+      <div className="h-[220px] w-full flex items-center justify-center">
+        <div className="h-[170px] w-[170px] rounded-full border-4 border-muted animate-pulse" />
+      </div>
+    ),
+    ssr: false,
+  }
+);
 import type {
   ExpenseCategory,
   CurrencyCode,
@@ -432,35 +437,11 @@ export default function BudgetPage() {
               <CardTitle className="text-sm font-medium">카테고리별 지출</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={220}>
-                <PieChart>
-                  <Pie
-                    data={categoryData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={55}
-                    outerRadius={85}
-                    paddingAngle={3}
-                    dataKey="value"
-                  >
-                    {categoryData.map((entry, index) => (
-                      <Cell key={index} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    formatter={(value) =>
-                      formatAmount(Number(value), currency)
-                    }
-                  />
-                  <Legend
-                    iconType="circle"
-                    iconSize={8}
-                    formatter={(value) => (
-                      <span className="text-xs">{value}</span>
-                    )}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
+              <RechartsChart
+                data={categoryData}
+                currency={currency}
+                formatAmount={formatAmount}
+              />
             </CardContent>
           </Card>
 

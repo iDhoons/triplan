@@ -52,7 +52,7 @@ export default function DashboardPage() {
   async function fetchTrips() {
     const { data } = await supabase
       .from("trips")
-      .select("*")
+      .select("id, title, destination, start_date, end_date, created_at")
       .order("created_at", { ascending: false });
 
     if (data) setTrips(data as Trip[]);
