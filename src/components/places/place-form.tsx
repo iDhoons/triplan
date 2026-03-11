@@ -18,8 +18,7 @@ import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/auth-store";
 import { PlaceSearch, type PlaceSearchResult } from "@/components/maps/place-search";
-import type { Place, PlaceCategory } from "@/types/database";
-import type { ScrapedPlace } from "@/lib/scraper";
+import type { Place, PlaceCategory, ScrapeResponse } from "@/types/database";
 
 interface PlaceFormProps {
   tripId: string;
@@ -129,7 +128,7 @@ export function PlaceForm({
     return () => clearTimeout(timer);
   }, [autoFilledFields]);
 
-  const applyScrapeResult = useCallback((data: ScrapedPlace) => {
+  const applyScrapeResult = useCallback((data: ScrapeResponse) => {
     const filled = new Set<string>();
     setForm((prev) => {
       const next = { ...prev };
@@ -139,11 +138,6 @@ export function PlaceForm({
       if (data.address) { next.address = data.address; filled.add("address"); }
       if (data.rating !== null) { next.rating = String(data.rating); filled.add("rating"); }
       if (data.memo) { next.memo = data.memo; filled.add("memo"); }
-      if (data.price_per_night !== null) { next.price_per_night = String(data.price_per_night); filled.add("price_per_night"); }
-      if (data.cancel_policy) { next.cancel_policy = data.cancel_policy; filled.add("cancel_policy"); }
-      if (data.amenities.length > 0) { next.amenities = data.amenities.join(", "); filled.add("amenities"); }
-      if (data.check_in_time) { next.check_in_time = data.check_in_time; filled.add("check_in_time"); }
-      if (data.check_out_time) { next.check_out_time = data.check_out_time; filled.add("check_out_time"); }
       return next;
     });
     if (data.imageUrl) {
@@ -151,7 +145,7 @@ export function PlaceForm({
     }
     setAutoFilledFields(filled);
     // 상세 섹션에 채워진 필드가 있으면 자동 펼침
-    const detailFields = ["rating", "url", "address", "price_per_night", "cancel_policy", "amenities", "check_in_time", "check_out_time", "admission_fee", "estimated_duration"];
+    const detailFields = ["rating", "url", "address", "admission_fee", "estimated_duration"];
     if (detailFields.some((f) => filled.has(f))) {
       setShowDetails(true);
     }
@@ -170,7 +164,7 @@ export function PlaceForm({
         const err = await res.json();
         throw new Error(err.error ?? "스크래핑에 실패했습니다");
       }
-      const data: ScrapedPlace = await res.json();
+      const data: ScrapeResponse = await res.json();
       // 의미 있는 데이터가 없으면 사용자에게 알림
       if (!data.name && !data.address && !data.imageUrl) {
         setScrapeError("이 URL에서 정보를 가져오지 못했습니다. 장소명을 직접 입력해주세요.");

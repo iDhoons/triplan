@@ -90,6 +90,28 @@ export interface Place {
   enrich_attempts: number;
 }
 
+/** /api/scrape 응답 타입 (Places API 기반) */
+export interface ScrapeResponse {
+  name: string;
+  category: PlaceCategory;
+  url: string;
+  address: string | null;
+  rating: number | null;
+  imageUrl: string | null;
+  image_urls: string[];
+  memo: string | null;
+  phone: string | null;
+  website: string | null;
+  review_count: number | null;
+  price_level: number | null;
+  description: string | null;
+  opening_hours: Record<string, string> | null;
+  latitude: number | null;
+  longitude: number | null;
+  google_place_id: string | null;
+  business_status: string | null;
+}
+
 export interface PlaceVote {
   id: string;
   place_id: string;
