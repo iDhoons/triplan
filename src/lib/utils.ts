@@ -89,3 +89,26 @@ export function formatPriceLevel(level: number | null): string | null {
   if (level === 0) return "무료";
   return "₩".repeat(Math.min(level, 4));
 }
+
+/**
+ * 인앱 브라우저(WebView) 감지
+ * 카카오톡, 인스타그램, 페이스북, 네이버, 라인 등의 인앱 브라우저를 감지한다.
+ * Google OAuth는 WebView에서 403 disallowed_useragent 에러를 발생시킨다.
+ */
+export function isInAppBrowser(): boolean {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent || navigator.vendor || "";
+  return /KAKAOTALK|NAVER|Instagram|FBAN|FBAV|Line\/|SamsungBrowser\/.*CrossApp|wv\)|\.NET.*WebView/i.test(ua);
+}
+
+/**
+ * 현재 URL을 외부 브라우저에서 여는 Intent URL 생성 (Android)
+ */
+export function getExternalBrowserUrl(url: string): string {
+  const isAndroid = /Android/i.test(navigator.userAgent);
+  if (isAndroid) {
+    return `intent://${url.replace(/^https?:\/\//, "")}#Intent;scheme=https;end`;
+  }
+  // iOS: Safari로 열기 (x-safari-https는 지원 안 되므로 클립보드 복사 안내가 더 적절)
+  return url;
+}

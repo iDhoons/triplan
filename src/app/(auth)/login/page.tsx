@@ -1,22 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plane, Cloud, Globe, Mail, Lock } from "lucide-react";
+import { Plane, Cloud, Globe, Mail, Lock, ExternalLink, Copy, Check } from "lucide-react";
 import { humanizeError } from "@/lib/error-messages";
+import { isInAppBrowser, getExternalBrowserUrl } from "@/lib/utils";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [inAppBrowser, setInAppBrowser] = useState(false);
+  const [copied, setCopied] = useState(false);
   const router = useRouter();
   const supabase = createClient();
+
+  useEffect(() => {
+    setInAppBrowser(isInAppBrowser());
+  }, []);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -71,11 +78,62 @@ export default function LoginPage() {
           </p>
         </div>
 
+        {/* In-App Browser Warning */}
+        {inAppBrowser && (
+          <div className="mb-4 rounded-2xl border border-amber-200/60 bg-amber-50/80 dark:border-amber-500/30 dark:bg-amber-950/30 p-4 space-y-3">
+            <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+              인앱 브라우저에서는 Google 로그인이 제한돼요
+            </p>
+            <p className="text-xs text-amber-700 dark:text-amber-300">
+              Safari 또는 Chrome에서 열어주세요
+            </p>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex-1 text-xs border-amber-300 dark:border-amber-600"
+                onClick={() => {
+                  const url = window.location.href;
+                  const externalUrl = getExternalBrowserUrl(url);
+                  if (externalUrl !== url) {
+                    // Android: Intent URL로 외부 브라우저 열기
+                    window.location.href = externalUrl;
+                  } else {
+                    // iOS: 클립보드 복사
+                    navigator.clipboard.writeText(url).then(() => {
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 2000);
+                    });
+                  }
+                }}
+              >
+                {/Android/i.test(typeof navigator !== "undefined" ? navigator.userAgent : "") ? (
+                  <>
+                    <ExternalLink className="h-3.5 w-3.5 mr-1" />
+                    브라우저에서 열기
+                  </>
+                ) : copied ? (
+                  <>
+                    <Check className="h-3.5 w-3.5 mr-1" />
+                    복사됨!
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-3.5 w-3.5 mr-1" />
+                    주소 복사 후 브라우저에서 열기
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Google Login */}
         <Button
           variant="outline"
           onClick={handleGoogleLogin}
-          className="w-full py-5 sm:py-6 text-sm sm:text-base font-semibold transition-all duration-300 rounded-2xl glass-light border-glass-border cursor-pointer hover:scale-[1.01] active:scale-[0.98]"
+          disabled={inAppBrowser}
+          className="w-full py-5 sm:py-6 text-sm sm:text-base font-semibold transition-all duration-300 rounded-2xl glass-light border-glass-border cursor-pointer hover:scale-[1.01] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
             <path
