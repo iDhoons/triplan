@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { Suspense, useEffect, useState, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -39,6 +39,20 @@ function setStickyTrip(tripId: string) {
 }
 
 export default function ShareTargetPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center p-4">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        </div>
+      }
+    >
+      <ShareTargetContent />
+    </Suspense>
+  );
+}
+
+function ShareTargetContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
