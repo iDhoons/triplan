@@ -1,6 +1,18 @@
 /* Pretendard — layout.tsx에서 <link rel="stylesheet"> 로 로드 (렌더 블로킹 제거) */
 
 @import "tailwindcss";
+
+/* PWA 모바일 안정화 */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+html,
+body {
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+}
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
