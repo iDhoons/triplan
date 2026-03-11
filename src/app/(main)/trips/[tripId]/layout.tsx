@@ -1,54 +1,37 @@
-"use client";
+import { notFound } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import TripLayoutClient from "./trip-layout-client";
 
-import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
-import type { Trip } from "@/types/database";
-import { RealtimeProvider } from "@/components/realtime/realtime-provider";
-import { ActivityToast } from "@/components/realtime/activity-toast";
-import { AiChatFab } from "@/components/ai/ai-chat-fab";
-import { TripHeader } from "@/components/trip/trip-header";
-import { TripTabNav } from "@/components/trip/trip-tab-nav";
-import { TripEditDialog } from "@/components/trip/trip-edit-dialog";
-
-export default function TripLayout({
+export default async function TripLayout({
   children,
+  params,
 }: {
   children: React.ReactNode;
+  params: Promise<{ tripId: string }>;
 }) {
-  const params = useParams();
-  const tripId = params.tripId as string;
-  const [trip, setTrip] = useState<Trip | null>(null);
-  const [editOpen, setEditOpen] = useState(false);
-  const supabase = createClient();
+  const { tripId } = await params;
+  const supabase = await createClient();
 
-  useEffect(() => {
-    async function fetchTrip() {
-      const { data } = await supabase
-        .from("trips")
-        .select("*")
-        .eq("id", tripId)
-        .single();
-      if (data) setTrip(data as Trip);
-    }
-    fetchTrip();
-  }, [tripId]);
+  // 현재 사용자 확인
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  return (
-    <RealtimeProvider tripId={tripId}>
-      <ActivityToast />
-      <div>
-        <TripHeader trip={trip} onEditClick={() => setEditOpen(true)} />
-        <TripTabNav tripId={tripId} />
-        {children}
-        <AiChatFab />
-      </div>
-      <TripEditDialog
-        trip={trip}
-        open={editOpen}
-        onOpenChange={setEditOpen}
-        onSaved={setTrip}
-      />
-    </RealtimeProvider>
-  );
+  if (!user) {
+    notFound();
+  }
+
+  // 여행 멤버십 확인
+  const { data: membership } = await supabase
+    .from("trip_members")
+    .select("id")
+    .eq("trip_id", tripId)
+    .eq("user_id", user.id)
+    .single();
+
+  if (!membership) {
+    notFound();
+  }
+
+  return <TripLayoutClient>{children}</TripLayoutClient>;
 }
