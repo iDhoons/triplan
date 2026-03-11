@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
 export default function TripError({
-  error,
+  error: _error,
   reset,
 }: {
   error: Error & { digest?: string };
