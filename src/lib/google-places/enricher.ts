@@ -19,6 +19,12 @@ export interface EnrichedPlaceData {
   memo: string | null;
   opening_hours: Record<string, string> | null;
   google_place_id: string | null;
+  phone: string | null;
+  website: string | null;
+  review_count: number | null;
+  price_level: number | null;
+  business_status: string | null;
+  description: string | null;
 }
 
 /**
@@ -40,13 +46,25 @@ function inferCategory(types: string[]): PlaceCategory {
 /**
  * Places API 결과 → EnrichedPlaceData 변환
  */
+function parsePriceLevel(level?: string): number | null {
+  if (!level) return null;
+  const map: Record<string, number> = {
+    PRICE_LEVEL_FREE: 0,
+    PRICE_LEVEL_INEXPENSIVE: 1,
+    PRICE_LEVEL_MODERATE: 2,
+    PRICE_LEVEL_EXPENSIVE: 3,
+    PRICE_LEVEL_VERY_EXPENSIVE: 4,
+  };
+  return map[level] ?? null;
+}
+
 function mapPlaceResult(
   place: PlacesTextSearchResult,
   sourceUrl: string
 ): EnrichedPlaceData {
   const imageUrls: string[] = [];
   if (place.photos) {
-    const max = Math.min(place.photos.length, 3);
+    const max = Math.min(place.photos.length, 5);
     for (let i = 0; i < max; i++) {
       imageUrls.push(getPhotoUrl(place.photos[i].name));
     }
@@ -63,15 +81,42 @@ function mapPlaceResult(
     }
   }
 
+  const phone = place.internationalPhoneNumber ?? place.nationalPhoneNumber ?? null;
+  const website = place.websiteUri ?? null;
+  const reviewCount = place.userRatingCount ?? null;
+  const priceLevel = parsePriceLevel(place.priceLevel);
+  const businessStatus = place.businessStatus ?? null;
+  const description = place.editorialSummary?.text ?? null;
+
   const memoLines: string[] = [];
-  if (place.userRatingCount) {
-    memoLines.push(`리뷰 ${place.userRatingCount.toLocaleString()}개`);
+  if (reviewCount) {
+    memoLines.push(`리뷰 ${reviewCount.toLocaleString()}개`);
   }
-  if (place.internationalPhoneNumber) {
-    memoLines.push(`전화: ${place.internationalPhoneNumber}`);
+  if (phone) {
+    memoLines.push(`전화: ${phone}`);
   }
-  if (place.websiteUri) {
-    memoLines.push(`웹사이트: ${place.websiteUri}`);
+  if (website) {
+    memoLines.push(`웹사이트: ${website}`);
+  }
+
+  // 비즈니스 상태 한글화
+  if (businessStatus === "CLOSED_TEMPORARILY") {
+    memoLines.push("임시 휴업 중");
+  } else if (businessStatus === "CLOSED_PERMANENTLY") {
+    memoLines.push("영구 폐업");
+  }
+
+  // 주요 리뷰 (최대 3개)
+  if (place.reviews?.length) {
+    const topReviews = place.reviews
+      .slice(0, 3)
+      .map((r) => {
+        const author = r.authorAttribution?.displayName ?? "익명";
+        const text = r.text.text.length > 80 ? r.text.text.slice(0, 80) + "..." : r.text.text;
+        return `${author} (${r.rating}점): "${text}"`;
+      })
+      .join("\n");
+    memoLines.push(`\n--- 주요 리뷰 ---\n${topReviews}`);
   }
 
   return {
@@ -86,6 +131,12 @@ function mapPlaceResult(
     memo: memoLines.length > 0 ? memoLines.join("\n") : null,
     opening_hours: openingHours,
     google_place_id: place.id ?? null,
+    phone,
+    website,
+    review_count: reviewCount,
+    price_level: priceLevel,
+    business_status: businessStatus,
+    description,
   };
 }
 

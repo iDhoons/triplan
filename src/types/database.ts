@@ -62,6 +62,13 @@ export interface Place {
   admission_fee: number | null;
   estimated_duration: number | null;
   opening_hours: Record<string, string> | null;
+  phone: string | null;
+  website: string | null;
+  review_count: number | null;
+  price_level: number | null;
+  price_range: string | null;
+  business_status: string | null;
+  description: string | null;
   added_by: string;
   created_at: string;
   updated_at: string;

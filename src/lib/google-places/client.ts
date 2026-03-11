@@ -23,6 +23,12 @@ const DEFAULT_FIELD_MASK = [
   "places.websiteUri",
   "places.types",
   "places.currentOpeningHours",
+  "places.internationalPhoneNumber",
+  "places.nationalPhoneNumber",
+  "places.priceLevel",
+  "places.businessStatus",
+  "places.editorialSummary",
+  "places.reviews",
 ].join(",");
 
 const DETAIL_FIELD_MASK = [
@@ -37,6 +43,11 @@ const DETAIL_FIELD_MASK = [
   "types",
   "currentOpeningHours",
   "internationalPhoneNumber",
+  "nationalPhoneNumber",
+  "priceLevel",
+  "businessStatus",
+  "editorialSummary",
+  "reviews",
 ].join(",");
 
 export interface PlacesTextSearchResult {
@@ -53,6 +64,16 @@ export interface PlacesTextSearchResult {
     weekdayDescriptions?: string[];
   };
   internationalPhoneNumber?: string;
+  nationalPhoneNumber?: string;
+  priceLevel?: string;
+  businessStatus?: string;
+  editorialSummary?: { text: string; languageCode?: string };
+  reviews?: {
+    text: { text: string };
+    rating: number;
+    relativePublishTimeDescription: string;
+    authorAttribution?: { displayName: string };
+  }[];
 }
 
 /**

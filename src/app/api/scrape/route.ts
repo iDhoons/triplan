@@ -82,12 +82,24 @@ export async function POST(request: Request) {
           address: enriched.address,
           rating: enriched.rating,
           imageUrl: enriched.image_urls[0] ?? null,
+          image_urls: enriched.image_urls,
           price_per_night: null,
           cancel_policy: null,
           amenities: [],
           check_in_time: null,
           check_out_time: null,
           memo: enriched.memo,
+          phone: enriched.phone,
+          website: enriched.website,
+          review_count: enriched.review_count,
+          price_level: enriched.price_level,
+          price_range: null,
+          description: enriched.description,
+          opening_hours: enriched.opening_hours,
+          latitude: enriched.latitude,
+          longitude: enriched.longitude,
+          google_place_id: enriched.google_place_id,
+          business_status: enriched.business_status,
         });
       }
       return NextResponse.json(
@@ -104,8 +116,38 @@ export async function POST(request: Request) {
   }
 
   try {
-    const result = await scrapeUrl(url);
-    return NextResponse.json(result);
+    const scraped = await scrapeUrl(url);
+
+    // HTML 스크래핑 성공 후 Places API로 추가 정보 보강 (좌표, 전화 등)
+    let enriched: Awaited<ReturnType<typeof import("@/lib/google-places").enrichFromUrl>> = null;
+    try {
+      const { enrichFromUrl } = await import("@/lib/google-places");
+      enriched = await enrichFromUrl(url);
+    } catch {
+      // Places API 실패해도 스크래핑 결과는 반환
+    }
+
+    // 머지: 스크래핑 우선, 빈 필드만 Places API로 채움
+    return NextResponse.json({
+      ...scraped,
+      address: scraped.address ?? enriched?.address ?? null,
+      rating: scraped.rating ?? enriched?.rating ?? null,
+      imageUrl: scraped.imageUrl ?? enriched?.image_urls[0] ?? null,
+      image_urls: scraped.image_urls.length > 0
+        ? scraped.image_urls
+        : (enriched?.image_urls ?? []),
+      phone: scraped.phone ?? enriched?.phone ?? null,
+      website: scraped.website ?? enriched?.website ?? null,
+      review_count: scraped.review_count ?? enriched?.review_count ?? null,
+      description: scraped.description ?? enriched?.description ?? null,
+      price_level: enriched?.price_level ?? null,
+      price_range: scraped.price_range ?? null,
+      latitude: enriched?.latitude ?? null,
+      longitude: enriched?.longitude ?? null,
+      opening_hours: enriched?.opening_hours ?? null,
+      google_place_id: enriched?.google_place_id ?? null,
+      business_status: enriched?.business_status ?? null,
+    });
   } catch (err) {
     console.error("[scrape] HTML scrape failed, trying Places API fallback:", err);
 
@@ -114,7 +156,6 @@ export async function POST(request: Request) {
       const { enrichFromUrl } = await import("@/lib/google-places");
       const enriched = await enrichFromUrl(url);
       if (enriched) {
-        // ScrapedPlace 형식으로 변환
         return NextResponse.json({
           name: enriched.name,
           category: enriched.category,
@@ -122,12 +163,24 @@ export async function POST(request: Request) {
           address: enriched.address,
           rating: enriched.rating,
           imageUrl: enriched.image_urls[0] ?? null,
+          image_urls: enriched.image_urls,
           price_per_night: null,
           cancel_policy: null,
           amenities: [],
           check_in_time: null,
           check_out_time: null,
           memo: enriched.memo,
+          phone: enriched.phone,
+          website: enriched.website,
+          review_count: enriched.review_count,
+          price_level: enriched.price_level,
+          price_range: null,
+          description: enriched.description,
+          opening_hours: enriched.opening_hours,
+          latitude: enriched.latitude,
+          longitude: enriched.longitude,
+          google_place_id: enriched.google_place_id,
+          business_status: enriched.business_status,
         });
       }
     } catch (placesErr) {
