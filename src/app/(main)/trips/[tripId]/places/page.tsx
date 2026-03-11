@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   MapPinIcon,
   PlusIcon,
@@ -29,6 +30,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { createClient } from "@/lib/supabase/client";
 import { PlaceForm } from "@/components/places/place-form";
 import { PlaceMap } from "@/components/maps/place-map";
+import { usePlaces } from "@/hooks/use-places";
 import { cn } from "@/lib/utils";
 import type { Place, PlaceCategory } from "@/types/database";
 
@@ -42,13 +44,13 @@ const CATEGORY_LABEL: Record<PlaceCategory | "all", string> = {
 
 const CATEGORY_BADGE_CLASS: Record<PlaceCategory, string> = {
   accommodation:
-    "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300",
+    "bg-cat-accommodation text-cat-accommodation-fg border-cat-accommodation-border",
   attraction:
-    "bg-green-100 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-300",
+    "bg-cat-attraction text-cat-attraction-fg border-cat-attraction-border",
   restaurant:
-    "bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-950 dark:text-orange-300",
+    "bg-cat-restaurant text-cat-restaurant-fg border-cat-restaurant-border",
   other:
-    "bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-300",
+    "bg-cat-other text-cat-other-fg border-cat-other-border",
 };
 
 type TabValue = PlaceCategory | "all";
@@ -194,9 +196,9 @@ export default function PlacesPage() {
   const { tripId } = useParams<{ tripId: string }>();
   const router = useRouter();
   const supabase = createClient();
+  const queryClient = useQueryClient();
 
-  const [places, setPlaces] = useState<Place[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: places = [], isLoading: loading } = usePlaces(tripId);
   const [activeTab, setActiveTab] = useState<TabValue>("all");
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -204,39 +206,16 @@ export default function PlacesPage() {
   const [compareMode, setCompareMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    fetchPlaces();
-  }, [tripId]);
-
-  async function fetchPlaces() {
-    setLoading(true);
-    const { data } = await supabase
-      .from("places")
-      .select("*")
-      .eq("trip_id", tripId)
-      .order("created_at", { ascending: false });
-    setPlaces((data as Place[]) ?? []);
-    setLoading(false);
-  }
-
   async function handleDelete(place: Place) {
     if (!confirm(`"${place.name}"을(를) 삭제하시겠습니까?`)) return;
     const { error } = await supabase.from("places").delete().eq("id", place.id);
     if (!error) {
-      setPlaces((prev) => prev.filter((p) => p.id !== place.id));
+      queryClient.invalidateQueries({ queryKey: ["places", tripId] });
     }
   }
 
-  function handleFormSuccess(place: Place) {
-    setPlaces((prev) => {
-      const idx = prev.findIndex((p) => p.id === place.id);
-      if (idx >= 0) {
-        const next = [...prev];
-        next[idx] = place;
-        return next;
-      }
-      return [place, ...prev];
-    });
+  function handleFormSuccess(_place: Place) {
+    queryClient.invalidateQueries({ queryKey: ["places", tripId] });
     setDialogOpen(false);
     setEditingPlace(null);
   }

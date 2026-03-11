@@ -60,6 +60,45 @@ export function RealtimeProvider({ tripId, children }: RealtimeProviderProps) {
           queryClient.invalidateQueries({ queryKey: ["place_votes", tripId] });
         }
       )
+      // budgets 테이블 변경 구독
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "budgets",
+          filter: `trip_id=eq.${tripId}`,
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["budget", tripId] });
+        }
+      )
+      // expenses 테이블 변경 구독
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "expenses",
+          filter: `trip_id=eq.${tripId}`,
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["expenses", tripId] });
+        }
+      )
+      // trip_members 테이블 변경 구독
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "trip_members",
+          filter: `trip_id=eq.${tripId}`,
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["members", tripId] });
+        }
+      )
       // schedule_items 테이블 변경 구독
       .on(
         "postgres_changes",

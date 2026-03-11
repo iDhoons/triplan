@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useParams } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/auth-store";
 import { Button } from "@/components/ui/button";
@@ -31,9 +32,6 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import type {
-  Budget,
-  Expense,
-  TripMember,
   ExpenseCategory,
   CurrencyCode,
 } from "@/types/database";
@@ -45,6 +43,7 @@ import {
   calculateCategoryTotals,
   groupExpensesByDate,
 } from "@/lib/services/budget";
+import { useBudget, useExpenses, useTripMembers } from "@/hooks/use-budget";
 
 const CURRENCY_OPTIONS: CurrencyCode[] = [
   "KRW",
@@ -77,11 +76,12 @@ export default function BudgetPage() {
   const tripId = params.tripId as string;
   const { user } = useAuthStore();
   const supabase = createClient();
+  const queryClient = useQueryClient();
 
-  const [budget, setBudget] = useState<Budget | null>(null);
-  const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [members, setMembers] = useState<TripMember[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: budget = null, isLoading: budgetLoading } = useBudget(tripId);
+  const { data: expenses = [], isLoading: expensesLoading } = useExpenses(tripId);
+  const { data: members = [], isLoading: membersLoading } = useTripMembers(tripId);
+  const loading = budgetLoading || expensesLoading || membersLoading;
 
   // Budget edit state
   const [budgetDialogOpen, setBudgetDialogOpen] = useState(false);
@@ -101,31 +101,10 @@ export default function BudgetPage() {
   const [expMemo, setExpMemo] = useState("");
   const [savingExpense, setSavingExpense] = useState(false);
 
-  useEffect(() => {
-    fetchAll();
-  }, [tripId]);
-
-  async function fetchAll() {
-    setLoading(true);
-    const [budgetRes, expensesRes, membersRes] = await Promise.all([
-      supabase.from("budgets").select("*").eq("trip_id", tripId).maybeSingle(),
-      supabase
-        .from("expenses")
-        .select("*, profile:profiles(id, display_name, avatar_url, created_at)")
-        .eq("trip_id", tripId)
-        .order("date", { ascending: false }),
-      supabase
-        .from("trip_members")
-        .select(
-          "*, profile:profiles(id, display_name, avatar_url, created_at)"
-        )
-        .eq("trip_id", tripId),
-    ]);
-
-    if (budgetRes.data) setBudget(budgetRes.data as Budget);
-    if (expensesRes.data) setExpenses(expensesRes.data as Expense[]);
-    if (membersRes.data) setMembers(membersRes.data as TripMember[]);
-    setLoading(false);
+  function invalidateBudgetQueries() {
+    queryClient.invalidateQueries({ queryKey: ["budget", tripId] });
+    queryClient.invalidateQueries({ queryKey: ["expenses", tripId] });
+    queryClient.invalidateQueries({ queryKey: ["members", tripId] });
   }
 
   async function handleSaveBudget(e: React.FormEvent) {
@@ -148,7 +127,7 @@ export default function BudgetPage() {
         .insert({ trip_id: tripId, total_budget: total, currency: budgetCurrency });
     }
 
-    await fetchAll();
+    invalidateBudgetQueries();
     setSavingBudget(false);
     setBudgetDialogOpen(false);
   }
@@ -175,14 +154,14 @@ export default function BudgetPage() {
     setExpPaidBy("");
     setExpCategory("food");
     setExpDate(new Date().toISOString().split("T")[0]);
-    await fetchAll();
+    invalidateBudgetQueries();
     setSavingExpense(false);
     setExpenseDialogOpen(false);
   }
 
   async function handleDeleteExpense(id: string) {
     await supabase.from("expenses").delete().eq("id", id);
-    setExpenses((prev) => prev.filter((e) => e.id !== id));
+    queryClient.invalidateQueries({ queryKey: ["expenses", tripId] });
   }
 
   const currency = budget?.currency ?? "KRW";
