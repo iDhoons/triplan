@@ -4,6 +4,20 @@
  * OG 메타태그 파싱이 실패해도 URL 경로에서 이름을 추정한다.
  */
 
+import { lookup } from "node:dns/promises";
+
+const PRIVATE_IP_RANGES = [
+  /^10\./,
+  /^172\.(1[6-9]|2\d|3[01])\./,
+  /^192\.168\./,
+  /^169\.254\./,
+  /^127\./,
+  /^0\./,
+  /^fc00:/i,
+  /^fe80:/i,
+  /^::1$/,
+];
+
 interface ParsedUrlInfo {
   placeName: string | null;
   site: string;
@@ -146,6 +160,22 @@ export function parseUrl(rawUrl: string): ParsedUrlInfo {
  */
 export async function fetchOgTitle(url: string): Promise<string | null> {
   try {
+    // SSRF 방어: 프로토콜 검증
+    const parsed = new URL(url);
+    if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+      return null;
+    }
+
+    // SSRF 방어: DNS 해석 후 사설 IP 차단
+    try {
+      const { address } = await lookup(parsed.hostname);
+      if (PRIVATE_IP_RANGES.some((re) => re.test(address))) {
+        return null;
+      }
+    } catch {
+      return null;
+    }
+
     const res = await fetch(url, {
       headers: {
         "User-Agent":
@@ -153,48 +183,82 @@ export async function fetchOgTitle(url: string): Promise<string | null> {
         Accept: "text/html",
       },
       signal: AbortSignal.timeout(4000),
-      redirect: "follow",
+      redirect: "manual",
     });
+
+    // 리다이렉트 시 Location도 SSRF 검증
+    if ([301, 302, 303, 307, 308].includes(res.status)) {
+      const location = res.headers.get("location");
+      if (!location) return null;
+      const redirectUrl = new URL(location, url);
+      if (redirectUrl.protocol !== "https:" && redirectUrl.protocol !== "http:") {
+        return null;
+      }
+      try {
+        const { address } = await lookup(redirectUrl.hostname);
+        if (PRIVATE_IP_RANGES.some((re) => re.test(address))) {
+          return null;
+        }
+      } catch {
+        return null;
+      }
+      // 리다이렉트 1회만 허용
+      const redirectRes = await fetch(redirectUrl.toString(), {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (compatible; TravelPlannerBot/2.0; +https://travel-planner.app)",
+          Accept: "text/html",
+        },
+        signal: AbortSignal.timeout(4000),
+        redirect: "error",
+      });
+      if (!redirectRes.ok) return null;
+      return extractOgTitleFromResponse(redirectRes);
+    }
 
     if (!res.ok) return null;
 
-    const contentType = res.headers.get("content-type") ?? "";
-    if (!contentType.includes("text/html")) return null;
-
-    // 처음 50KB만 읽기 (메타태그는 head에 있으므로 충분)
-    const reader = res.body?.getReader();
-    if (!reader) return null;
-
-    let html = "";
-    const decoder = new TextDecoder();
-    const MAX = 50 * 1024;
-
-    while (html.length < MAX) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      html += decoder.decode(value, { stream: true });
-    }
-    reader.cancel();
-
-    // og:title 추출
-    const ogMatch = html.match(
-      /<meta[^>]+(?:property|name)=["']og:title["'][^>]+content=["']([^"']+)["']/i
-    );
-    if (ogMatch?.[1]) {
-      return ogMatch[1]
-        .replace(/&amp;/g, "&")
-        .replace(/&lt;/g, "<")
-        .replace(/&gt;/g, ">")
-        .replace(/&quot;/g, '"')
-        .trim();
-    }
-
-    // <title> 태그 폴백
-    const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-    return titleMatch?.[1]?.trim() ?? null;
+    return extractOgTitleFromResponse(res);
   } catch {
     return null;
   }
+}
+
+async function extractOgTitleFromResponse(res: Response): Promise<string | null> {
+  const contentType = res.headers.get("content-type") ?? "";
+  if (!contentType.includes("text/html")) return null;
+
+  // 처음 50KB만 읽기 (메타태그는 head에 있으므로 충분)
+  const reader = res.body?.getReader();
+  if (!reader) return null;
+
+  let html = "";
+  const decoder = new TextDecoder();
+  const MAX = 50 * 1024;
+
+  while (html.length < MAX) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    html += decoder.decode(value, { stream: true });
+  }
+  reader.cancel();
+
+  // og:title 추출
+  const ogMatch = html.match(
+    /<meta[^>]+(?:property|name)=["']og:title["'][^>]+content=["']([^"']+)["']/i
+  );
+  if (ogMatch?.[1]) {
+    return ogMatch[1]
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"')
+      .trim();
+  }
+
+  // <title> 태그 폴백
+  const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+  return titleMatch?.[1]?.trim() ?? null;
 }
 
 /**

@@ -14,13 +14,37 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const body = await request.json();
-  const { trip_id, message, type, history } = body as {
-    trip_id: string;
-    message: string;
-    type?: string;
-    history?: { role: "user" | "assistant"; content: string }[];
-  };
+  let body: { trip_id?: unknown; message?: unknown; type?: unknown; history?: unknown };
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
+
+  const trip_id = typeof body.trip_id === "string" ? body.trip_id.trim() : "";
+  const message = typeof body.message === "string" ? body.message.trim() : "";
+  const type = typeof body.type === "string" ? body.type : undefined;
+  const history = Array.isArray(body.history) ? body.history as { role: "user" | "assistant"; content: string }[] : undefined;
+
+  if (!trip_id || !message) {
+    return NextResponse.json({ error: "trip_id와 message가 필요합니다" }, { status: 400 });
+  }
+
+  if (message.length > 2000) {
+    return NextResponse.json({ error: "메시지가 너무 깁니다 (최대 2000자)" }, { status: 400 });
+  }
+
+  // 권한 확인: 해당 여행의 멤버인지 체크
+  const { data: membership } = await supabase
+    .from("trip_members")
+    .select("role")
+    .eq("trip_id", trip_id)
+    .eq("user_id", user.id)
+    .single();
+
+  if (!membership) {
+    return NextResponse.json({ error: "해당 여행에 접근할 수 없습니다" }, { status: 403 });
+  }
 
   // 여행 정보 조회
   const { data: trip } = await supabase

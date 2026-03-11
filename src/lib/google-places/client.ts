@@ -105,9 +105,23 @@ export async function getPlaceDetails(
 }
 
 /**
- * Photo URI: Places photo reference → 실제 이미지 URL
+ * Photo URI: Places photo reference → 서버 프록시 URL
+ * API 키를 클라이언트에 노출하지 않기 위해 프록시 경로를 반환한다.
  */
 export function getPhotoUrl(
+  photoName: string,
+  maxWidth: number = 800
+): string {
+  // photoName 예: "places/ChIJ.../photos/AUGGfZ..."
+  // 프록시 API Route를 통해 서빙 (API 키는 서버에서만 사용)
+  return `/api/places/photo?name=${encodeURIComponent(photoName)}&maxWidth=${maxWidth}`;
+}
+
+/**
+ * 서버 전용: 실제 Google Places Photo URL 생성 (API 키 포함)
+ * 프록시 API Route 내부에서만 사용할 것.
+ */
+export function getPhotoUrlDirect(
   photoName: string,
   maxWidth: number = 800
 ): string {
