@@ -203,25 +203,12 @@ export function PlaceForm({
       category = "attraction";
     }
 
-    // 리뷰 수 + 전화번호 + 웹사이트를 메모에 추가
-    const memoLines: string[] = [];
-    if (result.userRatingsTotal) {
-      memoLines.push(`리뷰 ${result.userRatingsTotal.toLocaleString()}개`);
-    }
-    if (result.phoneNumber) {
-      memoLines.push(`전화: ${result.phoneNumber}`);
-    }
-    if (result.website) {
-      memoLines.push(`웹사이트: ${result.website}`);
-    }
-
     setForm((prev) => ({
       ...prev,
       name: result.name,
       address: result.address,
       rating: result.rating !== null ? String(result.rating) : prev.rating,
       url: result.url ?? prev.url,
-      memo: memoLines.length > 0 ? memoLines.join("\n") : prev.memo,
       opening_hours: result.openingHours ? JSON.stringify(result.openingHours) : prev.opening_hours,
       category,
     }));

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { memo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -11,6 +11,10 @@ import {
   ListIcon,
   Map,
   YoutubeIcon,
+  MoreHorizontalIcon,
+  TicketIcon,
+  HotelIcon,
+  UtensilsCrossedIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,8 +32,15 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { createClient } from "@/lib/supabase/client";
 import { PlaceForm } from "@/components/places/place-form";
+import { PlaceDetailDrawer } from "@/components/places/place-detail-drawer";
 import { YouTubePlacePicker } from "@/components/places/youtube-place-picker";
 import dynamic from "next/dynamic";
 
@@ -46,20 +57,9 @@ const PlaceMap = dynamic(
 );
 import { usePlaces } from "@/hooks/use-places";
 import { PlaceCardSkeleton } from "@/components/layout/loading-skeleton";
-import { cn } from "@/lib/utils";
-import { PLACE_CATEGORY_LABEL } from "@/config/categories";
+import { cn, formatShortAddress, formatPriceLevel } from "@/lib/utils";
+import { PLACE_CATEGORY_LABEL, PLACE_CATEGORY_BADGE_CLASS } from "@/config/categories";
 import type { Place, PlaceCategory } from "@/types/database";
-
-const CATEGORY_BADGE_CLASS: Record<PlaceCategory, string> = {
-  accommodation:
-    "bg-cat-accommodation text-cat-accommodation-fg border-cat-accommodation-border",
-  attraction:
-    "bg-cat-attraction text-cat-attraction-fg border-cat-attraction-border",
-  restaurant:
-    "bg-cat-restaurant text-cat-restaurant-fg border-cat-restaurant-border",
-  other:
-    "bg-cat-other text-cat-other-fg border-cat-other-border",
-};
 
 type TabValue = PlaceCategory | "all";
 const TAB_VALUES: TabValue[] = ["all", "accommodation", "attraction", "restaurant", "other"];
@@ -73,103 +73,164 @@ interface PlaceCardProps {
   onToggleSelect: (id: string) => void;
   onEdit: (place: Place) => void;
   onDelete: (place: Place) => void;
+  onOpenDetail: (place: Place) => void;
 }
 
-function PlaceCard({
+/** 카테고리별 보조 정보 1줄 */
+function CategoryMeta({ place }: { place: Place }) {
+  switch (place.category) {
+    case "accommodation":
+      if (place.price_per_night !== null) {
+        return (
+          <div className="flex items-center gap-1 text-xs text-primary font-semibold">
+            <HotelIcon className="size-3 shrink-0" />
+            <span>₩{place.price_per_night.toLocaleString()} / 박</span>
+          </div>
+        );
+      }
+      return null;
+    case "attraction": {
+      const parts: string[] = [];
+      if (place.estimated_duration) parts.push(`${place.estimated_duration}분`);
+      if (place.admission_fee !== null) {
+        parts.push(place.admission_fee === 0 ? "무료" : `₩${place.admission_fee.toLocaleString()}`);
+      }
+      if (parts.length === 0) return null;
+      return (
+        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <TicketIcon className="size-3 shrink-0" />
+          <span>{parts.join(" · ")}</span>
+        </div>
+      );
+    }
+    case "restaurant": {
+      const priceLabel = formatPriceLevel(place.price_level);
+      if (!priceLabel) return null;
+      return (
+        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <UtensilsCrossedIcon className="size-3 shrink-0" />
+          <span>{priceLabel}</span>
+        </div>
+      );
+    }
+    default:
+      return null;
+  }
+}
+
+const PlaceCard = memo(function PlaceCard({
   place,
   selected,
   compareMode,
   onToggleSelect,
   onEdit,
   onDelete,
+  onOpenDetail,
 }: PlaceCardProps) {
-  const router = useRouter();
-  const { tripId } = useParams();
+  const shortAddress = formatShortAddress(place.address_components, place.address);
 
   return (
     <Card
       className={cn(
-        "relative cursor-pointer transition-shadow hover:shadow-md",
+        "relative cursor-pointer transition-shadow hover:shadow-md overflow-hidden",
         selected && "ring-2 ring-primary"
       )}
-      onClick={() => router.push(`/trips/${tripId}/places/${place.id}`)}
+      onClick={() => onOpenDetail(place)}
     >
       {/* 이미지 */}
-      {place.image_urls?.length > 0 && (
+      {place.image_urls?.length > 0 ? (
         <img
           src={place.image_urls[0]}
           alt={place.name}
-          className="h-40 w-full object-cover"
+          className="h-36 w-full object-cover"
         />
+      ) : (
+        <div className={cn(
+          "h-24 w-full flex items-center justify-center",
+          place.category === "accommodation" && "bg-cat-accommodation/20",
+          place.category === "attraction" && "bg-cat-attraction/20",
+          place.category === "restaurant" && "bg-cat-restaurant/20",
+          place.category === "other" && "bg-muted",
+        )}>
+          <MapPinIcon className="size-8 text-muted-foreground/30" />
+        </div>
       )}
 
       <CardHeader className="pb-1">
         <div className="flex items-start justify-between gap-2">
-          <CardTitle className="line-clamp-1">{place.name}</CardTitle>
-          <Badge
-            className={cn(
-              "shrink-0 border",
-              CATEGORY_BADGE_CLASS[place.category]
-            )}
-            variant="outline"
-          >
-            {PLACE_CATEGORY_LABEL[place.category]}
-          </Badge>
+          <CardTitle className="text-sm line-clamp-1">{place.name}</CardTitle>
+          <div className="flex items-center gap-1 shrink-0">
+            <Badge
+              className={cn(
+                "shrink-0 border text-[10px] px-1.5 py-0",
+                PLACE_CATEGORY_BADGE_CLASS[place.category]
+              )}
+              variant="outline"
+            >
+              {PLACE_CATEGORY_LABEL[place.category]}
+            </Badge>
+            {/* 더보기 메뉴 */}
+            <div onClick={(e) => e.stopPropagation()}>
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  render={
+                    <Button variant="ghost" size="xs" className="size-6 p-0">
+                      <MoreHorizontalIcon className="size-3.5" />
+                    </Button>
+                  }
+                />
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => onEdit(place)}>
+                    수정
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="text-red-600"
+                    onClick={() => onDelete(place)}
+                  >
+                    삭제
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
         </div>
       </CardHeader>
 
-      <CardContent className="flex flex-col gap-2">
-        {/* 주소 */}
-        {place.address && (
+      <CardContent className="flex flex-col gap-1.5 pt-0">
+        {/* 주소 (짧은 한글) */}
+        {shortAddress && (
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
             <MapPinIcon className="size-3 shrink-0" />
-            <span className="line-clamp-1">{place.address}</span>
+            <span className="line-clamp-1">{shortAddress}</span>
           </div>
         )}
 
-        {/* 가격 (숙소) */}
-        {place.category === "accommodation" &&
-          place.price_per_night !== null && (
-            <p className="text-sm font-semibold text-primary">
-              ₩{place.price_per_night.toLocaleString()} / 박
-            </p>
-          )}
-
-        {/* 평점 */}
+        {/* 평점 + 리뷰 수 */}
         {place.rating !== null && (
           <div className="flex items-center gap-1">
-            <StarIcon className="size-3.5 fill-yellow-400 text-yellow-400" />
-            <span className="text-sm font-medium">{place.rating}</span>
+            <StarIcon className="size-3 fill-yellow-400 text-yellow-400" />
+            <span className="text-xs font-medium">{place.rating}</span>
+            {place.review_count !== null && (
+              <span className="text-xs text-muted-foreground">
+                ({place.review_count.toLocaleString()})
+              </span>
+            )}
           </div>
         )}
 
-        {/* 메모 */}
+        {/* 카테고리별 보조 정보 */}
+        <CategoryMeta place={place} />
+
+        {/* 메모 (1줄) */}
         {place.memo && (
-          <p className="line-clamp-2 text-xs text-muted-foreground">
+          <p className="line-clamp-1 text-xs text-muted-foreground">
             {place.memo}
           </p>
         )}
 
-        {/* 액션 */}
-        <div className="flex items-center justify-between pt-1" onClick={(e) => e.stopPropagation()}>
-          <div className="flex gap-1">
-            <Button
-              variant="ghost"
-              size="xs"
-              onClick={() => onEdit(place)}
-            >
-              수정
-            </Button>
-            <Button
-              variant="ghost"
-              size="xs"
-              className="text-red-500 hover:text-red-700 hover:bg-red-50"
-              onClick={() => onDelete(place)}
-            >
-              삭제
-            </Button>
-          </div>
-          {compareMode && (
+        {/* 비교 모드 체크박스 */}
+        {compareMode && (
+          <div className="flex justify-end pt-0.5" onClick={(e) => e.stopPropagation()}>
             <button
               type="button"
               onClick={() => onToggleSelect(place.id)}
@@ -193,12 +254,12 @@ function PlaceCard({
                 </svg>
               )}
             </button>
-          )}
-        </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
-}
+});
 
 export default function PlacesPage() {
   const { tripId } = useParams<{ tripId: string }>();
@@ -213,6 +274,7 @@ export default function PlacesPage() {
   const [editingPlace, setEditingPlace] = useState<Place | null>(null);
   const [compareMode, setCompareMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
   const [youtubePickerOpen, setYoutubePickerOpen] = useState(false);
 
   async function handleDelete(place: Place) {
@@ -223,7 +285,7 @@ export default function PlacesPage() {
     }
   }
 
-  function handleFormSuccess(_place: Place) {
+  function handleFormSuccess() {
     queryClient.invalidateQueries({ queryKey: ["places", tripId] });
     setDialogOpen(false);
     setEditingPlace(null);
@@ -432,6 +494,7 @@ export default function PlacesPage() {
                       setDialogOpen(true);
                     }}
                     onDelete={handleDelete}
+                    onOpenDetail={(p) => setSelectedPlace(p)}
                   />
                 ))}
               </div>
@@ -445,6 +508,19 @@ export default function PlacesPage() {
         tripId={tripId}
         open={youtubePickerOpen}
         onOpenChange={setYoutubePickerOpen}
+      />
+
+      {/* 장소 상세 Drawer */}
+      <PlaceDetailDrawer
+        place={selectedPlace}
+        onOpenChange={(open) => {
+          if (!open) setSelectedPlace(null);
+        }}
+        onEdit={(p) => {
+          setEditingPlace(p);
+          setDialogOpen(true);
+        }}
+        onDelete={handleDelete}
       />
     </div>
   );

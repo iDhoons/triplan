@@ -5,12 +5,13 @@
 
 import { textSearch, getPhotoUrl, type PlacesTextSearchResult } from "./client";
 import { extractPlaceName } from "./url-parser";
-import type { PlaceCategory } from "@/types/database";
+import type { PlaceCategory, GoogleAddressComponent } from "@/types/database";
 
 export interface EnrichedPlaceData {
   name: string;
   category: PlaceCategory;
   address: string | null;
+  address_components: GoogleAddressComponent[] | null;
   latitude: number | null;
   longitude: number | null;
   rating: number | null;
@@ -88,47 +89,20 @@ function mapPlaceResult(
   const businessStatus = place.businessStatus ?? null;
   const description = place.editorialSummary?.text ?? null;
 
-  const memoLines: string[] = [];
-  if (reviewCount) {
-    memoLines.push(`리뷰 ${reviewCount.toLocaleString()}개`);
-  }
-  if (phone) {
-    memoLines.push(`전화: ${phone}`);
-  }
-  if (website) {
-    memoLines.push(`웹사이트: ${website}`);
-  }
-
-  // 비즈니스 상태 한글화
-  if (businessStatus === "CLOSED_TEMPORARILY") {
-    memoLines.push("임시 휴업 중");
-  } else if (businessStatus === "CLOSED_PERMANENTLY") {
-    memoLines.push("영구 폐업");
-  }
-
-  // 주요 리뷰 (최대 3개)
-  if (place.reviews?.length) {
-    const topReviews = place.reviews
-      .slice(0, 3)
-      .map((r) => {
-        const author = r.authorAttribution?.displayName ?? "익명";
-        const text = r.text.text.length > 80 ? r.text.text.slice(0, 80) + "..." : r.text.text;
-        return `${author} (${r.rating}점): "${text}"`;
-      })
-      .join("\n");
-    memoLines.push(`\n--- 주요 리뷰 ---\n${topReviews}`);
-  }
+  // address_components from Places API (New)
+  const addressComponents = place.addressComponents ?? null;
 
   return {
     name: place.displayName?.text ?? "",
     category: inferCategory(place.types ?? []),
     address: place.formattedAddress ?? null,
+    address_components: addressComponents,
     latitude: place.location?.latitude ?? null,
     longitude: place.location?.longitude ?? null,
     rating: place.rating ?? null,
     image_urls: imageUrls,
     url: sourceUrl,
-    memo: memoLines.length > 0 ? memoLines.join("\n") : null,
+    memo: description,
     opening_hours: openingHours,
     google_place_id: place.id ?? null,
     phone,

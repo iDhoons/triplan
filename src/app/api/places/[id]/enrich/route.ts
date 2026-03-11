@@ -98,6 +98,7 @@ export async function POST(
         name: enriched.name,
         category: enriched.category,
         address: enriched.address,
+        address_components: enriched.address_components,
         latitude: enriched.latitude,
         longitude: enriched.longitude,
         rating: enriched.rating,

@@ -13,6 +13,14 @@ export type ExpenseCategory =
   | "other";
 export type CurrencyCode = "KRW" | "JPY" | "USD" | "EUR" | "CNY" | "THB" | "VND";
 
+/** Google Places API addressComponent structure */
+export interface GoogleAddressComponent {
+  longText: string;
+  shortText: string;
+  types: string[];
+  languageCode: string;
+}
+
 export interface Profile {
   id: string;
   display_name: string;
@@ -69,6 +77,7 @@ export interface Place {
   price_range: string | null;
   business_status: string | null;
   description: string | null;
+  address_components: GoogleAddressComponent[] | null;
   added_by: string;
   created_at: string;
   updated_at: string;

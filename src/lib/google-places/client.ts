@@ -3,6 +3,8 @@
  * Uses GOOGLE_PLACES_API_KEY (never NEXT_PUBLIC_).
  */
 
+import type { GoogleAddressComponent } from "@/types/database";
+
 const API_BASE = "https://places.googleapis.com/v1";
 
 function getApiKey(): string {
@@ -29,6 +31,7 @@ const DEFAULT_FIELD_MASK = [
   "places.businessStatus",
   "places.editorialSummary",
   "places.reviews",
+  "places.addressComponents",
 ].join(",");
 
 const DETAIL_FIELD_MASK = [
@@ -48,6 +51,7 @@ const DETAIL_FIELD_MASK = [
   "businessStatus",
   "editorialSummary",
   "reviews",
+  "addressComponents",
 ].join(",");
 
 export interface PlacesTextSearchResult {
@@ -74,6 +78,7 @@ export interface PlacesTextSearchResult {
     relativePublishTimeDescription: string;
     authorAttribution?: { displayName: string };
   }[];
+  addressComponents?: GoogleAddressComponent[];
 }
 
 /**
