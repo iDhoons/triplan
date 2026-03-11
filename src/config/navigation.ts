@@ -1,6 +1,5 @@
 import {
   Home,
-  Compass,
   Bell,
   User,
   MapPin,
@@ -19,7 +18,6 @@ export interface NavItem {
 
 export const globalNav: NavItem[] = [
   { href: "/dashboard", label: "내 여행", icon: Home },
-  { href: "/explore", label: "탐색", icon: Compass },
   { href: "/notifications", label: "알림", icon: Bell },
   { href: "/profile", label: "내 정보", icon: User },
 ];
