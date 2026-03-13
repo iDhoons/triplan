@@ -9,28 +9,12 @@ import {
 import { useDroppable } from "@dnd-kit/core";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { DraggableItem } from "./draggable-item";
-import type { Schedule, ScheduleItem, Place } from "@/types/database";
+import { TravelInfoCard } from "./travel-info-card";
+import type { Schedule, ScheduleItem } from "@/types/database";
 
 // -----------------------------------------------------------------------
-// Transport badge between items
-// -----------------------------------------------------------------------
-function TransportBadge({ transport }: { transport: string }) {
-  return (
-    <div className="flex items-center gap-2 py-1 pl-8">
-      <Separator className="flex-1" />
-      <Badge variant="secondary" className="text-xs font-normal">
-        {transport}
-      </Badge>
-      <Separator className="flex-1" />
-    </div>
-  );
-}
-
-// -----------------------------------------------------------------------
-// Droppable Day card
+// Droppable Day card — 순서 기반 플래너
 // -----------------------------------------------------------------------
 interface DayCardProps {
   schedule: Schedule;
@@ -71,13 +55,18 @@ function DayCard({
             — {schedule.day_memo}
           </span>
         )}
+        {items.length > 0 && (
+          <span className="text-xs text-muted-foreground ml-auto">
+            {items.length}개 일정
+          </span>
+        )}
       </div>
 
       {/* Drop zone */}
       <div
         ref={setNodeRef}
         className={cn(
-          "rounded-xl border-2 border-dashed p-3 min-h-[80px] transition-colors space-y-1",
+          "rounded-xl border-2 border-dashed p-3 min-h-[80px] transition-colors",
           isOver
             ? "border-primary bg-primary/5"
             : items.length === 0
@@ -105,18 +94,25 @@ function DayCard({
             items={items.map((i) => i.id)}
             strategy={verticalListSortingStrategy}
           >
-            {items.map((item, idx) => (
-              <div key={item.id}>
-                <DraggableItem
-                  item={item}
-                  onEdit={onEditItem}
-                  onDelete={(id) => onDeleteItem(id, schedule.id)}
-                />
-                {item.transport_to_next && idx < items.length - 1 && (
-                  <TransportBadge transport={item.transport_to_next} />
-                )}
-              </div>
-            ))}
+            <div className="space-y-0">
+              {items.map((item, idx) => (
+                <div key={item.id}>
+                  <DraggableItem
+                    item={item}
+                    orderNumber={idx + 1}
+                    onEdit={onEditItem}
+                    onDelete={(id) => onDeleteItem(id, schedule.id)}
+                  />
+                  {/* 이동 정보 카드: 현재 아이템과 다음 아이템 사이 */}
+                  {idx < items.length - 1 && (
+                    <TravelInfoCard
+                      currentItem={item}
+                      nextItem={items[idx + 1]}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
           </SortableContext>
         )}
       </div>
@@ -138,28 +134,28 @@ function DayCard({
 }
 
 // -----------------------------------------------------------------------
-// cn helper (inline to avoid extra import complexity)
+// cn helper
 // -----------------------------------------------------------------------
 function cn(...classes: (string | false | null | undefined)[]) {
   return classes.filter(Boolean).join(" ");
 }
 
 // -----------------------------------------------------------------------
-// Calendar View
+// Planner View (순서 기반 데일리 플래너)
 // -----------------------------------------------------------------------
-interface CalendarViewProps {
+interface PlannerViewProps {
   schedules: Schedule[];
   onAddItem: (scheduleId: string) => void;
   onEditItem: (item: ScheduleItem) => void;
   onDeleteItem: (itemId: string, scheduleId: string) => void;
 }
 
-export function CalendarView({
+export function PlannerView({
   schedules,
   onAddItem,
   onEditItem,
   onDeleteItem,
-}: CalendarViewProps) {
+}: PlannerViewProps) {
   return (
     <div className="space-y-8">
       {schedules.map((schedule, idx) => (

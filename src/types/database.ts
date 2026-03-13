@@ -129,6 +129,8 @@ export interface Schedule {
   items?: ScheduleItem[];
 }
 
+export type TravelMode = "walking" | "transit" | "driving";
+
 export interface ScheduleItem {
   id: string;
   schedule_id: string;
@@ -139,6 +141,11 @@ export interface ScheduleItem {
   sort_order: number;
   memo: string | null;
   transport_to_next: string | null;
+  arrival_by: string | null;
+  travel_duration_seconds: number | null;
+  travel_distance_meters: number | null;
+  travel_mode: TravelMode | null;
+  notify_before_minutes: number;
   created_at: string;
   updated_at: string;
   place?: Place;

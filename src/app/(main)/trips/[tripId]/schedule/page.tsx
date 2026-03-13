@@ -9,38 +9,32 @@ import {
   TouchSensor,
   useSensor,
   useSensors,
+  pointerWithin,
   closestCenter,
+  type CollisionDetection,
   type DragStartEvent,
   type DragEndEvent,
 } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
-import { CalendarDays, TimerIcon, RouteIcon } from "lucide-react";
+import { ListOrdered, RouteIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
-import { CalendarView } from "@/components/schedule/calendar-view";
-import { TimelineView } from "@/components/schedule/timeline-view";
+import { PlannerView } from "@/components/schedule/planner-view";
 import { PlaceSidebar } from "@/components/schedule/place-sidebar";
-import { ScheduleItemForm } from "@/components/schedule/schedule-item-form";
-import { DraggableItem } from "@/components/schedule/draggable-item";
+import {
+  ScheduleItemForm,
+  type ScheduleItemFormData,
+} from "@/components/schedule/schedule-item-form";
 import { RouteMap } from "@/components/maps/route-map";
 import type { Schedule, ScheduleItem, Place, Trip } from "@/types/database";
 
 // -----------------------------------------------------------------------
 // Types
 // -----------------------------------------------------------------------
-type ViewMode = "calendar" | "timeline" | "route";
-
-interface ScheduleItemFormData {
-  title: string;
-  start_time: string;
-  end_time: string;
-  memo: string;
-  transport_to_next: string;
-  place_id: string;
-}
+type ViewMode = "planner" | "route";
 
 // -----------------------------------------------------------------------
 // Page Component
@@ -49,13 +43,13 @@ export default function SchedulePage() {
   const { tripId } = useParams<{ tripId: string }>();
   const supabase = createClient();
 
-  const [viewMode, setViewMode] = useState<ViewMode>("calendar");
+  const [viewMode, setViewMode] = useState<ViewMode>("planner");
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [places, setPlaces] = useState<Place[]>([]);
   const [trip, setTrip] = useState<Trip | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Route view state: 선택된 날짜 (null = 전체)
+  // Route view state: 선택된 날짜
   const [routeDateIndex, setRouteDateIndex] = useState<number>(0);
 
   // Form state
@@ -63,8 +57,9 @@ export default function SchedulePage() {
   const [targetScheduleId, setTargetScheduleId] = useState<string | null>(null);
   const [editingItem, setEditingItem] = useState<ScheduleItem | null>(null);
 
-  // DnD overlay state for place cards
+  // DnD overlay state
   const [activePlaceId, setActivePlaceId] = useState<string | null>(null);
+  const [activeItemId, setActiveItemId] = useState<string | null>(null);
 
   // -----------------------------------------------------------------------
   // Data fetching
@@ -151,7 +146,6 @@ export default function SchedulePage() {
   };
 
   const handleOpenEditForm = (item: ScheduleItem) => {
-    // Find which schedule this item belongs to
     const parentSchedule = schedules.find((s) =>
       (s.items ?? []).some((i) => i.id === item.id)
     );
@@ -166,11 +160,14 @@ export default function SchedulePage() {
     const payload = {
       schedule_id: targetScheduleId,
       title: data.title.trim(),
-      start_time: data.start_time || null,
-      end_time: data.end_time || null,
       memo: data.memo.trim() || null,
-      transport_to_next: data.transport_to_next || null,
       place_id: data.place_id || null,
+      arrival_by: data.arrival_by ? new Date(data.arrival_by).toISOString() : null,
+      travel_mode: data.travel_mode || null,
+      // 기존 필드는 null로 유지 (하위호환)
+      start_time: null,
+      end_time: null,
+      transport_to_next: null,
     };
 
     try {
@@ -191,7 +188,10 @@ export default function SchedulePage() {
         if (error) throw error;
         toast.success("일정이 추가되었습니다.");
       }
+
+      // 이동 정보 자동 계산 (폼 저장 후)
       await fetchData();
+      await computeTravelInfoForSchedule(targetScheduleId);
     } catch (err) {
       console.error(err);
       toast.error("저장에 실패했습니다.");
@@ -238,6 +238,8 @@ export default function SchedulePage() {
             .eq("id", item.id)
         )
       );
+      // 순서 변경 후 이동 정보 재계산
+      await computeTravelInfoForSchedule(scheduleId);
     } catch {
       toast.error("순서 저장에 실패했습니다.");
       await fetchData(); // revert
@@ -262,10 +264,14 @@ export default function SchedulePage() {
         end_time: null,
         memo: null,
         transport_to_next: null,
+        arrival_by: null,
+        travel_mode: null,
       });
       if (error) throw error;
       toast.success(`"${place.name}" 을(를) 일정에 추가했습니다.`);
       await fetchData();
+      // 장소 추가 후 이동 정보 계산
+      await computeTravelInfoForSchedule(scheduleId);
     } catch (err) {
       console.error(err);
       toast.error("장소 추가에 실패했습니다.");
@@ -273,20 +279,92 @@ export default function SchedulePage() {
   };
 
   // -----------------------------------------------------------------------
-  // Top-level DnD handlers (for place sidebar drag)
+  // Directions API: 이동 정보 자동 계산
+  // -----------------------------------------------------------------------
+  const computeTravelInfoForSchedule = async (scheduleId: string) => {
+    // 최신 데이터를 refetch
+    const { data } = await supabase
+      .from("schedules")
+      .select(`*, items:schedule_items(*, place:places(*))`)
+      .eq("id", scheduleId)
+      .single();
+
+    if (!data) return;
+
+    const items = ((data as Schedule).items ?? [])
+      .slice()
+      .sort((a, b) => a.sort_order - b.sort_order);
+
+    for (let i = 1; i < items.length; i++) {
+      const prev = items[i - 1];
+      const curr = items[i];
+
+      // 이미 캐싱되어 있으면 스킵
+      if (curr.travel_duration_seconds != null) continue;
+
+      // 양쪽 좌표 필요
+      if (
+        prev.place?.latitude == null || prev.place?.longitude == null ||
+        curr.place?.latitude == null || curr.place?.longitude == null
+      ) continue;
+
+      const mode = curr.travel_mode || "walking";
+
+      try {
+        const res = await fetch(
+          `/api/directions?origin=${prev.place.latitude},${prev.place.longitude}&destination=${curr.place.latitude},${curr.place.longitude}&mode=${mode}`
+        );
+        if (!res.ok) continue;
+
+        const result = await res.json();
+
+        await supabase
+          .from("schedule_items")
+          .update({
+            travel_duration_seconds: result.duration_seconds,
+            travel_distance_meters: result.distance_meters,
+            travel_mode: mode,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", curr.id);
+      } catch {
+        // 개별 실패는 무시 — 다음 항목 계속 처리
+      }
+    }
+
+    // UI 갱신
+    await fetchData();
+  };
+
+  // -----------------------------------------------------------------------
+  // Top-level DnD handlers
   // -----------------------------------------------------------------------
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } })
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } })
+  );
+
+  const collisionDetection: CollisionDetection = useCallback(
+    (args) => {
+      const pointerCollisions = pointerWithin(args);
+      if (pointerCollisions.length > 0) return pointerCollisions;
+      return closestCenter(args);
+    },
+    []
   );
 
   const handleTopDragStart = (event: DragStartEvent) => {
     const id = event.active.id as string;
-    if (id.startsWith("place-")) setActivePlaceId(id);
+    if (id.startsWith("place-")) {
+      setActivePlaceId(id);
+    } else {
+      setActiveItemId(id);
+    }
   };
 
   const handleTopDragEnd = async (event: DragEndEvent) => {
     setActivePlaceId(null);
+    setActiveItemId(null);
     const { active, over } = event;
     if (!over) return;
 
@@ -356,6 +434,10 @@ export default function SchedulePage() {
     ? places.find((p) => `place-${p.id}` === activePlaceId) ?? null
     : null;
 
+  const activeItemObj = activeItemId
+    ? schedules.flatMap((s) => s.items ?? []).find((i) => i.id === activeItemId) ?? null
+    : null;
+
   // -----------------------------------------------------------------------
   // Loading skeleton
   // -----------------------------------------------------------------------
@@ -381,7 +463,7 @@ export default function SchedulePage() {
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={closestCenter}
+      collisionDetection={collisionDetection}
       onDragStart={handleTopDragStart}
       onDragEnd={handleTopDragEnd}
     >
@@ -390,22 +472,13 @@ export default function SchedulePage() {
         <div className="flex items-center gap-2 flex-wrap">
           <div className="flex rounded-lg border p-1 gap-1">
             <Button
-              variant={viewMode === "calendar" ? "secondary" : "ghost"}
+              variant={viewMode === "planner" ? "secondary" : "ghost"}
               size="sm"
               className="h-7 px-3 text-xs gap-1.5"
-              onClick={() => setViewMode("calendar")}
+              onClick={() => setViewMode("planner")}
             >
-              <CalendarDays className="w-3.5 h-3.5" />
-              달력
-            </Button>
-            <Button
-              variant={viewMode === "timeline" ? "secondary" : "ghost"}
-              size="sm"
-              className="h-7 px-3 text-xs gap-1.5"
-              onClick={() => setViewMode("timeline")}
-            >
-              <TimerIcon className="w-3.5 h-3.5" />
-              타임라인
+              <ListOrdered className="w-3.5 h-3.5" />
+              플래너
             </Button>
             <Button
               variant={viewMode === "route" ? "secondary" : "ghost"}
@@ -432,22 +505,20 @@ export default function SchedulePage() {
             {schedules.length === 0 ? (
               <div className="flex flex-col items-center gap-4 py-20 text-center animate-fade-in-up">
                 <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
-                  <CalendarDays className="h-8 w-8 text-primary/60" />
+                  <ListOrdered className="h-8 w-8 text-primary/60" />
                 </div>
                 <div className="space-y-1">
                   <p className="font-medium text-foreground/80">아직 일정이 없습니다</p>
                   <p className="text-sm text-muted-foreground">여행 날짜별 일정을 자동 생성 중...</p>
                 </div>
               </div>
-            ) : viewMode === "calendar" ? (
-              <CalendarView
+            ) : viewMode === "planner" ? (
+              <PlannerView
                 schedules={schedules}
                 onAddItem={handleOpenAddForm}
                 onEditItem={handleOpenEditForm}
                 onDeleteItem={handleDeleteItem}
               />
-            ) : viewMode === "timeline" ? (
-              <TimelineView schedules={schedules} />
             ) : (
               /* 동선 뷰 */
               <div className="space-y-3">
@@ -497,9 +568,9 @@ export default function SchedulePage() {
                             {idx + 1}
                           </span>
                           <span>{item.title}</span>
-                          {item.start_time && (
+                          {item.arrival_by && (
                             <span className="text-xs opacity-60">
-                              {item.start_time}
+                              {new Date(item.arrival_by).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit", hour12: false })}까지
                             </span>
                           )}
                         </li>
@@ -526,11 +597,19 @@ export default function SchedulePage() {
         </div>
       </div>
 
-      {/* Place drag overlay */}
-      <DragOverlay>
+      {/* Drag overlay */}
+      <DragOverlay dropAnimation={{ duration: 200, easing: "ease" }}>
         {activePlaceObj && (
-          <div className="opacity-80 pointer-events-none w-40 bg-card border rounded-lg p-2 shadow-lg text-xs font-medium">
+          <div className="pointer-events-none w-40 bg-card border rounded-lg p-2 shadow-xl text-xs font-medium scale-105">
             {activePlaceObj.name}
+          </div>
+        )}
+        {activeItemObj && (
+          <div className="pointer-events-none bg-card border border-primary rounded-lg p-3 shadow-xl max-w-sm scale-[1.02]">
+            <p className="font-medium text-sm">{activeItemObj.title}</p>
+            {activeItemObj.place && (
+              <span className="text-xs text-muted-foreground">{activeItemObj.place.name}</span>
+            )}
           </div>
         )}
       </DragOverlay>

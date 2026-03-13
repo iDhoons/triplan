@@ -19,25 +19,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { ScheduleItem, Place } from "@/types/database";
+import type { ScheduleItem, Place, TravelMode } from "@/types/database";
 
-const TRANSPORT_OPTIONS = [
-  { value: "도보", label: "도보" },
-  { value: "버스", label: "버스" },
-  { value: "지하철", label: "지하철" },
-  { value: "택시", label: "택시" },
-  { value: "렌터카", label: "렌터카" },
-  { value: "기차", label: "기차" },
-  { value: "비행기", label: "비행기" },
-  { value: "배", label: "배" },
+const TRAVEL_MODE_OPTIONS: { value: TravelMode; label: string }[] = [
+  { value: "walking", label: "도보" },
+  { value: "transit", label: "대중교통" },
+  { value: "driving", label: "자동차" },
 ];
 
-interface ScheduleItemFormData {
+export interface ScheduleItemFormData {
   title: string;
-  start_time: string;
-  end_time: string;
+  arrival_by: string;
   memo: string;
-  transport_to_next: string;
+  travel_mode: string;
   place_id: string;
 }
 
@@ -51,12 +45,23 @@ interface ScheduleItemFormProps {
 
 const EMPTY_FORM: ScheduleItemFormData = {
   title: "",
-  start_time: "",
-  end_time: "",
+  arrival_by: "",
   memo: "",
-  transport_to_next: "",
+  travel_mode: "",
   place_id: "",
 };
+
+/** TIMESTAMPTZ → datetime-local 값 변환 */
+function toDatetimeLocal(iso: string | null): string {
+  if (!iso) return "";
+  try {
+    const d = new Date(iso);
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  } catch {
+    return "";
+  }
+}
 
 export function ScheduleItemForm({
   open,
@@ -72,10 +77,9 @@ export function ScheduleItemForm({
     if (editingItem) {
       setForm({
         title: editingItem.title,
-        start_time: editingItem.start_time?.slice(0, 5) ?? "",
-        end_time: editingItem.end_time?.slice(0, 5) ?? "",
+        arrival_by: toDatetimeLocal(editingItem.arrival_by),
         memo: editingItem.memo ?? "",
-        transport_to_next: editingItem.transport_to_next ?? "",
+        travel_mode: editingItem.travel_mode ?? "",
         place_id: editingItem.place_id ?? "",
       });
     } else {
@@ -120,26 +124,18 @@ export function ScheduleItemForm({
             />
           </div>
 
-          {/* Time range */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="start_time">시작 시간</Label>
-              <Input
-                id="start_time"
-                type="time"
-                value={form.start_time}
-                onChange={(e) => set("start_time")(e.target.value)}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="end_time">종료 시간</Label>
-              <Input
-                id="end_time"
-                type="time"
-                value={form.end_time}
-                onChange={(e) => set("end_time")(e.target.value)}
-              />
-            </div>
+          {/* Arrival by (datetime-local) */}
+          <div className="space-y-1.5">
+            <Label htmlFor="arrival_by">희망 도착 시간</Label>
+            <Input
+              id="arrival_by"
+              type="datetime-local"
+              value={form.arrival_by}
+              onChange={(e) => set("arrival_by")(e.target.value)}
+            />
+            <p className="text-[11px] text-muted-foreground">
+              설정하면 이동시간을 역산하여 출발 알림을 받을 수 있습니다.
+            </p>
           </div>
 
           {/* Place */}
@@ -175,13 +171,13 @@ export function ScheduleItemForm({
             />
           </div>
 
-          {/* Transport to next */}
+          {/* Travel mode */}
           <div className="space-y-1.5">
-            <Label>다음 장소 이동 수단</Label>
+            <Label>이동 수단</Label>
             <Select
-              value={form.transport_to_next || "none"}
+              value={form.travel_mode || "none"}
               onValueChange={(v) =>
-                set("transport_to_next")(v == null || v === "none" ? "" : v)
+                set("travel_mode")(v == null || v === "none" ? "" : v)
               }
             >
               <SelectTrigger>
@@ -189,7 +185,7 @@ export function ScheduleItemForm({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">선택 안 함</SelectItem>
-                {TRANSPORT_OPTIONS.map((opt) => (
+                {TRAVEL_MODE_OPTIONS.map((opt) => (
                   <SelectItem key={opt.value} value={opt.value}>
                     {opt.label}
                   </SelectItem>
