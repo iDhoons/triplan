@@ -219,8 +219,8 @@ function RouteMapInner({
       marker.addListener("click", () => {
         const place = item.place!;
         const timeStr =
-          item.start_time
-            ? `<p style="margin:2px 0 0;font-size:11px;color:#666;">${item.start_time}${item.end_time ? ` ~ ${item.end_time}` : ""}</p>`
+          item.arrival_by
+            ? `<p style="margin:2px 0 0;font-size:11px;color:#666;">${new Date(item.arrival_by).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit", hour12: false })}까지 도착</p>`
             : "";
         const content = `
           <div style="padding:4px 2px;min-width:130px;">

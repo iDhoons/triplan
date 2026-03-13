@@ -121,11 +121,23 @@ export interface PlaceVote {
   created_at: string;
 }
 
+export interface WeatherSummary {
+  weather_code: number;
+  label: string;
+  temp_high: number;
+  temp_low: number;
+  precip_pct: number;
+  precip_mm: number;
+  icon: string;
+}
+
 export interface Schedule {
   id: string;
   trip_id: string;
   date: string;
   day_memo: string | null;
+  weather_summary: WeatherSummary | null;
+  weather_fetched_at: string | null;
   items?: ScheduleItem[];
 }
 

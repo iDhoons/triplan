@@ -11,6 +11,7 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DraggableItem } from "./draggable-item";
 import { TravelInfoCard } from "./travel-info-card";
+import { WeatherBadge } from "./weather-badge";
 import type { Schedule, ScheduleItem } from "@/types/database";
 
 // -----------------------------------------------------------------------
@@ -50,6 +51,7 @@ function DayCard({
           </span>
           <span className="text-sm text-muted-foreground">({dateLabel})</span>
         </div>
+        <WeatherBadge weather={schedule.weather_summary ?? null} />
         {schedule.day_memo && (
           <span className="text-xs text-muted-foreground truncate">
             — {schedule.day_memo}

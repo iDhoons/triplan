@@ -119,9 +119,29 @@ export default function SchedulePage() {
     }
   }, [tripId, supabase]);
 
+  // -----------------------------------------------------------------------
+  // Weather sync: 데이터 로드 후 날씨 정보 동기화 (비동기, 실패 시 무시)
+  // -----------------------------------------------------------------------
+  const syncWeather = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/weather?tripId=${tripId}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.status === "updated") {
+        // 날씨가 갱신되었으면 schedules를 다시 가져와서 UI 반영
+        await fetchData();
+      }
+    } catch {
+      // 날씨 실패는 무시 — graceful degradation
+    }
+  }, [tripId, fetchData]);
+
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    fetchData().then(() => {
+      // 데이터 로드 완료 후 날씨 동기화 (논블로킹)
+      syncWeather();
+    });
+  }, [fetchData, syncWeather]);
 
   // -----------------------------------------------------------------------
   // Computed: scheduled place IDs set
@@ -308,7 +328,7 @@ export default function SchedulePage() {
         curr.place?.latitude == null || curr.place?.longitude == null
       ) continue;
 
-      const mode = curr.travel_mode || "walking";
+      const mode = curr.travel_mode || "transit";
 
       try {
         const res = await fetch(
