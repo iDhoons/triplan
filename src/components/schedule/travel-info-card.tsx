@@ -198,6 +198,12 @@ interface TravelInfoCardProps {
 
 export function TravelInfoCard({ currentItem, nextItem, loading }: TravelInfoCardProps) {
   const [expanded, setExpanded] = useState(false);
+  const [fetching, setFetching] = useState(false);
+  const [fetchedInfo, setFetchedInfo] = useState<{
+    duration: number;
+    distance: number;
+    mode: TravelMode;
+  } | null>(null);
 
   const duration = nextItem.travel_duration_seconds;
   const distance = nextItem.travel_distance_meters;
@@ -210,6 +216,30 @@ export function TravelInfoCard({ currentItem, nextItem, loading }: TravelInfoCar
     nextItem.place?.longitude != null;
 
   const hasCachedInfo = duration != null && distance != null;
+
+  /** 미계산 상태에서 길찾기 클릭 시 API 호출 */
+  async function fetchDirections() {
+    if (!hasCoords || fetching) return;
+    setFetching(true);
+    try {
+      const res = await fetch(
+        `/api/directions?origin=${currentItem.place!.latitude},${currentItem.place!.longitude}&destination=${nextItem.place!.latitude},${nextItem.place!.longitude}&mode=transit`
+      );
+      if (res.ok) {
+        const data = await res.json();
+        setFetchedInfo({
+          duration: data.duration_seconds,
+          distance: data.distance_meters,
+          mode: data.used_mode || "transit",
+        });
+        setExpanded(true);
+      }
+    } catch (e) {
+      console.error("[TravelInfoCard] fetch error:", e);
+    } finally {
+      setFetching(false);
+    }
+  }
 
   // Loading 상태
   if (loading) {
@@ -268,6 +298,19 @@ export function TravelInfoCard({ currentItem, nextItem, loading }: TravelInfoCar
         {/* Accordion 확장 영역 */}
         {expanded && (
           <div className="mx-4 mb-2 space-y-2 animate-in slide-in-from-top-1 duration-200">
+            {/* 추천 경로 정보 (먼저 표시) */}
+            <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-primary/5 border border-primary/10">
+              {getModeIcon(mode, "w-4 h-4 text-primary shrink-0")}
+              <div className="flex flex-col gap-0.5">
+                <span className="text-[11px] font-semibold text-foreground">
+                  추천 경로
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {getModeLabel(mode)} {formatDuration(duration)} &middot; {formatDistance(distance)}
+                </span>
+              </div>
+            </div>
+
             {/* 미니맵 */}
             {hasCoords && (
               <MiniMap
@@ -280,69 +323,120 @@ export function TravelInfoCard({ currentItem, nextItem, loading }: TravelInfoCar
               />
             )}
 
-            {/* 경로 정보 요약 */}
-            <div className="flex items-center justify-between px-1">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                {getModeIcon(mode, "w-3.5 h-3.5")}
-                <span>
-                  {getModeLabel(mode)} {formatDuration(duration)} &middot; {formatDistance(distance)}
-                </span>
-              </div>
-
-              {/* Google Maps 딥링크 버튼 */}
-              {hasCoords && (
-                <a
-                  href={buildGoogleMapsUrl(
-                    currentItem.place!.latitude!,
-                    currentItem.place!.longitude!,
-                    nextItem.place!.latitude!,
-                    nextItem.place!.longitude!,
-                    mode
-                  )}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={cn(
-                    "inline-flex items-center gap-1.5 h-7 px-3 text-xs font-medium",
-                    "rounded-md border bg-background hover:bg-accent transition-colors"
-                  )}
-                >
-                  <ExternalLink className="w-3 h-3" />
-                  Google Maps에서 길찾기
-                </a>
-              )}
-            </div>
+            {/* Google Maps 연결 (하단) */}
+            {hasCoords && (
+              <a
+                href={buildGoogleMapsUrl(
+                  currentItem.place!.latitude!,
+                  currentItem.place!.longitude!,
+                  nextItem.place!.latitude!,
+                  nextItem.place!.longitude!,
+                  mode
+                )}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={cn(
+                  "flex items-center justify-center gap-1.5 w-full h-8 text-xs font-medium",
+                  "rounded-md border bg-background hover:bg-accent transition-colors"
+                )}
+              >
+                <ExternalLink className="w-3 h-3" />
+                Google Maps에서 상세 경로 보기
+              </a>
+            )}
           </div>
         )}
       </div>
     );
   }
 
-  // 좌표 있지만 미계산 → 탭하면 Google Maps 딥링크만
+  // 좌표 있지만 미계산 → 길찾기 클릭 시 경로 조회 후 표시
   return (
     <div className="space-y-0">
-      <div className="flex items-center gap-2 py-1 pl-4">
+      <div className="flex items-center gap-2 py-1.5 pl-4">
         <div className="flex-1 border-t border-dashed border-muted-foreground/20" />
         {hasCoords ? (
+          <button
+            type="button"
+            onClick={fetchedInfo ? () => setExpanded(!expanded) : fetchDirections}
+            disabled={fetching}
+            className={cn(
+              "flex items-center gap-1.5 rounded-full px-2.5 py-0.5",
+              "text-xs transition-all",
+              fetchedInfo
+                ? "bg-muted text-muted-foreground hover:bg-muted/80 cursor-pointer"
+                : "text-muted-foreground/60 hover:text-primary cursor-pointer",
+              fetching && "opacity-60 cursor-wait"
+            )}
+          >
+            {fetching ? (
+              <>
+                <Loader2 className="w-3 h-3 animate-spin" />
+                <span>경로 조회 중...</span>
+              </>
+            ) : fetchedInfo ? (
+              <>
+                {getModeIcon(fetchedInfo.mode)}
+                <span className="font-medium">{formatDuration(fetchedInfo.duration)}</span>
+                <span className="text-muted-foreground/60">&middot;</span>
+                <span>{formatDistance(fetchedInfo.distance)}</span>
+                <ChevronDown
+                  className={cn(
+                    "w-3 h-3 transition-transform duration-200",
+                    expanded && "rotate-180"
+                  )}
+                />
+              </>
+            ) : (
+              <>
+                {getModeIcon(null, "w-2.5 h-2.5")}
+                <span>길찾기</span>
+              </>
+            )}
+          </button>
+        ) : (
+          <span className="text-[10px] text-muted-foreground/50">이동 정보 미계산</span>
+        )}
+        <div className="flex-1 border-t border-dashed border-muted-foreground/20" />
+      </div>
+
+      {/* 조회된 경로 정보 확장 영역 */}
+      {fetchedInfo && expanded && hasCoords && (
+        <div className="mx-4 mb-2 space-y-2 animate-in slide-in-from-top-1 duration-200">
+          {/* 추천 경로 정보 */}
+          <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-primary/5 border border-primary/10">
+            {getModeIcon(fetchedInfo.mode, "w-4 h-4 text-primary shrink-0")}
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[11px] font-semibold text-foreground">
+                추천 경로
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {getModeLabel(fetchedInfo.mode)} {formatDuration(fetchedInfo.duration)} &middot; {formatDistance(fetchedInfo.distance)}
+              </span>
+            </div>
+          </div>
+
+          {/* Google Maps 연결 */}
           <a
             href={buildGoogleMapsUrl(
               currentItem.place!.latitude!,
               currentItem.place!.longitude!,
               nextItem.place!.latitude!,
               nextItem.place!.longitude!,
-              null
+              fetchedInfo.mode
             )}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1 text-[10px] text-muted-foreground/60 hover:text-primary transition-colors"
+            className={cn(
+              "flex items-center justify-center gap-1.5 w-full h-8 text-xs font-medium",
+              "rounded-md border bg-background hover:bg-accent transition-colors"
+            )}
           >
-            <ExternalLink className="w-2.5 h-2.5" />
-            길찾기
+            <ExternalLink className="w-3 h-3" />
+            Google Maps에서 상세 경로 보기
           </a>
-        ) : (
-          <span className="text-[10px] text-muted-foreground/50">이동 정보 미계산</span>
-        )}
-        <div className="flex-1 border-t border-dashed border-muted-foreground/20" />
-      </div>
+        </div>
+      )}
     </div>
   );
 }
