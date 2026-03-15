@@ -144,7 +144,8 @@ export default function SignupPage() {
 
           <Button
             type="submit"
-            className="w-full py-5 sm:py-6 text-sm sm:text-base font-bold cursor-pointer rounded-2xl transition-all duration-300 hover:scale-[1.01] active:scale-[0.98]"
+            size="lg"
+            className="w-full font-bold cursor-pointer transition-all duration-300 hover:scale-[1.01] active:scale-[0.98]"
             disabled={loading}
           >
             {loading ? "가입 중..." : "가입하기"}

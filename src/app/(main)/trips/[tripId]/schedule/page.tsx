@@ -493,8 +493,7 @@ export default function SchedulePage() {
           <div className="flex rounded-lg border p-1 gap-1">
             <Button
               variant={viewMode === "planner" ? "secondary" : "ghost"}
-              size="sm"
-              className="h-7 px-3 text-xs gap-1.5"
+              size="xs"
               onClick={() => setViewMode("planner")}
             >
               <ListOrdered className="w-3.5 h-3.5" />
@@ -502,8 +501,7 @@ export default function SchedulePage() {
             </Button>
             <Button
               variant={viewMode === "route" ? "secondary" : "ghost"}
-              size="sm"
-              className="h-7 px-3 text-xs gap-1.5"
+              size="xs"
               onClick={() => setViewMode("route")}
             >
               <RouteIcon className="w-3.5 h-3.5" />

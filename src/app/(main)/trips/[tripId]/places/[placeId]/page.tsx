@@ -273,7 +273,6 @@ export default function PlaceDetailPage() {
       {/* 액션 버튼 */}
       <div className="flex gap-2 flex-wrap">
         <Button
-          size="sm"
           onClick={() => setScheduleDialogOpen(true)}
           className="gap-1.5"
         >
@@ -292,9 +291,8 @@ export default function PlaceDetailPage() {
           수정
         </Button>
         <Button
-          variant="outline"
-          size="sm"
-          className="gap-1.5 text-red-500 hover:text-red-700"
+          variant="destructive"
+          className="gap-1.5"
           onClick={handleDelete}
         >
           <Trash2 className="w-4 h-4" />
@@ -472,7 +470,6 @@ export default function PlaceDetailPage() {
               className="resize-none text-sm"
             />
             <Button
-              size="sm"
               onClick={handleSubmitComment}
               disabled={!comment.trim() || submittingComment}
               className="shrink-0"

@@ -202,8 +202,8 @@ export default function JournalPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">여행 후기</h2>
-        <Button size="sm" onClick={openCreateDialog}>
-          <Plus className="w-3.5 h-3.5 mr-1" />
+        <Button onClick={openCreateDialog}>
+          <Plus className="w-3.5 h-3.5" />
           후기 작성
         </Button>
       </div>
@@ -338,16 +338,16 @@ export default function JournalPage() {
                   <div className="flex gap-1">
                     <Button
                       variant="ghost"
-                      size="sm"
-                      className="h-7 px-2 text-muted-foreground"
+                      size="xs"
+                      className="text-muted-foreground"
                       onClick={() => openEditDialog(journal)}
                     >
                       수정
                     </Button>
                     <Button
                       variant="ghost"
-                      size="sm"
-                      className="h-7 px-2 text-destructive hover:text-destructive"
+                      size="xs"
+                      className="text-destructive hover:text-destructive"
                       onClick={() => handleDelete(journal.id)}
                     >
                       <Trash2 className="w-3.5 h-3.5" />

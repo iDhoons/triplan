@@ -77,8 +77,7 @@ export function DraggableItem({ item, orderNumber, onEdit, onDelete }: Draggable
           <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
             <Button
               variant="ghost"
-              size="icon"
-              className="h-6 w-6"
+              size="icon-sm"
               onClick={() => onEdit(item)}
               aria-label="수정"
             >
@@ -86,8 +85,8 @@ export function DraggableItem({ item, orderNumber, onEdit, onDelete }: Draggable
             </Button>
             <Button
               variant="ghost"
-              size="icon"
-              className="h-6 w-6 text-destructive hover:text-destructive"
+              size="icon-sm"
+              className="text-destructive hover:text-destructive"
               onClick={() => onDelete(item.id)}
               aria-label="삭제"
             >

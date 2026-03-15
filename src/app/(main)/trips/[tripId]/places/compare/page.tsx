@@ -196,7 +196,7 @@ function ComparePage() {
     <div className="flex flex-col gap-6">
       {/* 헤더 */}
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon-sm" onClick={() => router.back()}>
+        <Button variant="ghost" size="icon" onClick={() => router.back()}>
           <ArrowLeftIcon />
         </Button>
         <h2 className="text-lg font-semibold">장소 비교</h2>

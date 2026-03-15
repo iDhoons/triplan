@@ -117,11 +117,11 @@ export function InstallBanner() {
             </p>
           </div>
           <div className="flex shrink-0 items-center gap-1">
-            <Button size="sm" onClick={handleInstallAndroid}>
+            <Button onClick={handleInstallAndroid}>
               설치
             </Button>
             <Button
-              size="icon-sm"
+              size="icon"
               variant="ghost"
               onClick={handleDismiss}
               aria-label="닫기"
@@ -150,11 +150,11 @@ export function InstallBanner() {
               </p>
             </div>
             <div className="flex shrink-0 items-center gap-1">
-              <Button size="sm" onClick={() => setShowIosGuide(true)}>
+              <Button onClick={() => setShowIosGuide(true)}>
                 방법 보기
               </Button>
               <Button
-                size="icon-sm"
+                size="icon"
                 variant="ghost"
                 onClick={handleDismiss}
                 aria-label="닫기"
@@ -178,7 +178,7 @@ export function InstallBanner() {
               <div className="mb-4 flex items-center justify-between">
                 <p className="text-base font-semibold">홈 화면에 추가하는 법</p>
                 <Button
-                  size="icon-sm"
+                  size="icon"
                   variant="ghost"
                   onClick={() => setShowIosGuide(false)}
                   aria-label="닫기"
@@ -261,7 +261,7 @@ export function InstallBanner() {
             </p>
           </div>
           <Button
-            size="icon-sm"
+            size="icon"
             variant="ghost"
             onClick={handleDismiss}
             aria-label="닫기"

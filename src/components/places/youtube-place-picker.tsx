@@ -268,7 +268,7 @@ export function YouTubePlacePicker({
           </SheetTitle>
           <Button
             variant="ghost"
-            size="icon-sm"
+            size="icon"
             onClick={() => onOpenChange(false)}
           >
             <XIcon className="size-4" />
@@ -289,7 +289,7 @@ export function YouTubePlacePicker({
               disabled={step === "extracting" || step === "analyzing"}
             />
             {step === "extracting" || step === "analyzing" ? (
-              <Button variant="outline" onClick={handleCancel}>
+              <Button variant="outline" size="sm" onClick={handleCancel}>
                 취소
               </Button>
             ) : (
@@ -423,7 +423,6 @@ export function YouTubePlacePicker({
             <Button
               onClick={handleAddPlaces}
               disabled={selectedCount === 0 || isAdding}
-              size="sm"
             >
               {isAdding ? (
                 <>

@@ -83,8 +83,7 @@ function DayCard({
             </p>
             <Button
               variant="outline"
-              size="sm"
-              className="h-7 text-xs"
+              size="xs"
               onClick={() => onAddItem(schedule.id)}
             >
               <Plus className="w-3 h-3 mr-1" />
@@ -123,8 +122,8 @@ function DayCard({
       {items.length > 0 && (
         <Button
           variant="ghost"
-          size="sm"
-          className="h-7 text-xs text-muted-foreground"
+          size="xs"
+          className="text-muted-foreground"
           onClick={() => onAddItem(schedule.id)}
         >
           <Plus className="w-3 h-3 mr-1" />

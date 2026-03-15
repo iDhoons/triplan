@@ -248,7 +248,7 @@ export function PlaceDetailDrawer({
 
           {/* Sticky action bar */}
           <div className="border-t bg-background px-4 py-3 flex items-center gap-2">
-            <Button className="flex-1" size="sm">
+            <Button className="flex-1">
               일정에 추가
             </Button>
             <Button

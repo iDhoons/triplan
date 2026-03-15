@@ -19,7 +19,7 @@ export function TripHeader({ trip, onEditClick }: TripHeaderProps) {
       <div className="flex items-center gap-3">
         <Button
           variant="ghost"
-          size="sm"
+          size="icon"
           aria-label="대시보드로 돌아가기"
           onClick={() => router.push("/dashboard")}
         >

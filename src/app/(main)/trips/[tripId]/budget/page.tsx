@@ -233,7 +233,7 @@ export default function BudgetPage() {
               setBudgetDialogOpen(true);
             }}
           >
-            <Pencil className="w-3.5 h-3.5 mr-1" />
+            <Pencil className="w-3.5 h-3.5" />
             {budget ? "예산 수정" : "예산 설정"}
           </Button>
 
@@ -283,8 +283,8 @@ export default function BudgetPage() {
             </DialogContent>
           </Dialog>
 
-          <Button size="sm" onClick={() => setExpenseDialogOpen(true)}>
-            <Plus className="w-3.5 h-3.5 mr-1" />
+          <Button onClick={() => setExpenseDialogOpen(true)}>
+            <Plus className="w-3.5 h-3.5" />
             지출 추가
           </Button>
 

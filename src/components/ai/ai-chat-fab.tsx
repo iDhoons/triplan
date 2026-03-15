@@ -180,7 +180,7 @@ export function AiChatFab() {
               <SheetDescription className="text-xs">여행 계획을 도와드릴게요</SheetDescription>
             </div>
           </div>
-          <Button variant="ghost" size="icon-sm" onClick={() => setOpen(false)}>
+          <Button variant="ghost" size="icon" onClick={() => setOpen(false)}>
             <X className="w-4 h-4" />
           </Button>
         </SheetHeader>
@@ -191,10 +191,9 @@ export function AiChatFab() {
             <Button
               key={action.label}
               variant="outline"
-              size="sm"
+              size="xs"
               onClick={() => sendMessage(action.prompt, action.type)}
               disabled={loading}
-              className="text-xs"
             >
               {action.label}
             </Button>
@@ -241,10 +240,10 @@ export function AiChatFab() {
               disabled={loading}
             />
             <Button
-              size="sm"
+              size="icon-sm"
               onClick={() => sendMessage(input)}
               disabled={!input.trim() || loading}
-              className="shrink-0 h-8 w-8 p-0 rounded-lg"
+              className="shrink-0"
             >
               <Send className="w-3.5 h-3.5" />
               <span className="sr-only">전송</span>

@@ -237,7 +237,6 @@ function ShareTargetContent() {
             </p>
             <div className="flex gap-2">
               <Button
-                size="sm"
                 variant="outline"
                 onClick={() => {
                   // 점착성 맥락 해제 + 여행 선택 UI 표시
@@ -248,7 +247,6 @@ function ShareTargetContent() {
                 다른 여행으로
               </Button>
               <Button
-                size="sm"
                 onClick={() => router.push("/dashboard")}
               >
                 확인
@@ -270,14 +268,12 @@ function ShareTargetContent() {
             <p className="text-xs font-medium">{duplicate.name}</p>
             <div className="flex gap-2">
               <Button
-                size="sm"
                 variant="outline"
                 onClick={() => router.push("/dashboard")}
               >
                 확인
               </Button>
               <Button
-                size="sm"
                 variant="secondary"
                 onClick={() => {
                   setDuplicate(null);

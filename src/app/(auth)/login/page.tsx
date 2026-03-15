@@ -89,7 +89,7 @@ export default function LoginPage() {
             </p>
             <div className="flex gap-2">
               <Button
-                size="sm"
+                size="xs"
                 variant="outline"
                 className="flex-1 text-xs border-amber-300 dark:border-amber-600"
                 onClick={() => {
@@ -203,7 +203,8 @@ export default function LoginPage() {
 
           <Button
             type="submit"
-            className="w-full py-5 sm:py-6 text-sm sm:text-base font-bold cursor-pointer rounded-2xl transition-all duration-300 hover:scale-[1.01] active:scale-[0.98]"
+            size="lg"
+            className="w-full font-bold cursor-pointer transition-all duration-300 hover:scale-[1.01] active:scale-[0.98]"
             disabled={loading}
           >
             {loading ? "로그인 중..." : "로그인"}

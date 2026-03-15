@@ -337,8 +337,7 @@ export default function PlacesPage() {
           <div className="flex rounded-lg border p-0.5 gap-0.5">
             <Button
               variant={viewMode === "list" ? "secondary" : "ghost"}
-              size="sm"
-              className="h-7 px-2.5 text-xs gap-1"
+              size="xs"
               onClick={() => setViewMode("list")}
             >
               <ListIcon className="size-3.5" />
@@ -346,8 +345,7 @@ export default function PlacesPage() {
             </Button>
             <Button
               variant={viewMode === "map" ? "secondary" : "ghost"}
-              size="sm"
-              className="h-7 px-2.5 text-xs gap-1"
+              size="xs"
               onClick={() => setViewMode("map")}
             >
               <Map className="size-3.5" />
@@ -373,6 +371,7 @@ export default function PlacesPage() {
             <YoutubeIcon className="size-3.5 text-red-500" />
             YouTube
           </Button>
+
           <Dialog
             open={dialogOpen}
             onOpenChange={(open) => {
@@ -382,7 +381,7 @@ export default function PlacesPage() {
           >
             <DialogTrigger
               render={
-                <Button size="sm">
+                <Button>
                   <PlusIcon className="size-3.5" />
                   장소 추가
                 </Button>
@@ -417,7 +416,6 @@ export default function PlacesPage() {
               : `${selectedIds.size}개 선택됨 (최대 4개)`}
           </span>
           <Button
-            size="sm"
             disabled={selectedIds.size < 2}
             onClick={goCompare}
           >
@@ -476,7 +474,6 @@ export default function PlacesPage() {
                 <div className="flex gap-2 mt-1">
                   <Button
                     variant="outline"
-                    size="sm"
                     onClick={() => setDialogOpen(true)}
                   >
                     <PlusIcon className="size-3.5" />
@@ -484,7 +481,6 @@ export default function PlacesPage() {
                   </Button>
                   <Button
                     variant="outline"
-                    size="sm"
                     onClick={() => setYoutubePickerOpen(true)}
                   >
                     <YoutubeIcon className="size-3.5 text-red-500" />

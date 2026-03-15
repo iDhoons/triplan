@@ -376,7 +376,6 @@ export function PlaceForm({
                 <Button
                   type="button"
                   variant="secondary"
-                  size="sm"
                   disabled={scraping || !scrapeUrl.trim()}
                   onClick={handleScrape}
                 >
