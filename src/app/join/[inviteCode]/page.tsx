@@ -7,7 +7,8 @@ import { useAuthStore } from "@/stores/auth-store";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Trip, TripMember } from "@/types/database";
-import { MapPin, CalendarDays, Users } from "lucide-react";
+import { MapPin, CalendarDays, Users, Sparkles } from "lucide-react";
+import { toast } from "sonner";
 
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString("ko-KR", {
@@ -106,11 +107,15 @@ export default function JoinPage() {
     });
 
     if (error) {
-      // Might be a race condition duplicate – redirect anyway
       router.push(`/trips/${trip.id}/places`);
       return;
     }
 
+    // 온보딩 메시지 — 신규 참여자에게 첫 행동 안내
+    toast.success(`"${trip.title}" 여행에 참여했어요!`, {
+      description: "가고 싶은 장소를 추가하거나, AI에게 추천을 받아보세요.",
+      duration: 6000,
+    });
     router.push(`/trips/${trip.id}/places`);
   }
 
@@ -201,10 +206,23 @@ export default function JoinPage() {
           </CardContent>
         </Card>
 
-        {/* Role notice */}
-        <p className="text-xs text-muted-foreground text-center">
-          참여하면 <strong>편집자</strong> 권한으로 일정, 장소 등을 함께 편집할 수 있어요.
-        </p>
+        {/* 참여 후 할 수 있는 것 안내 */}
+        <div className="space-y-2 px-2">
+          <p className="text-xs font-medium text-center text-foreground/80">참여하면 이런 것들을 할 수 있어요</p>
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              { icon: MapPin, label: "장소 추가/투표" },
+              { icon: CalendarDays, label: "일정 편성" },
+              { icon: Users, label: "실시간 협업" },
+              { icon: Sparkles, label: "AI 추천" },
+            ].map(({ icon: Icon, label }) => (
+              <div key={label} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Icon className="w-3 h-3 text-primary/60" />
+                <span>{label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
 
         {/* Actions */}
         <div className="flex flex-col gap-3">
