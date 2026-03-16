@@ -1,92 +1,101 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { toast } from "sonner";
+import { useEffect, useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import type { Schedule, Place, Trip } from "@/types/database";
 
 /**
- * Schedule 페이지의 데이터 페칭 + 날씨 동기화를 담당하는 훅.
- * - trip, schedules, places를 한 번에 로드
- * - 로드 완료 후 날씨 자동 동기화 (논블로킹)
+ * Schedule 페이지의 데이터 페칭 훅 (React Query 기반).
+ * - RealtimeProvider의 ["schedules", tripId] invalidation과 자동 연결
+ * - 날씨 동기화는 초기 로드 후 논블로킹으로 실행
  */
 export function useScheduleData(tripId: string) {
   const supabase = createClient();
+  const queryClient = useQueryClient();
 
-  const [trip, setTrip] = useState<Trip | null>(null);
-  const [schedules, setSchedules] = useState<Schedule[]>([]);
-  const [places, setPlaces] = useState<Place[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const { data: tripData } = await supabase
+  // --- Trip ---
+  const tripQuery = useQuery({
+    queryKey: ["trip", tripId],
+    queryFn: async () => {
+      const { data, error } = await supabase
         .from("trips")
         .select("*")
         .eq("id", tripId)
         .single();
-      if (tripData) setTrip(tripData as Trip);
+      if (error) throw error;
+      return data as Trip;
+    },
+    enabled: !!tripId,
+  });
 
-      const { data: schedulesData, error: schedulesError } = await supabase
+  // --- Schedules (with items + places) ---
+  const schedulesQuery = useQuery({
+    queryKey: ["schedules", tripId],
+    queryFn: async () => {
+      const { data, error } = await supabase
         .from("schedules")
-        .select(
-          `*, items:schedule_items(*, place:places(*))`
-        )
+        .select(`*, items:schedule_items(*, place:places(*))`)
         .eq("trip_id", tripId)
         .order("date", { ascending: true });
+      if (error) throw error;
+      return ((data as Schedule[]) ?? []).map((s) => ({
+        ...s,
+        items: (s.items ?? [])
+          .slice()
+          .sort((a, b) => a.sort_order - b.sort_order),
+      }));
+    },
+    enabled: !!tripId,
+  });
 
-      if (schedulesError) throw schedulesError;
-
-      if (schedulesData) {
-        const normalized = (schedulesData as Schedule[]).map((s) => ({
-          ...s,
-          items: (s.items ?? [])
-            .slice()
-            .sort((a, b) => a.sort_order - b.sort_order),
-        }));
-        setSchedules(normalized);
-      }
-
-      const { data: placesData } = await supabase
+  // --- Places (for sidebar) ---
+  const placesQuery = useQuery({
+    queryKey: ["places", tripId],
+    queryFn: async () => {
+      const { data, error } = await supabase
         .from("places")
         .select("*")
         .eq("trip_id", tripId)
         .order("created_at", { ascending: true });
+      if (error) throw error;
+      return (data as Place[]) ?? [];
+    },
+    enabled: !!tripId,
+  });
 
-      if (placesData) setPlaces(placesData as Place[]);
-    } catch (err) {
-      console.error(err);
-      toast.error("데이터를 불러오는데 실패했습니다.");
-    } finally {
-      setLoading(false);
-    }
-  }, [tripId, supabase]);
-
+  // --- Weather sync (논블로킹, 초기 로드 후 1회) ---
   const syncWeather = useCallback(async () => {
     try {
       const res = await fetch(`/api/weather?tripId=${tripId}`);
       if (!res.ok) return;
       const data = await res.json();
       if (data.status === "updated") {
-        await fetchData();
+        queryClient.invalidateQueries({ queryKey: ["schedules", tripId] });
       }
     } catch {
       // 날씨 실패는 무시
     }
-  }, [tripId, fetchData]);
+  }, [tripId, queryClient]);
 
   useEffect(() => {
-    fetchData().then(() => syncWeather());
-  }, [fetchData, syncWeather]);
+    if (schedulesQuery.data && !schedulesQuery.isStale) {
+      syncWeather();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [schedulesQuery.data != null]);
+
+  const loading = tripQuery.isLoading || schedulesQuery.isLoading || placesQuery.isLoading;
 
   return {
-    trip,
-    schedules,
-    setSchedules,
-    places,
+    trip: tripQuery.data ?? null,
+    schedules: schedulesQuery.data ?? [],
+    places: placesQuery.data ?? [],
     loading,
     supabase,
-    refetch: fetchData,
+    refetch: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["schedules", tripId] });
+      await queryClient.invalidateQueries({ queryKey: ["places", tripId] });
+    },
   };
 }

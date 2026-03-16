@@ -1,5 +1,6 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { computeTravelInfoForSchedule } from "@/lib/services/travel-info";
 import type { Schedule, ScheduleItem, Place } from "@/types/database";
@@ -8,25 +9,27 @@ import type { ScheduleItemFormData } from "@/components/schedule/schedule-item-f
 type SupabaseClient = ReturnType<typeof import("@/lib/supabase/client").createClient>;
 
 interface UseScheduleActionsParams {
+  tripId: string;
   supabase: SupabaseClient;
   schedules: Schedule[];
-  setSchedules: React.Dispatch<React.SetStateAction<Schedule[]>>;
-  refetch: () => Promise<void>;
   targetScheduleId: string | null;
   editingItem: ScheduleItem | null;
 }
 
 /**
- * Schedule 페이지의 CRUD + 이동 정보 계산 핸들러를 제공하는 훅.
+ * Schedule 페이지의 CRUD + 이동 정보 계산 핸들러 (React Query 연동).
  */
 export function useScheduleActions({
+  tripId,
   supabase,
   schedules,
-  setSchedules,
-  refetch,
   targetScheduleId,
   editingItem,
 }: UseScheduleActionsParams) {
+  const queryClient = useQueryClient();
+
+  const invalidateSchedules = () =>
+    queryClient.invalidateQueries({ queryKey: ["schedules", tripId] });
 
   const handleFormSubmit = async (data: ScheduleItemFormData) => {
     if (!targetScheduleId) return;
@@ -62,9 +65,10 @@ export function useScheduleActions({
         toast.success("일정이 추가되었습니다.");
       }
 
-      await refetch();
+      await invalidateSchedules();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await computeTravelInfoForSchedule(supabase as any, targetScheduleId);
+      await invalidateSchedules();
     } catch (err) {
       console.error(err);
       toast.error("저장에 실패했습니다.");
@@ -82,17 +86,20 @@ export function useScheduleActions({
       return;
     }
     toast.success("일정이 삭제되었습니다.");
-    await refetch();
+    await invalidateSchedules();
   };
 
   const handleReorderItems = async (
     scheduleId: string,
     orderedItems: ScheduleItem[]
   ) => {
-    setSchedules((prev) =>
-      prev.map((s) =>
-        s.id === scheduleId ? { ...s, items: orderedItems } : s
-      )
+    // Optimistic update via React Query cache
+    queryClient.setQueryData<Schedule[]>(
+      ["schedules", tripId],
+      (old) =>
+        old?.map((s) =>
+          s.id === scheduleId ? { ...s, items: orderedItems } : s
+        ) ?? []
     );
 
     try {
@@ -106,9 +113,10 @@ export function useScheduleActions({
       );
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await computeTravelInfoForSchedule(supabase as any, scheduleId);
+      await invalidateSchedules();
     } catch {
       toast.error("순서 저장에 실패했습니다.");
-      await refetch();
+      await invalidateSchedules(); // revert via refetch
     }
   };
 
@@ -132,9 +140,10 @@ export function useScheduleActions({
       });
       if (error) throw error;
       toast.success(`"${place.name}" 을(를) 일정에 추가했습니다.`);
-      await refetch();
+      await invalidateSchedules();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await computeTravelInfoForSchedule(supabase as any, scheduleId);
+      await invalidateSchedules();
     } catch (err) {
       console.error(err);
       toast.error("장소 추가에 실패했습니다.");

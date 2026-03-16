@@ -41,15 +41,13 @@ type ViewMode = "planner" | "route";
 export default function SchedulePage() {
   const { tripId } = useParams<{ tripId: string }>();
 
-  // --- Data ---
+  // --- Data (React Query) ---
   const {
     trip,
     schedules,
-    setSchedules,
     places,
     loading,
     supabase,
-    refetch,
   } = useScheduleData(tripId);
 
   // --- UI state ---
@@ -61,17 +59,16 @@ export default function SchedulePage() {
   const [activePlaceId, setActivePlaceId] = useState<string | null>(null);
   const [activeItemId, setActiveItemId] = useState<string | null>(null);
 
-  // --- Actions ---
+  // --- Actions (React Query invalidation) ---
   const {
     handleFormSubmit,
     handleDeleteItem,
     handleReorderItems,
     handleDropPlace,
   } = useScheduleActions({
+    tripId,
     supabase,
     schedules,
-    setSchedules,
-    refetch,
     targetScheduleId,
     editingItem,
   });
