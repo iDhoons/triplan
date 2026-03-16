@@ -60,32 +60,6 @@ export function RealtimeProvider({ tripId, children }: RealtimeProviderProps) {
           queryClient.invalidateQueries({ queryKey: ["place_votes", tripId] });
         }
       )
-      // budgets 테이블 변경 구독
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "budgets",
-          filter: `trip_id=eq.${tripId}`,
-        },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ["budget", tripId] });
-        }
-      )
-      // expenses 테이블 변경 구독
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "expenses",
-          filter: `trip_id=eq.${tripId}`,
-        },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ["expenses", tripId] });
-        }
-      )
       // trip_members 테이블 변경 구독
       .on(
         "postgres_changes",
@@ -109,6 +83,31 @@ export function RealtimeProvider({ tripId, children }: RealtimeProviderProps) {
         },
         () => {
           queryClient.invalidateQueries({ queryKey: ["schedules", tripId] });
+        }
+      )
+      // checklist_items 테이블 변경 구독
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "checklist_items",
+          filter: `trip_id=eq.${tripId}`,
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["checklist", tripId] });
+        }
+      )
+      // checklist_logs 변경 구독
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "checklist_logs",
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["checklist_logs"] });
         }
       )
       // activity_logs 테이블 변경 구독

@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
-import { MapPin, CalendarCheck, Wallet } from "lucide-react";
+import { MapPin, CalendarCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface TripProgressBannerProps {
@@ -13,7 +13,6 @@ interface ProgressData {
   placeCount: number;
   scheduledCount: number;
   totalItemCount: number;
-  hasBudget: boolean;
 }
 
 /**
@@ -26,20 +25,11 @@ export function TripProgressBanner({ tripId }: TripProgressBannerProps) {
   const { data } = useQuery<ProgressData>({
     queryKey: ["trip-progress", tripId],
     queryFn: async () => {
-      const [placesRes, itemsRes, budgetRes] = await Promise.all([
+      const [placesRes] = await Promise.all([
         supabase
           .from("places")
           .select("id", { count: "exact", head: true })
           .eq("trip_id", tripId),
-        supabase
-          .from("schedule_items")
-          .select("id, schedule_id, place_id")
-          .eq("schedule_id.trip_id" as never, tripId),
-        supabase
-          .from("budgets")
-          .select("id")
-          .eq("trip_id", tripId)
-          .maybeSingle(),
       ]);
 
       // schedule_items는 schedules를 통해 간접 조회
@@ -63,7 +53,6 @@ export function TripProgressBanner({ tripId }: TripProgressBannerProps) {
         placeCount: placesRes.count ?? 0,
         scheduledCount: scheduledPlaceIds.size,
         totalItemCount: totalItems,
-        hasBudget: !!budgetRes.data,
       };
     },
     enabled: !!tripId,
@@ -73,7 +62,7 @@ export function TripProgressBanner({ tripId }: TripProgressBannerProps) {
   if (!data) return null;
 
   // 아무것도 없으면 배너 숨김
-  if (data.placeCount === 0 && data.totalItemCount === 0 && !data.hasBudget) {
+  if (data.placeCount === 0 && data.totalItemCount === 0) {
     return null;
   }
 
@@ -89,11 +78,6 @@ export function TripProgressBanner({ tripId }: TripProgressBannerProps) {
         ? `일정 ${data.totalItemCount}개`
         : "일정 미편성",
       done: data.totalItemCount > 0,
-    },
-    {
-      icon: Wallet,
-      label: data.hasBudget ? "예산 설정됨" : "예산 미설정",
-      done: data.hasBudget,
     },
   ];
 

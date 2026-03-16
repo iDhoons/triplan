@@ -27,8 +27,6 @@ function formatAction(log: ActivityLog): string {
       return `${actor}이(가) 일정에 '${targetName}'을(를) 추가했습니다`;
     case "schedule_item_removed":
       return `${actor}이(가) 일정에서 '${targetName}'을(를) 제거했습니다`;
-    case "expense_added":
-      return `${actor}이(가) 지출 '${targetName}'을(를) 기록했습니다`;
     case "member_joined":
       return `${actor}이(가) 여행에 참여했습니다`;
     default:

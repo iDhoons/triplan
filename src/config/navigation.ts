@@ -4,8 +4,7 @@ import {
   User,
   MapPin,
   Calendar,
-  Wallet,
-  BookOpen,
+  ListChecks,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -25,8 +24,7 @@ export const globalNav: NavItem[] = [
 export const tripNav: NavItem[] = [
   { href: "places", label: "장소", icon: MapPin },
   { href: "schedule", label: "일정", icon: Calendar },
-  { href: "budget", label: "예산", icon: Wallet },
-  { href: "journal", label: "후기", icon: BookOpen },
+  { href: "checklist", label: "체크리스트", icon: ListChecks },
   { href: "members", label: "멤버", icon: Users },
 ];
 

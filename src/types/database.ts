@@ -4,14 +4,15 @@ export type PlaceCategory =
   | "attraction"
   | "restaurant"
   | "other";
-export type ExpenseCategory =
-  | "accommodation"
-  | "food"
-  | "transport"
-  | "activity"
-  | "shopping"
-  | "other";
-export type CurrencyCode = "KRW" | "JPY" | "USD" | "EUR" | "CNY" | "THB" | "VND";
+export type ChecklistCategory =
+  | "documents"
+  | "clothing"
+  | "electronics"
+  | "hygiene"
+  | "shared"
+  | "todo"
+  | "shopping";
+export type ChecklistPriority = "high" | "medium" | "low";
 
 /** Google Places API addressComponent structure */
 export interface GoogleAddressComponent {
@@ -163,47 +164,29 @@ export interface ScheduleItem {
   place?: Place;
 }
 
-export interface Budget {
+export interface ChecklistItem {
   id: string;
   trip_id: string;
-  total_budget: number;
-  currency: CurrencyCode;
-}
-
-export interface Expense {
-  id: string;
-  trip_id: string;
-  category: ExpenseCategory;
+  category: ChecklistCategory;
   title: string;
-  amount: number;
-  currency: CurrencyCode;
-  paid_by: string;
-  date: string;
+  is_checked: boolean;
+  priority: ChecklistPriority;
+  position: number;
+  assigned_to: string | null;
   memo: string | null;
-  created_at: string;
-  profile?: Profile;
-}
-
-export interface Settlement {
-  id: string;
-  trip_id: string;
-  from_user: string;
-  to_user: string;
-  amount: number;
-  is_settled: boolean;
-  created_at: string;
-}
-
-export interface TripJournal {
-  id: string;
-  trip_id: string;
-  author_id: string;
-  date: string;
-  content: string | null;
-  photo_urls: string[];
+  created_by: string;
   created_at: string;
   updated_at: string;
-  profile?: Profile;
+  assignee?: Profile;
+}
+
+export interface ChecklistLog {
+  id: string;
+  checklist_item_id: string;
+  action: "checked" | "unchecked";
+  performed_by: string;
+  performed_at: string;
+  performer?: Profile;
 }
 
 export interface ActivityLog {
