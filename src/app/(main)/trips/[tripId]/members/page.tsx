@@ -16,7 +16,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { Trip, TripMember, MemberRole } from "@/types/database";
-import { Copy, Check, UserMinus } from "lucide-react";
+import { Copy, Check, UserMinus, RefreshCw } from "lucide-react";
+import { nanoid } from "nanoid";
+import { toast } from "sonner";
 
 const ROLE_LABELS: Record<MemberRole, string> = {
   admin: "관리자",
@@ -81,6 +83,21 @@ export default function MembersPage() {
     await navigator.clipboard.writeText(getInviteUrl());
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  }
+
+  async function handleRegenerateInvite() {
+    if (!trip) return;
+    const newCode = nanoid(10);
+    const { error } = await supabase
+      .from("trips")
+      .update({ invite_code: newCode })
+      .eq("id", trip.id);
+    if (error) {
+      toast.error("초대 코드 재생성에 실패했습니다.");
+      return;
+    }
+    setTrip({ ...trip, invite_code: newCode });
+    toast.success("초대 코드가 재생성되었습니다. 이전 링크는 더 이상 사용할 수 없어요.");
   }
 
   async function handleRoleChange(memberId: string, newRole: MemberRole) {
@@ -167,9 +184,22 @@ export default function MembersPage() {
               )}
             </Button>
           </div>
-          <p className="text-xs text-muted-foreground mt-2">
-            링크를 공유하면 누구나 편집자로 참여할 수 있어요.
-          </p>
+          <div className="flex items-center justify-between mt-2">
+            <p className="text-xs text-muted-foreground">
+              링크를 공유하면 누구나 편집자로 참여할 수 있어요.
+            </p>
+            {isAdmin && (
+              <button
+                type="button"
+                onClick={handleRegenerateInvite}
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive transition-colors"
+                title="이전 초대 링크를 무효화하고 새 코드를 생성합니다"
+              >
+                <RefreshCw className="w-3 h-3" />
+                재생성
+              </button>
+            )}
+          </div>
         </CardContent>
       </Card>
 

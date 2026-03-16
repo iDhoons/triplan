@@ -24,7 +24,9 @@ function getDaysNights(start: string, end: string) {
   return `${nights}박 ${nights + 1}일`;
 }
 
-type Status = "loading" | "not-found" | "already-member" | "ready" | "joining";
+const MAX_MEMBERS = 20; // 여행당 최대 멤버 수
+
+type Status = "loading" | "not-found" | "full" | "already-member" | "ready" | "joining";
 
 export default function JoinPage() {
   const params = useParams();
@@ -80,8 +82,13 @@ export default function JoinPage() {
       .maybeSingle();
 
     if (existing) {
-      // Already a member → go directly
       router.replace(`/trips/${tripData.id}/places`);
+      return;
+    }
+
+    // 최대 멤버 수 초과 확인
+    if ((count ?? 0) >= MAX_MEMBERS) {
+      setStatus("full");
       return;
     }
 
@@ -122,6 +129,21 @@ export default function JoinPage() {
         <h1 className="text-xl font-bold text-center">초대 링크를 찾을 수 없어요</h1>
         <p className="text-sm text-muted-foreground text-center">
           링크가 만료되었거나 잘못된 주소예요.
+        </p>
+        <Button variant="outline" onClick={() => router.push("/dashboard")}>
+          대시보드로 이동
+        </Button>
+      </div>
+    );
+  }
+
+  if (status === "full") {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-4">
+        <p className="text-4xl">👥</p>
+        <h1 className="text-xl font-bold text-center">참여 인원이 가득 찼어요</h1>
+        <p className="text-sm text-muted-foreground text-center">
+          이 여행은 최대 {MAX_MEMBERS}명까지 참여할 수 있어요.
         </p>
         <Button variant="outline" onClick={() => router.push("/dashboard")}>
           대시보드로 이동
