@@ -1,37 +1,5 @@
 import { describe, it, expect } from "vitest";
-
-/**
- * directions/route.ts에서 순수 함수를 추출하여 테스트한다.
- * haversineDistance, estimateDuration은 외부 의존성 없는 순수 계산 함수.
- *
- * NOTE: 현재 route.ts 내부에 인라인 정의되어 있으므로,
- * 여기서 동일한 로직을 검증하고, 추후 별도 모듈로 추출 시 import를 교체한다.
- */
-
-const EARTH_RADIUS_M = 6_371_000;
-
-function haversineDistance(
-  lat1: number, lng1: number,
-  lat2: number, lng2: number
-): number {
-  const toRad = (deg: number) => (deg * Math.PI) / 180;
-  const dLat = toRad(lat2 - lat1);
-  const dLng = toRad(lng2 - lng1);
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
-  return EARTH_RADIUS_M * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
-
-function estimateDuration(distanceMeters: number, mode: string): number {
-  const speeds: Record<string, number> = {
-    walking: 4500 / 3600,
-    transit: 25000 / 3600,
-    driving: 35000 / 3600,
-  };
-  const speed = speeds[mode] ?? speeds.walking;
-  return Math.round((distanceMeters * 1.4) / speed);
-}
+import { haversineDistance, estimateDuration } from "@/lib/directions/client";
 
 describe("haversineDistance", () => {
   it("같은 좌표는 0m를 반환한다", () => {

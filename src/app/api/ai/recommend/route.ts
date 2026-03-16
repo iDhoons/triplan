@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { buildTripContext, getSystemPrompt } from "@/lib/services/ai-context";
 import { aiRecommendSchema } from "@/lib/api/schemas";
 import { withAuth } from "@/lib/api/guards";
+import { sanitizeUserMessage, detectInjectionAttempt } from "@/lib/services/ai-sanitize";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
@@ -81,8 +82,16 @@ export const POST = withAuth(async (request, { supabase, user }) => {
         parts: [{ text: m.content }],
       }));
 
+    // 프롬프트 인젝션 감지 (로깅용)
+    if (detectInjectionAttempt(message)) {
+      console.warn("[ai] Prompt injection attempt detected:", user.id);
+    }
+
+    // 사용자 메시지 새니타이징
+    const safeMessage = sanitizeUserMessage(message);
+
     const chat = model.startChat({ history: chatHistory });
-    const result = await chat.sendMessage(message);
+    const result = await chat.sendMessage(safeMessage);
     const response = result.response.text();
 
     return NextResponse.json({ message: response });
