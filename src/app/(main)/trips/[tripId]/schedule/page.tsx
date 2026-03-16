@@ -526,8 +526,8 @@ export default function SchedulePage() {
                   <ListOrdered className="h-8 w-8 text-primary/60" />
                 </div>
                 <div className="space-y-1">
-                  <p className="font-medium text-foreground/80">아직 일정이 없습니다</p>
-                  <p className="text-sm text-muted-foreground">여행 날짜별 일정을 자동 생성 중...</p>
+                  <p className="font-medium text-foreground/80">아직 일정이 없어요</p>
+                  <p className="text-sm text-muted-foreground">여행 날짜를 설정하면 일정이 자동으로 생성돼요!</p>
                 </div>
               </div>
             ) : viewMode === "planner" ? (
