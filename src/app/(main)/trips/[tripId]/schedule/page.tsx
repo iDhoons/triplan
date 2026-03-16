@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useParams } from "next/navigation";
 import {
   DndContext,
@@ -17,19 +17,18 @@ import {
 } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
 import { ListOrdered, RouteIcon } from "lucide-react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { createClient } from "@/lib/supabase/client";
 import { PlannerView } from "@/components/schedule/planner-view";
 import { PlaceSidebar } from "@/components/schedule/place-sidebar";
 import {
   ScheduleItemForm,
-  type ScheduleItemFormData,
 } from "@/components/schedule/schedule-item-form";
 import { RouteMap } from "@/components/maps/route-map";
-import type { Schedule, ScheduleItem, Place, Trip } from "@/types/database";
+import { useScheduleData } from "@/hooks/use-schedule-data";
+import { useScheduleActions } from "@/hooks/use-schedule-actions";
+import type { Schedule, ScheduleItem, Place } from "@/types/database";
 
 // -----------------------------------------------------------------------
 // Types
@@ -41,111 +40,43 @@ type ViewMode = "planner" | "route";
 // -----------------------------------------------------------------------
 export default function SchedulePage() {
   const { tripId } = useParams<{ tripId: string }>();
-  const supabase = createClient();
 
+  // --- Data ---
+  const {
+    trip,
+    schedules,
+    setSchedules,
+    places,
+    loading,
+    supabase,
+    refetch,
+  } = useScheduleData(tripId);
+
+  // --- UI state ---
   const [viewMode, setViewMode] = useState<ViewMode>("planner");
-  const [schedules, setSchedules] = useState<Schedule[]>([]);
-  const [places, setPlaces] = useState<Place[]>([]);
-  const [trip, setTrip] = useState<Trip | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  // Route view state: 선택된 날짜
-  const [routeDateIndex, setRouteDateIndex] = useState<number>(0);
-
-  // Form state
+  const [routeDateIndex, setRouteDateIndex] = useState(0);
   const [formOpen, setFormOpen] = useState(false);
   const [targetScheduleId, setTargetScheduleId] = useState<string | null>(null);
   const [editingItem, setEditingItem] = useState<ScheduleItem | null>(null);
-
-  // DnD overlay state
   const [activePlaceId, setActivePlaceId] = useState<string | null>(null);
   const [activeItemId, setActiveItemId] = useState<string | null>(null);
 
-  // -----------------------------------------------------------------------
-  // Data fetching
-  // -----------------------------------------------------------------------
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    try {
-      // Fetch trip info (for date range)
-      const { data: tripData } = await supabase
-        .from("trips")
-        .select("*")
-        .eq("id", tripId)
-        .single();
-      if (tripData) setTrip(tripData as Trip);
+  // --- Actions ---
+  const {
+    handleFormSubmit,
+    handleDeleteItem,
+    handleReorderItems,
+    handleDropPlace,
+  } = useScheduleActions({
+    supabase,
+    schedules,
+    setSchedules,
+    refetch,
+    targetScheduleId,
+    editingItem,
+  });
 
-      // Fetch schedules with items and places
-      const { data: schedulesData, error: schedulesError } = await supabase
-        .from("schedules")
-        .select(
-          `
-          *,
-          items:schedule_items(
-            *,
-            place:places(*)
-          )
-        `
-        )
-        .eq("trip_id", tripId)
-        .order("date", { ascending: true });
-
-      if (schedulesError) throw schedulesError;
-
-      if (schedulesData) {
-        // Sort items by sort_order within each schedule
-        const normalized = (schedulesData as Schedule[]).map((s) => ({
-          ...s,
-          items: (s.items ?? [])
-            .slice()
-            .sort((a, b) => a.sort_order - b.sort_order),
-        }));
-        setSchedules(normalized);
-      }
-
-      // Fetch places for sidebar
-      const { data: placesData } = await supabase
-        .from("places")
-        .select("*")
-        .eq("trip_id", tripId)
-        .order("created_at", { ascending: true });
-
-      if (placesData) setPlaces(placesData as Place[]);
-    } catch (err) {
-      console.error(err);
-      toast.error("데이터를 불러오는데 실패했습니다.");
-    } finally {
-      setLoading(false);
-    }
-  }, [tripId, supabase]);
-
-  // -----------------------------------------------------------------------
-  // Weather sync: 데이터 로드 후 날씨 정보 동기화 (비동기, 실패 시 무시)
-  // -----------------------------------------------------------------------
-  const syncWeather = useCallback(async () => {
-    try {
-      const res = await fetch(`/api/weather?tripId=${tripId}`);
-      if (!res.ok) return;
-      const data = await res.json();
-      if (data.status === "updated") {
-        // 날씨가 갱신되었으면 schedules를 다시 가져와서 UI 반영
-        await fetchData();
-      }
-    } catch {
-      // 날씨 실패는 무시 — graceful degradation
-    }
-  }, [tripId, fetchData]);
-
-  useEffect(() => {
-    fetchData().then(() => {
-      // 데이터 로드 완료 후 날씨 동기화 (논블로킹)
-      syncWeather();
-    });
-  }, [fetchData, syncWeather]);
-
-  // -----------------------------------------------------------------------
-  // Computed: scheduled place IDs set
-  // -----------------------------------------------------------------------
+  // --- Computed ---
   const scheduledPlaceIds = useMemo(() => {
     const ids = new Set<string>();
     schedules.forEach((s) =>
@@ -156,9 +87,7 @@ export default function SchedulePage() {
     return ids;
   }, [schedules]);
 
-  // -----------------------------------------------------------------------
-  // Handlers: add/edit item form
-  // -----------------------------------------------------------------------
+  // --- Form handlers ---
   const handleOpenAddForm = (scheduleId: string) => {
     setTargetScheduleId(scheduleId);
     setEditingItem(null);
@@ -174,191 +103,7 @@ export default function SchedulePage() {
     setFormOpen(true);
   };
 
-  const handleFormSubmit = async (data: ScheduleItemFormData) => {
-    if (!targetScheduleId) return;
-
-    const payload = {
-      schedule_id: targetScheduleId,
-      title: data.title.trim(),
-      memo: data.memo.trim() || null,
-      place_id: data.place_id || null,
-      arrival_by: data.arrival_by ? new Date(data.arrival_by).toISOString() : null,
-      travel_mode: data.travel_mode || null,
-      // 기존 필드는 null로 유지 (하위호환)
-      start_time: null,
-      end_time: null,
-      transport_to_next: null,
-    };
-
-    try {
-      if (editingItem) {
-        const { error } = await supabase
-          .from("schedule_items")
-          .update({ ...payload, updated_at: new Date().toISOString() })
-          .eq("id", editingItem.id);
-        if (error) throw error;
-        toast.success("일정이 수정되었습니다.");
-      } else {
-        const schedule = schedules.find((s) => s.id === targetScheduleId);
-        const sort_order = (schedule?.items?.length ?? 0) + 1;
-        const { error } = await supabase.from("schedule_items").insert({
-          ...payload,
-          sort_order,
-        });
-        if (error) throw error;
-        toast.success("일정이 추가되었습니다.");
-      }
-
-      // 이동 정보 자동 계산 (폼 저장 후)
-      await fetchData();
-      await computeTravelInfoForSchedule(targetScheduleId);
-    } catch (err) {
-      console.error(err);
-      toast.error("저장에 실패했습니다.");
-      throw err;
-    }
-  };
-
-  // -----------------------------------------------------------------------
-  // Handler: delete item
-  // -----------------------------------------------------------------------
-  const handleDeleteItem = async (itemId: string, _scheduleId: string) => {
-    const { error } = await supabase
-      .from("schedule_items")
-      .delete()
-      .eq("id", itemId);
-    if (error) {
-      toast.error("삭제에 실패했습니다.");
-      return;
-    }
-    toast.success("일정이 삭제되었습니다.");
-    await fetchData();
-  };
-
-  // -----------------------------------------------------------------------
-  // Handler: reorder items (update sort_order in DB)
-  // -----------------------------------------------------------------------
-  const handleReorderItems = async (
-    scheduleId: string,
-    orderedItems: ScheduleItem[]
-  ) => {
-    // Optimistic update
-    setSchedules((prev) =>
-      prev.map((s) =>
-        s.id === scheduleId ? { ...s, items: orderedItems } : s
-      )
-    );
-
-    try {
-      await Promise.all(
-        orderedItems.map((item) =>
-          supabase
-            .from("schedule_items")
-            .update({ sort_order: item.sort_order, updated_at: new Date().toISOString() })
-            .eq("id", item.id)
-        )
-      );
-      // 순서 변경 후 이동 정보 재계산
-      await computeTravelInfoForSchedule(scheduleId);
-    } catch {
-      toast.error("순서 저장에 실패했습니다.");
-      await fetchData(); // revert
-    }
-  };
-
-  // -----------------------------------------------------------------------
-  // Handler: drop place from sidebar → create schedule_item
-  // -----------------------------------------------------------------------
-  const handleDropPlace = async (
-    scheduleId: string,
-    place: Place,
-    sortOrder: number
-  ) => {
-    try {
-      const { error } = await supabase.from("schedule_items").insert({
-        schedule_id: scheduleId,
-        place_id: place.id,
-        title: place.name,
-        sort_order: sortOrder,
-        start_time: null,
-        end_time: null,
-        memo: null,
-        transport_to_next: null,
-        arrival_by: null,
-        travel_mode: null,
-      });
-      if (error) throw error;
-      toast.success(`"${place.name}" 을(를) 일정에 추가했습니다.`);
-      await fetchData();
-      // 장소 추가 후 이동 정보 계산
-      await computeTravelInfoForSchedule(scheduleId);
-    } catch (err) {
-      console.error(err);
-      toast.error("장소 추가에 실패했습니다.");
-    }
-  };
-
-  // -----------------------------------------------------------------------
-  // Directions API: 이동 정보 자동 계산
-  // -----------------------------------------------------------------------
-  const computeTravelInfoForSchedule = async (scheduleId: string) => {
-    // 최신 데이터를 refetch
-    const { data } = await supabase
-      .from("schedules")
-      .select(`*, items:schedule_items(*, place:places(*))`)
-      .eq("id", scheduleId)
-      .single();
-
-    if (!data) return;
-
-    const items = ((data as Schedule).items ?? [])
-      .slice()
-      .sort((a, b) => a.sort_order - b.sort_order);
-
-    for (let i = 1; i < items.length; i++) {
-      const prev = items[i - 1];
-      const curr = items[i];
-
-      // 이미 캐싱되어 있으면 스킵
-      if (curr.travel_duration_seconds != null) continue;
-
-      // 양쪽 좌표 필요
-      if (
-        prev.place?.latitude == null || prev.place?.longitude == null ||
-        curr.place?.latitude == null || curr.place?.longitude == null
-      ) continue;
-
-      const mode = curr.travel_mode || "transit";
-
-      try {
-        const res = await fetch(
-          `/api/directions?origin=${prev.place.latitude},${prev.place.longitude}&destination=${curr.place.latitude},${curr.place.longitude}&mode=${mode}`
-        );
-        if (!res.ok) continue;
-
-        const result = await res.json();
-
-        await supabase
-          .from("schedule_items")
-          .update({
-            travel_duration_seconds: result.duration_seconds,
-            travel_distance_meters: result.distance_meters,
-            travel_mode: mode,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", curr.id);
-      } catch {
-        // 개별 실패는 무시 — 다음 항목 계속 처리
-      }
-    }
-
-    // UI 갱신
-    await fetchData();
-  };
-
-  // -----------------------------------------------------------------------
-  // Top-level DnD handlers
-  // -----------------------------------------------------------------------
+  // --- DnD ---
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } })
@@ -396,19 +141,7 @@ export default function SchedulePage() {
       const place = active.data.current?.place as Place | undefined;
       if (!place) return;
 
-      let dropScheduleId: string | null = null;
-
-      if (overId.startsWith("schedule-")) {
-        dropScheduleId = overId.replace("schedule-", "");
-      } else {
-        for (const s of schedules) {
-          if ((s.items ?? []).some((i) => i.id === overId)) {
-            dropScheduleId = s.id;
-            break;
-          }
-        }
-      }
-
+      let dropScheduleId = resolveDropScheduleId(overId, schedules);
       if (!dropScheduleId) return;
       const targetSchedule = schedules.find((s) => s.id === dropScheduleId);
       const sortOrder = (targetSchedule?.items?.length ?? 0) + 1;
@@ -426,17 +159,7 @@ export default function SchedulePage() {
     }
     if (!sourceSchedule) return;
 
-    let dropScheduleId: string | null = null;
-    if (overId.startsWith("schedule-")) {
-      dropScheduleId = overId.replace("schedule-", "");
-    } else {
-      for (const s of schedules) {
-        if ((s.items ?? []).some((i) => i.id === overId)) {
-          dropScheduleId = s.id;
-          break;
-        }
-      }
-    }
+    const dropScheduleId = resolveDropScheduleId(overId, schedules);
     if (!dropScheduleId || sourceSchedule.id !== dropScheduleId) return;
 
     const items = sourceSchedule.items ?? [];
@@ -458,9 +181,7 @@ export default function SchedulePage() {
     ? schedules.flatMap((s) => s.items ?? []).find((i) => i.id === activeItemId) ?? null
     : null;
 
-  // -----------------------------------------------------------------------
-  // Loading skeleton
-  // -----------------------------------------------------------------------
+  // --- Loading ---
   if (loading) {
     return (
       <div className="space-y-4">
@@ -477,9 +198,7 @@ export default function SchedulePage() {
     );
   }
 
-  // -----------------------------------------------------------------------
-  // Render
-  // -----------------------------------------------------------------------
+  // --- Render ---
   return (
     <DndContext
       sensors={sensors}
@@ -510,9 +229,7 @@ export default function SchedulePage() {
           </div>
 
           <span className="text-xs text-muted-foreground">
-            {trip
-              ? `${trip.start_date} ~ ${trip.end_date}`
-              : ""}
+            {trip ? `${trip.start_date} ~ ${trip.end_date}` : ""}
           </span>
         </div>
 
@@ -538,64 +255,11 @@ export default function SchedulePage() {
                 onDeleteItem={handleDeleteItem}
               />
             ) : (
-              /* 동선 뷰 */
-              <div className="space-y-3">
-                {/* 날짜 선택 탭 */}
-                {schedules.length > 1 && (
-                  <div className="flex gap-1.5 flex-wrap">
-                    {schedules.map((schedule, idx) => (
-                      <button
-                        key={schedule.id}
-                        type="button"
-                        onClick={() => setRouteDateIndex(idx)}
-                        className={cn(
-                          "rounded-lg border px-3 py-1 text-xs font-medium transition-colors",
-                          routeDateIndex === idx
-                            ? "bg-primary text-primary-foreground border-primary"
-                            : "bg-card hover:bg-muted"
-                        )}
-                      >
-                        {`Day ${idx + 1}`}
-                        <span className="ml-1 text-[10px] opacity-70">
-                          {schedule.date}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {/* 선택된 날짜의 동선 지도 */}
-                <RouteMap
-                  scheduleItems={
-                    schedules[routeDateIndex]?.items ?? []
-                  }
-                  className="h-[520px]"
-                />
-                {/* 해당 날짜 일정 목록 (순서 확인용) */}
-                {(schedules[routeDateIndex]?.items ?? []).filter(
-                  (item) => item.place?.latitude && item.place?.longitude
-                ).length > 0 && (
-                  <ol className="space-y-1 text-sm text-muted-foreground pl-1">
-                    {(schedules[routeDateIndex]?.items ?? [])
-                      .filter(
-                        (item) =>
-                          item.place?.latitude && item.place?.longitude
-                      )
-                      .map((item, idx) => (
-                        <li key={item.id} className="flex items-center gap-2">
-                          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
-                            {idx + 1}
-                          </span>
-                          <span>{item.title}</span>
-                          {item.arrival_by && (
-                            <span className="text-xs opacity-60">
-                              {new Date(item.arrival_by).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit", hour12: false })}까지
-                            </span>
-                          )}
-                        </li>
-                      ))}
-                  </ol>
-                )}
-              </div>
+              <RouteView
+                schedules={schedules}
+                routeDateIndex={routeDateIndex}
+                onDateChange={setRouteDateIndex}
+              />
             )}
           </div>
 
@@ -641,5 +305,94 @@ export default function SchedulePage() {
         onSubmit={handleFormSubmit}
       />
     </DndContext>
+  );
+}
+
+// -----------------------------------------------------------------------
+// Helper: resolve drop target schedule ID
+// -----------------------------------------------------------------------
+function resolveDropScheduleId(
+  overId: string,
+  schedules: Schedule[]
+): string | null {
+  if (overId.startsWith("schedule-")) {
+    return overId.replace("schedule-", "");
+  }
+  for (const s of schedules) {
+    if ((s.items ?? []).some((i) => i.id === overId)) {
+      return s.id;
+    }
+  }
+  return null;
+}
+
+// -----------------------------------------------------------------------
+// Sub-component: Route View
+// -----------------------------------------------------------------------
+function RouteView({
+  schedules,
+  routeDateIndex,
+  onDateChange,
+}: {
+  schedules: Schedule[];
+  routeDateIndex: number;
+  onDateChange: (idx: number) => void;
+}) {
+  return (
+    <div className="space-y-3">
+      {schedules.length > 1 && (
+        <div className="flex gap-1.5 flex-wrap">
+          {schedules.map((schedule, idx) => (
+            <button
+              key={schedule.id}
+              type="button"
+              onClick={() => onDateChange(idx)}
+              className={cn(
+                "rounded-lg border px-3 py-1 text-xs font-medium transition-colors",
+                routeDateIndex === idx
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-card hover:bg-muted"
+              )}
+            >
+              {`Day ${idx + 1}`}
+              <span className="ml-1 text-[10px] opacity-70">
+                {schedule.date}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      <RouteMap
+        scheduleItems={schedules[routeDateIndex]?.items ?? []}
+        className="h-[520px]"
+      />
+
+      {(schedules[routeDateIndex]?.items ?? []).filter(
+        (item) => item.place?.latitude && item.place?.longitude
+      ).length > 0 && (
+        <ol className="space-y-1 text-sm text-muted-foreground pl-1">
+          {(schedules[routeDateIndex]?.items ?? [])
+            .filter((item) => item.place?.latitude && item.place?.longitude)
+            .map((item, idx) => (
+              <li key={item.id} className="flex items-center gap-2">
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+                  {idx + 1}
+                </span>
+                <span>{item.title}</span>
+                {item.arrival_by && (
+                  <span className="text-xs opacity-60">
+                    {new Date(item.arrival_by).toLocaleTimeString("ko-KR", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: false,
+                    })}까지
+                  </span>
+                )}
+              </li>
+            ))}
+        </ol>
+      )}
+    </div>
   );
 }
