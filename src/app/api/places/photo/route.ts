@@ -1,12 +1,14 @@
 import { getPhotoUrlDirect } from "@/lib/google-places/client";
 import { NextResponse } from "next/server";
+import { withAuth } from "@/lib/api/guards";
 
 /**
  * GET /api/places/photo?name=...&maxWidth=...
  * Google Places Photo를 프록시하여 API 키 노출을 방지한다.
+ * 인증 필수 — 미인증 사용자의 API 할당량 소진 방지.
  * 응답에 캐시 헤더를 설정하여 반복 호출을 줄인다.
  */
-export async function GET(request: Request) {
+export const GET = withAuth(async (request) => {
   const { searchParams } = new URL(request.url);
   const photoName = searchParams.get("name");
   const maxWidth = Math.min(
@@ -52,4 +54,4 @@ export async function GET(request: Request) {
       { status: 500 }
     );
   }
-}
+});

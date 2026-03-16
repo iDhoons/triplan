@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
 import { fetchWeatherForDateRange } from "@/lib/weather/client";
+import { withAuth } from "@/lib/api/guards";
 
 /**
  * GET /api/weather?tripId=xxx
@@ -18,18 +18,8 @@ function getTTLMs(daysUntil: number): number {
   return 7 * 24 * 60 * 60 * 1000; // 7일
 }
 
-export async function GET(request: Request) {
-  // 1. 인증 확인
-  const supabase = await createClient();
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
-  if (authError || !user) {
-    return NextResponse.json({ error: "인증이 필요합니다" }, { status: 401 });
-  }
-
-  // 2. 입력 파싱
+export const GET = withAuth(async (request, { supabase }) => {
+  // 1. 입력 파싱
   const { searchParams } = new URL(request.url);
   const tripId = searchParams.get("tripId");
   if (!tripId) {
@@ -217,4 +207,4 @@ export async function GET(request: Request) {
       { status: 500 }
     );
   }
-}
+});

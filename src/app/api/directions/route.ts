@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { withAuth } from "@/lib/api/guards";
 
 /**
  * GET /api/directions?origin=lat,lng&destination=lat,lng&mode=walking|transit|driving
  *
  * Google Directions API를 호출하여 이동 시간/거리를 반환한다.
- * - 인증 필수
+ * - 인증 필수 (withAuth)
  * - mode 기본값: transit
  * - 한국 등 walking/driving 미지원 지역에서는 자동으로 transit fallback
  * - transit도 실패 시 Haversine 직선거리 추정
@@ -63,15 +63,8 @@ async function fetchDirections(
   return null;
 }
 
-export async function GET(request: Request) {
-  // 1. 인증 확인
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) {
-    return NextResponse.json({ error: "인증이 필요합니다" }, { status: 401 });
-  }
-
-  // 2. 입력 파싱 & 검증
+export const GET = withAuth(async (request) => {
+  // 1. 입력 파싱 & 검증
   const { searchParams } = new URL(request.url);
   const origin = searchParams.get("origin");
   const destination = searchParams.get("destination");
@@ -160,4 +153,4 @@ export async function GET(request: Request) {
       { status: 500 }
     );
   }
-}
+});
