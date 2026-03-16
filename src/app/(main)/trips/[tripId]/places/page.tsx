@@ -3,6 +3,7 @@
 import { memo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
   MapPinIcon,
   PlusIcon,
@@ -287,11 +288,39 @@ export default function PlacesPage() {
   const [youtubePickerOpen, setYoutubePickerOpen] = useState(false);
 
   async function handleDelete(place: Place) {
-    if (!confirm(`"${place.name}"을(를) 삭제하시겠습니까?`)) return;
     const { error } = await supabase.from("places").delete().eq("id", place.id);
-    if (!error) {
-      queryClient.invalidateQueries({ queryKey: ["places", tripId] });
+    if (error) {
+      toast.error("삭제에 실패했습니다.");
+      return;
     }
+    queryClient.invalidateQueries({ queryKey: ["places", tripId] });
+    toast("장소가 삭제되었어요", {
+      action: {
+        label: "되돌리기",
+        onClick: async () => {
+          await supabase.from("places").insert({
+            id: place.id,
+            trip_id: tripId,
+            name: place.name,
+            category: place.category,
+            address: place.address,
+            latitude: place.latitude,
+            longitude: place.longitude,
+            rating: place.rating,
+            image_urls: place.image_urls,
+            url: place.url,
+            source_url: place.source_url,
+            memo: place.memo,
+            added_by: place.added_by,
+            enriched: place.enriched,
+            google_place_id: place.google_place_id,
+          });
+          queryClient.invalidateQueries({ queryKey: ["places", tripId] });
+          toast.success("장소가 복원되었어요");
+        },
+      },
+      duration: 5000,
+    });
   }
 
   function handleFormSuccess() {

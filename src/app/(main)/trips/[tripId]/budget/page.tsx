@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { useParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/auth-store";
 import { Button } from "@/components/ui/button";
@@ -165,8 +166,31 @@ export default function BudgetPage() {
   }
 
   async function handleDeleteExpense(id: string) {
+    const deletedExp = expenses.find((e) => e.id === id);
     await supabase.from("expenses").delete().eq("id", id);
     queryClient.invalidateQueries({ queryKey: ["expenses", tripId] });
+    toast("지출이 삭제되었어요", {
+      action: {
+        label: "되돌리기",
+        onClick: async () => {
+          if (!deletedExp) return;
+          await supabase.from("expenses").insert({
+            id: deletedExp.id,
+            trip_id: tripId,
+            category: deletedExp.category,
+            title: deletedExp.title,
+            amount: deletedExp.amount,
+            currency: deletedExp.currency,
+            paid_by: deletedExp.paid_by,
+            date: deletedExp.date,
+            memo: deletedExp.memo,
+          });
+          queryClient.invalidateQueries({ queryKey: ["expenses", tripId] });
+          toast.success("지출이 복원되었어요");
+        },
+      },
+      duration: 5000,
+    });
   }
 
   const currency = budget?.currency ?? "KRW";

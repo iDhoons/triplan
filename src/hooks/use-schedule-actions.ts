@@ -77,6 +77,13 @@ export function useScheduleActions({
   };
 
   const handleDeleteItem = async (itemId: string) => {
+    // 삭제 전 백업 (Undo용)
+    const allItems = schedules.flatMap((s) => s.items ?? []);
+    const deletedItem = allItems.find((i) => i.id === itemId);
+    const parentSchedule = schedules.find((s) =>
+      (s.items ?? []).some((i) => i.id === itemId)
+    );
+
     const { error } = await supabase
       .from("schedule_items")
       .delete()
@@ -85,8 +92,30 @@ export function useScheduleActions({
       toast.error("삭제에 실패했습니다.");
       return;
     }
-    toast.success("일정이 삭제되었습니다.");
     await invalidateSchedules();
+    toast("일정이 삭제되었어요", {
+      action: {
+        label: "되돌리기",
+        onClick: async () => {
+          if (!deletedItem || !parentSchedule) return;
+          await supabase.from("schedule_items").insert({
+            id: deletedItem.id,
+            schedule_id: parentSchedule.id,
+            title: deletedItem.title,
+            memo: deletedItem.memo,
+            place_id: deletedItem.place_id,
+            sort_order: deletedItem.sort_order,
+            arrival_by: deletedItem.arrival_by,
+            travel_mode: deletedItem.travel_mode,
+            travel_duration_seconds: deletedItem.travel_duration_seconds,
+            travel_distance_meters: deletedItem.travel_distance_meters,
+          });
+          await invalidateSchedules();
+          toast.success("일정이 복원되었어요");
+        },
+      },
+      duration: 5000,
+    });
   };
 
   const handleReorderItems = async (

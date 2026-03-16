@@ -112,12 +112,40 @@ export default function PlaceDetailPage() {
   }, [fetchData]);
 
   async function handleDelete() {
-    if (!place || !confirm(`"${place.name}"을(를) 삭제하시겠습니까?`)) return;
+    if (!place) return;
+    const deletedPlace = { ...place };
     const { error } = await supabase.from("places").delete().eq("id", place.id);
-    if (!error) {
-      toast.success("장소가 삭제되었습니다.");
-      router.push(`/trips/${tripId}/places`);
+    if (error) {
+      toast.error("삭제에 실패했습니다.");
+      return;
     }
+    router.push(`/trips/${tripId}/places`);
+    toast("장소가 삭제되었어요", {
+      action: {
+        label: "되돌리기",
+        onClick: async () => {
+          await supabase.from("places").insert({
+            id: deletedPlace.id,
+            trip_id: tripId,
+            name: deletedPlace.name,
+            category: deletedPlace.category,
+            address: deletedPlace.address,
+            latitude: deletedPlace.latitude,
+            longitude: deletedPlace.longitude,
+            rating: deletedPlace.rating,
+            image_urls: deletedPlace.image_urls,
+            url: deletedPlace.url,
+            source_url: deletedPlace.source_url,
+            memo: deletedPlace.memo,
+            added_by: deletedPlace.added_by,
+            enriched: deletedPlace.enriched,
+            google_place_id: deletedPlace.google_place_id,
+          });
+          toast.success("장소가 복원되었어요");
+        },
+      },
+      duration: 5000,
+    });
   }
 
   async function handleAddToSchedule() {

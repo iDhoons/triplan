@@ -117,14 +117,30 @@ export default function MembersPage() {
     const admins = members.filter((m) => m.role === "admin");
     const target = members.find((m) => m.id === memberId);
     if (target?.role === "admin" && admins.length <= 1) {
-      alert("마지막 관리자는 내보낼 수 없습니다.");
+      toast.error("마지막 관리자는 내보낼 수 없어요.");
       return;
     }
 
-    if (!confirm("정말 이 멤버를 내보내시겠습니까?")) return;
-
+    const removedMember = target;
     await supabase.from("trip_members").delete().eq("id", memberId);
     setMembers((prev) => prev.filter((m) => m.id !== memberId));
+    toast("멤버를 내보냈어요", {
+      action: {
+        label: "되돌리기",
+        onClick: async () => {
+          if (!removedMember) return;
+          await supabase.from("trip_members").insert({
+            id: removedMember.id,
+            trip_id: tripId,
+            user_id: userId,
+            role: removedMember.role,
+          });
+          setMembers((prev) => [...prev, removedMember]);
+          toast.success("멤버가 복원되었어요");
+        },
+      },
+      duration: 5000,
+    });
   }
 
   if (loading) {
