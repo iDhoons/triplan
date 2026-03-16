@@ -40,3 +40,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .env*.local
+
+# Claude screenshots (verification/debug captures)
+screenshots/
+screen_*.png
+*-check.png
+*-final.png

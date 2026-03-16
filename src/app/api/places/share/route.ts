@@ -2,40 +2,16 @@ import { createClient } from "@/lib/supabase/server";
 import { enrichFromUrl, enrichFromText, resolveInput } from "@/lib/google-places";
 import { NextResponse } from "next/server";
 import { after } from "next/server";
-
-// Rate limiter (in-memory, 프로덕션에서는 Upstash Redis 권장)
-const rateLimitMap = new Map<string, { count: number; reset: number }>();
-const WINDOW_MS = 60_000;
-const MAX_REQUESTS = 10;
-
-function checkRateLimit(userId: string): boolean {
-  const now = Date.now();
-  const entry = rateLimitMap.get(userId);
-  if (!entry || now > entry.reset) {
-    rateLimitMap.set(userId, { count: 1, reset: now + WINDOW_MS });
-    return true;
-  }
-  if (entry.count >= MAX_REQUESTS) return false;
-  entry.count++;
-  return true;
-}
+import { withAuth, checkRateLimit } from "@/lib/api/guards";
 
 /**
  * POST /api/places/share
  * Share Target에서 받은 URL 또는 텍스트를 즉시 저장하고 비동기 풍부화.
  * Tolerant Reader: 깨끗한 URL, 혼합 텍스트+URL, 순수 텍스트 모두 수용.
  */
-export async function POST(request: Request) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  if (!checkRateLimit(user.id)) {
+export const POST = withAuth(async (request, { supabase, user }) => {
+  // Rate limiting (guards.ts 공통 모듈 사용)
+  if (!checkRateLimit("places-share", user.id)) {
     return NextResponse.json(
       { error: "요청이 너무 많습니다. 잠시 후 다시 시도해주세요." },
       { status: 429 }
@@ -146,7 +122,7 @@ export async function POST(request: Request) {
     },
     { status: 201 }
   );
-}
+});
 
 /**
  * 백그라운드 풍부화 (fire-and-forget).

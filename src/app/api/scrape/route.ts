@@ -1,36 +1,10 @@
-import { createClient } from "@/lib/supabase/server";
 import { enrichFromUrl } from "@/lib/google-places";
 import { NextResponse } from "next/server";
+import { withAuth, checkRateLimit } from "@/lib/api/guards";
 
-// ─── Rate limiter (in-memory, 프로덕션에서는 Redis 권장) ───
-const rateLimitMap = new Map<string, { count: number; reset: number }>();
-const WINDOW_MS = 60_000; // 1분
-const MAX_REQUESTS = 10; // 분당 10회
-
-function checkRateLimit(userId: string): boolean {
-  const now = Date.now();
-  const entry = rateLimitMap.get(userId);
-  if (!entry || now > entry.reset) {
-    rateLimitMap.set(userId, { count: 1, reset: now + WINDOW_MS });
-    return true;
-  }
-  if (entry.count >= MAX_REQUESTS) return false;
-  entry.count++;
-  return true;
-}
-
-export async function POST(request: Request) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  // Rate limiting
-  if (!checkRateLimit(user.id)) {
+export const POST = withAuth(async (request, { user }) => {
+  // Rate limiting (guards.ts 공통 모듈 사용)
+  if (!checkRateLimit("scrape", user.id)) {
     return NextResponse.json(
       { error: "요청이 너무 많습니다. 잠시 후 다시 시도해주세요." },
       { status: 429 }
@@ -102,4 +76,4 @@ export async function POST(request: Request) {
       { status: 422 }
     );
   }
-}
+});

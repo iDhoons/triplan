@@ -1,20 +1,12 @@
-import { createClient } from "@/lib/supabase/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
 import { buildTripContext, getSystemPrompt } from "@/lib/services/ai-context";
 import { aiRecommendSchema } from "@/lib/api/schemas";
+import { withAuth } from "@/lib/api/guards";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
-export async function POST(request: Request) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+export const POST = withAuth(async (request, { supabase, user }) => {
 
   let rawBody: unknown;
   try {
@@ -101,4 +93,4 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
-}
+});

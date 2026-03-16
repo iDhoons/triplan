@@ -1,16 +1,7 @@
-import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { withAuth } from "@/lib/api/guards";
 
-export async function POST(request: Request) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+export const POST = withAuth(async (request) => {
   const formData = await request.formData();
   const title = formData.get("title") as string;
   const text = formData.get("text") as string;
@@ -22,4 +13,4 @@ export async function POST(request: Request) {
     text: text || "",
     url: url || "",
   });
-}
+});

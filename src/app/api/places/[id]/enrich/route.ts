@@ -1,6 +1,6 @@
-import { createClient } from "@/lib/supabase/server";
 import { enrichFromUrl } from "@/lib/google-places";
 import { NextResponse } from "next/server";
+import { withAuth } from "@/lib/api/guards";
 
 const MAX_ATTEMPTS = 3;
 
@@ -8,19 +8,15 @@ const MAX_ATTEMPTS = 3;
  * POST /api/places/[id]/enrich
  * 클라이언트 트리거 풍부화: 미풍부화 장소에 Places API 데이터 채우기.
  */
-export async function POST(
-  _request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id: placeId } = await params;
-
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+export const POST = withAuth(async (
+  _request,
+  { supabase, user }
+) => {
+  // Next.js dynamic route params — withAuth 밖에서 접근 불가하므로 URL에서 추출
+  const url = new URL(_request.url);
+  const placeId = url.pathname.split("/places/")[1]?.split("/")[0];
+  if (!placeId) {
+    return NextResponse.json({ error: "place ID가 필요합니다" }, { status: 400 });
   }
 
   // place 조회 + 권한 확인
@@ -140,4 +136,4 @@ export async function POST(
       { status: 500 }
     );
   }
-}
+});
