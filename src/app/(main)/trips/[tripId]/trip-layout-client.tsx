@@ -9,6 +9,7 @@ import { ActivityToast } from "@/components/realtime/activity-toast";
 import { AiChatFab } from "@/components/ai/ai-chat-fab";
 import { TripHeader } from "@/components/trip/trip-header";
 import { TripTabNav } from "@/components/trip/trip-tab-nav";
+import { TripProgressBanner } from "@/components/trip/trip-progress-banner";
 import { TripEditDialog } from "@/components/trip/trip-edit-dialog";
 
 export default function TripLayoutClient({
@@ -40,6 +41,7 @@ export default function TripLayoutClient({
       <div>
         <TripHeader trip={trip} onEditClick={() => setEditOpen(true)} />
         <TripTabNav tripId={tripId} />
+        <TripProgressBanner tripId={tripId} />
         {children}
         <AiChatFab />
       </div>
