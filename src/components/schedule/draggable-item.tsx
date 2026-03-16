@@ -1,7 +1,6 @@
 "use client";
 
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
+import type { DraggableAttributes, DraggableSyntheticListeners } from "@dnd-kit/core";
 import { GripVertical, FileText, Pencil, Trash2, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,22 +12,21 @@ interface DraggableItemProps {
   orderNumber: number;
   onEdit: (item: ScheduleItem) => void;
   onDelete: (itemId: string) => void;
+  isDragging?: boolean;
+  dragHandleProps?: {
+    attributes: DraggableAttributes;
+    listeners: DraggableSyntheticListeners;
+  };
 }
 
-export function DraggableItem({ item, orderNumber, onEdit, onDelete }: DraggableItemProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: item.id });
-
-  const style = {
-    transform: CSS.Translate.toString(transform),
-    transition,
-  };
+export function DraggableItem({
+  item,
+  orderNumber,
+  onEdit,
+  onDelete,
+  isDragging = false,
+  dragHandleProps,
+}: DraggableItemProps) {
 
   const formatArrivalBy = (arrivalBy: string | null) => {
     if (!arrivalBy) return null;
@@ -44,12 +42,10 @@ export function DraggableItem({ item, orderNumber, onEdit, onDelete }: Draggable
 
   return (
     <div
-      ref={setNodeRef}
-      style={style}
       className={cn(
         "group relative bg-card border rounded-lg p-3 flex gap-2.5 items-start",
         "hover:border-primary/50 transition-colors",
-        isDragging && "opacity-50 shadow-lg z-50 border-primary"
+        isDragging && "opacity-50 shadow-lg border-primary"
       )}
     >
       {/* Order number badge */}
@@ -59,8 +55,8 @@ export function DraggableItem({ item, orderNumber, onEdit, onDelete }: Draggable
         </span>
         {/* Drag handle */}
         <button
-          {...attributes}
-          {...listeners}
+          {...dragHandleProps?.attributes}
+          {...dragHandleProps?.listeners}
           className="text-muted-foreground/40 hover:text-muted-foreground cursor-grab active:cursor-grabbing touch-none"
           aria-label="드래그 핸들"
         >

@@ -4,8 +4,10 @@ import { format, parseISO } from "date-fns";
 import { ko } from "date-fns/locale";
 import {
   SortableContext,
+  useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { useDroppable } from "@dnd-kit/core";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,6 +15,56 @@ import { DraggableItem } from "./draggable-item";
 import { TravelInfoCard } from "./travel-info-card";
 import { WeatherBadge } from "./weather-badge";
 import type { Schedule, ScheduleItem } from "@/types/database";
+
+// -----------------------------------------------------------------------
+// Sortable wrapper — useSortable을 wrapper 레벨에 적용하여
+// DraggableItem + TravelInfoCard가 함께 밀리도록 함
+// -----------------------------------------------------------------------
+function SortableItemWrapper({
+  item,
+  orderNumber,
+  nextItem,
+  isLast,
+  onEdit,
+  onDelete,
+}: {
+  item: ScheduleItem;
+  orderNumber: number;
+  nextItem?: ScheduleItem;
+  isLast: boolean;
+  onEdit: (item: ScheduleItem) => void;
+  onDelete: (id: string) => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: item.id });
+
+  const style = {
+    transform: CSS.Translate.toString(transform),
+    transition,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className={isDragging ? "relative z-50" : "relative"}>
+      <DraggableItem
+        item={item}
+        orderNumber={orderNumber}
+        onEdit={onEdit}
+        onDelete={onDelete}
+        isDragging={isDragging}
+        dragHandleProps={{ attributes, listeners }}
+      />
+      {!isLast && nextItem && (
+        <TravelInfoCard currentItem={item} nextItem={nextItem} />
+      )}
+    </div>
+  );
+}
 
 // -----------------------------------------------------------------------
 // Droppable Day card — 순서 기반 플래너
@@ -97,21 +149,15 @@ function DayCard({
           >
             <div className="space-y-0">
               {items.map((item, idx) => (
-                <div key={item.id}>
-                  <DraggableItem
-                    item={item}
-                    orderNumber={idx + 1}
-                    onEdit={onEditItem}
-                    onDelete={(id) => onDeleteItem(id, schedule.id)}
-                  />
-                  {/* 이동 정보 카드: 현재 아이템과 다음 아이템 사이 */}
-                  {idx < items.length - 1 && (
-                    <TravelInfoCard
-                      currentItem={item}
-                      nextItem={items[idx + 1]}
-                    />
-                  )}
-                </div>
+                <SortableItemWrapper
+                  key={item.id}
+                  item={item}
+                  orderNumber={idx + 1}
+                  nextItem={idx < items.length - 1 ? items[idx + 1] : undefined}
+                  isLast={idx === items.length - 1}
+                  onEdit={onEditItem}
+                  onDelete={(id) => onDeleteItem(id, schedule.id)}
+                />
               ))}
             </div>
           </SortableContext>
