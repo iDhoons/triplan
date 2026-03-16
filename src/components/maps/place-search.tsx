@@ -15,6 +15,7 @@ export interface PlaceSearchResult {
   website: string | null;
   phoneNumber: string | null;
   imageUrls: string[];
+  googlePlaceId: string | null;
   openingHours: Record<string, string> | null;
   placeTypes: string[];
 }
@@ -153,14 +154,9 @@ export function PlaceSearch({ onSelect }: PlaceSearchProps) {
             return;
           }
 
-          // 사진 최대 3장
+          // 사진: getUrl()은 만료되는 임시 URL을 반환하므로 사용하지 않음.
+          // googlePlaceId를 전달하여 서버에서 영구 프록시 URL을 생성하도록 한다.
           const imageUrls: string[] = [];
-          if (place.photos) {
-            const max = Math.min(place.photos.length, 3);
-            for (let i = 0; i < max; i++) {
-              imageUrls.push(place.photos[i].getUrl({ maxWidth: 800 }));
-            }
-          }
 
           // 영업시간 파싱
           let openingHours: Record<string, string> | null = null;
@@ -185,6 +181,7 @@ export function PlaceSearch({ onSelect }: PlaceSearchProps) {
             website: place.website ?? null,
             phoneNumber: place.international_phone_number ?? place.formatted_phone_number ?? null,
             imageUrls,
+            googlePlaceId: suggestion.placeId,
             openingHours,
             placeTypes: place.types ?? [],
           };

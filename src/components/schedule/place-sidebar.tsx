@@ -54,13 +54,20 @@ function PlaceCard({ place, isScheduled }: PlaceCardProps) {
     >
       {/* Place image thumbnail */}
       {place.image_urls?.[0] ? (
-        <div className="w-full h-16 rounded mb-2 overflow-hidden bg-muted">
+        <div className="w-full h-16 rounded mb-2 overflow-hidden bg-muted relative">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={place.image_urls[0]}
             alt={place.name}
             className="w-full h-full object-cover"
+            onError={(e) => {
+              e.currentTarget.style.display = "none";
+              e.currentTarget.parentElement?.querySelector("[data-fallback]")?.classList.remove("hidden");
+            }}
           />
+          <div data-fallback className="hidden absolute inset-0 flex items-center justify-center">
+            <MapPin className="w-5 h-5 text-muted-foreground/40" />
+          </div>
         </div>
       ) : (
         <div className="w-full h-16 rounded mb-2 bg-muted flex items-center justify-center">

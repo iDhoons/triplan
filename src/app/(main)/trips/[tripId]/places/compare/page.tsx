@@ -218,6 +218,7 @@ function ComparePage() {
                   src={place.image_urls[0]}
                   alt={place.name}
                   className="h-24 w-full rounded-lg object-cover"
+                  onError={(e) => { e.currentTarget.style.display = "none"; }}
                 />
               )}
               <p className="text-center text-sm font-semibold leading-snug">

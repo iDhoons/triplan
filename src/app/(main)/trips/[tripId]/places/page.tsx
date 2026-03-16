@@ -143,18 +143,27 @@ const PlaceCard = memo(function PlaceCard({
           src={place.image_urls[0]}
           alt={place.name}
           className="h-36 w-full object-cover"
+          onError={(e) => {
+            // 만료된 URL fallback → placeholder로 교체
+            const target = e.currentTarget;
+            target.style.display = "none";
+            target.parentElement?.querySelector("[data-placeholder]")?.classList.remove("hidden");
+          }}
         />
-      ) : (
-        <div className={cn(
+      ) : null}
+      <div
+        data-placeholder
+        className={cn(
           "h-24 w-full flex items-center justify-center",
+          place.image_urls?.length > 0 && "hidden",
           place.category === "accommodation" && "bg-cat-accommodation/20",
           place.category === "attraction" && "bg-cat-attraction/20",
           place.category === "restaurant" && "bg-cat-restaurant/20",
           place.category === "other" && "bg-muted",
-        )}>
-          <MapPinIcon className="size-8 text-muted-foreground/30" />
-        </div>
-      )}
+        )}
+      >
+        <MapPinIcon className="size-8 text-muted-foreground/30" />
+      </div>
 
       <CardHeader className="pb-1">
         <div className="flex items-start justify-between gap-2">

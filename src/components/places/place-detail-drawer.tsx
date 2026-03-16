@@ -71,6 +71,7 @@ export function PlaceDetailDrawer({
                     src={url}
                     alt={`${place.name} ${i + 1}`}
                     className="h-48 min-w-[280px] rounded-lg object-cover snap-start"
+                    onError={(e) => { e.currentTarget.style.display = "none"; }}
                   />
                 ))}
               </div>

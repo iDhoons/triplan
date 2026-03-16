@@ -115,6 +115,7 @@ export function PlaceForm({
   const [longitude, setLongitude] = useState<number | null>(place?.longitude ?? null);
   const [searchImageUrl, setSearchImageUrl] = useState<string | null>(null);
   const [searchImageUrls, setSearchImageUrls] = useState<string[]>([]);
+  const [googlePlaceId, setGooglePlaceId] = useState<string | null>(null);
   const [scrapeUrl, setScrapeUrl] = useState("");
   const [scraping, setScraping] = useState(false);
   const [scrapeError, setScrapeError] = useState<string | null>(null);
@@ -190,7 +191,7 @@ export function PlaceForm({
     fetchAndScrape(url);
   }, [scrapeUrl, fetchAndScrape]);
 
-  function handlePlaceSearchSelect(result: PlaceSearchResult) {
+  async function handlePlaceSearchSelect(result: PlaceSearchResult) {
     // 장소 타입으로 카테고리 자동 추론
     let category: PlaceCategory = "other";
     const types = result.placeTypes;
@@ -213,10 +214,24 @@ export function PlaceForm({
     }));
     setLatitude(result.latitude);
     setLongitude(result.longitude);
-    // 사진 여러 장 저장
-    if (result.imageUrls.length > 0) {
-      setSearchImageUrl(result.imageUrls[0]);
-      setSearchImageUrls(result.imageUrls);
+    setGooglePlaceId(result.googlePlaceId);
+
+    // 서버 프록시 URL로 사진 가져오기 (임시 CDN URL 대신)
+    if (result.googlePlaceId) {
+      try {
+        const res = await fetch(
+          `/api/places/resolve-photos?googlePlaceId=${encodeURIComponent(result.googlePlaceId)}`
+        );
+        if (res.ok) {
+          const { urls } = await res.json();
+          if (urls?.length > 0) {
+            setSearchImageUrl(urls[0]);
+            setSearchImageUrls(urls);
+          }
+        }
+      } catch {
+        // 사진 로딩 실패 시 무시 — 장소 저장에는 지장 없음
+      }
     }
   }
 
@@ -295,6 +310,7 @@ export function PlaceForm({
           }
         })(),
         added_by: user.id,
+        ...(googlePlaceId && !place ? { google_place_id: googlePlaceId } : {}),
       };
 
       console.log("[PlaceForm] payload:", JSON.stringify(payload, null, 2));
