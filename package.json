@@ -9,7 +9,8 @@
     "lint": "eslint",
     "test": "vitest",
     "test:run": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "gen:types": "supabase gen types typescript --project-id $SUPABASE_PROJECT_ID > src/types/supabase.ts && echo '✅ Types generated at src/types/supabase.ts'"
   },
   "dependencies": {
     "@base-ui/react": "^1.2.0",
