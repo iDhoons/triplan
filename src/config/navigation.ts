@@ -17,6 +17,7 @@ export interface NavItem {
 
 export const globalNav: NavItem[] = [
   { href: "/dashboard", label: "내 여행", icon: Home },
+  { href: "/checklist", label: "체크리스트", icon: ListChecks },
   { href: "/notifications", label: "알림", icon: Bell },
   { href: "/profile", label: "내 정보", icon: User },
 ];
