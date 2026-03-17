@@ -42,6 +42,26 @@ export function estimateDuration(distanceMeters: number, mode: string): number {
 // 도메인 타입
 // -----------------------------------------------------------------------
 
+export interface TransitDetail {
+  line_name: string;
+  line_short_name: string | null;
+  line_color: string | null;
+  vehicle_type: string;
+  departure_stop: string;
+  arrival_stop: string;
+  num_stops: number;
+}
+
+export interface DirectionStep {
+  travel_mode: string;
+  duration_seconds: number;
+  duration_text: string;
+  distance_meters: number;
+  distance_text: string;
+  instruction: string;
+  transit_details?: TransitDetail;
+}
+
 export interface DirectionsResult {
   duration_seconds: number;
   distance_meters: number;
@@ -50,6 +70,8 @@ export interface DirectionsResult {
   summary: string | null;
   estimated: boolean;
   used_mode: string;
+  steps?: DirectionStep[];
+  overview_polyline?: string;
 }
 
 // -----------------------------------------------------------------------
@@ -62,8 +84,26 @@ interface GoogleDirectionsResponse {
     legs: {
       duration: { value: number; text: string };
       distance: { value: number; text: string };
+      steps?: {
+        travel_mode: string;
+        duration: { value: number; text: string };
+        distance: { value: number; text: string };
+        html_instructions: string;
+        transit_details?: {
+          departure_stop: { name: string };
+          arrival_stop: { name: string };
+          line: {
+            name: string;
+            short_name?: string;
+            color?: string;
+            vehicle: { type: string };
+          };
+          num_stops: number;
+        };
+      }[];
     }[];
     summary?: string;
+    overview_polyline?: { points: string };
   }[];
 }
 
@@ -153,6 +193,29 @@ export async function getDirections(
   }
 
   const leg = data.routes[0].legs[0];
+
+  const steps: DirectionStep[] | undefined = leg.steps?.map((s) => ({
+    travel_mode: s.travel_mode,
+    duration_seconds: s.duration.value,
+    duration_text: s.duration.text,
+    distance_meters: s.distance.value,
+    distance_text: s.distance.text,
+    instruction: s.html_instructions.replace(/<[^>]*>/g, ""),
+    ...(s.transit_details
+      ? {
+          transit_details: {
+            line_name: s.transit_details.line.name,
+            line_short_name: s.transit_details.line.short_name ?? null,
+            line_color: s.transit_details.line.color ?? null,
+            vehicle_type: s.transit_details.line.vehicle.type,
+            departure_stop: s.transit_details.departure_stop.name,
+            arrival_stop: s.transit_details.arrival_stop.name,
+            num_stops: s.transit_details.num_stops,
+          },
+        }
+      : {}),
+  }));
+
   return {
     duration_seconds: leg.duration.value,
     distance_meters: leg.distance.value,
@@ -161,5 +224,7 @@ export async function getDirections(
     summary: data.routes[0].summary || null,
     estimated: false,
     used_mode: usedMode,
+    steps,
+    overview_polyline: data.routes[0].overview_polyline?.points,
   };
 }
