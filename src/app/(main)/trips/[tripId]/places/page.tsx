@@ -13,17 +13,9 @@ import {
   Map,
   YoutubeIcon,
   MoreHorizontalIcon,
-  TicketIcon,
-  HotelIcon,
-  UtensilsCrossedIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -58,7 +50,7 @@ const PlaceMap = dynamic(
 );
 import { usePlaces } from "@/hooks/use-places";
 import { PlaceCardSkeleton } from "@/components/layout/loading-skeleton";
-import { cn, formatShortAddress, formatPriceLevel } from "@/lib/utils";
+import { cn, formatShortAddress } from "@/lib/utils";
 import { PLACE_CATEGORY_LABEL, PLACE_CATEGORY_BADGE_CLASS } from "@/config/categories";
 import type { Place, PlaceCategory } from "@/types/database";
 
@@ -77,48 +69,6 @@ interface PlaceCardProps {
   onOpenDetail: (place: Place) => void;
 }
 
-/** 카테고리별 보조 정보 1줄 */
-function CategoryMeta({ place }: { place: Place }) {
-  switch (place.category) {
-    case "accommodation":
-      if (place.price_per_night !== null) {
-        return (
-          <div className="flex items-center gap-1 text-xs text-primary font-semibold">
-            <HotelIcon className="size-3 shrink-0" />
-            <span>₩{place.price_per_night.toLocaleString()} / 박</span>
-          </div>
-        );
-      }
-      return null;
-    case "attraction": {
-      const parts: string[] = [];
-      if (place.estimated_duration) parts.push(`${place.estimated_duration}분`);
-      if (place.admission_fee !== null) {
-        parts.push(place.admission_fee === 0 ? "무료" : `₩${place.admission_fee.toLocaleString()}`);
-      }
-      if (parts.length === 0) return null;
-      return (
-        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-          <TicketIcon className="size-3 shrink-0" />
-          <span>{parts.join(" · ")}</span>
-        </div>
-      );
-    }
-    case "restaurant": {
-      const priceLabel = formatPriceLevel(place.price_level);
-      if (!priceLabel) return null;
-      return (
-        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-          <UtensilsCrossedIcon className="size-3 shrink-0" />
-          <span>{priceLabel}</span>
-        </div>
-      );
-    }
-    default:
-      return null;
-  }
-}
-
 const PlaceCard = memo(function PlaceCard({
   place,
   selected,
@@ -129,165 +79,155 @@ const PlaceCard = memo(function PlaceCard({
   onOpenDetail,
 }: PlaceCardProps) {
   const shortAddress = formatShortAddress(place.address_components, place.address);
+  const hasImage = place.image_urls?.length > 0;
 
   return (
     <Card
       className={cn(
-        "relative cursor-pointer transition-shadow hover:shadow-md overflow-hidden",
-        "flex flex-row sm:flex-col",
+        "relative cursor-pointer overflow-hidden group border-0",
+        "h-44 sm:h-52 transition-all hover:shadow-lg",
         selected && "ring-2 ring-primary"
       )}
       onClick={() => onOpenDetail(place)}
     >
-      {/* 이미지 — 모바일: 좌측 썸네일, 데스크톱: 상단 풀너비 */}
-      {place.image_urls?.length > 0 ? (
+      {/* 배경 이미지 (전체 카드) */}
+      {hasImage ? (
         <img
           src={place.image_urls[0]}
           alt={place.name}
-          className="h-20 w-20 shrink-0 rounded-l-lg object-cover sm:h-36 sm:w-full sm:rounded-l-none sm:rounded-t-lg"
+          className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           onError={(e) => {
-            const target = e.currentTarget;
-            target.style.display = "none";
-            target.parentElement?.querySelector("[data-placeholder]")?.classList.remove("hidden");
+            e.currentTarget.style.display = "none";
+            e.currentTarget.parentElement?.querySelector("[data-placeholder]")?.classList.remove("hidden");
           }}
         />
       ) : null}
       <div
         data-placeholder
         className={cn(
-          "flex shrink-0 items-center justify-center",
-          "h-20 w-20 rounded-l-lg sm:h-24 sm:w-full sm:rounded-l-none sm:rounded-t-lg",
-          place.image_urls?.length > 0 && "hidden",
+          "absolute inset-0 flex items-center justify-center",
+          hasImage && "hidden",
           place.category === "accommodation" && "bg-cat-accommodation/20",
           place.category === "attraction" && "bg-cat-attraction/20",
           place.category === "restaurant" && "bg-cat-restaurant/20",
           place.category === "other" && "bg-muted",
         )}
       >
-        <MapPinIcon className="size-6 text-muted-foreground/30 sm:size-8" />
+        <MapPinIcon className="size-8 text-muted-foreground/30" />
       </div>
 
-      {/* 정보 영역 */}
-      <div className="flex min-w-0 flex-1 flex-col">
-        <CardHeader className="pb-1 sm:pb-1">
-          <div className="flex items-start justify-between gap-2">
-            <CardTitle className="text-sm line-clamp-1">{place.name}</CardTitle>
-            <div className="flex items-center gap-1 shrink-0">
-              <Badge
-                className={cn(
-                  "shrink-0 border text-[10px] px-1.5 py-0",
-                  PLACE_CATEGORY_BADGE_CLASS[place.category]
-                )}
-                variant="outline"
+      {/* 그라디언트 오버레이 */}
+      {hasImage && (
+        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/5 to-transparent" />
+      )}
+
+      {/* 상단 — 카테고리 뱃지 + 더보기 */}
+      <div className="absolute top-2 left-2 right-2 flex items-center justify-between z-10">
+        <Badge
+          className={cn(
+            "shrink-0 text-[10px] px-1.5 py-0",
+            hasImage
+              ? "bg-black/40 text-white border-white/20 backdrop-blur-sm"
+              : cn("border", PLACE_CATEGORY_BADGE_CLASS[place.category])
+          )}
+          variant="outline"
+        >
+          {PLACE_CATEGORY_LABEL[place.category]}
+        </Badge>
+        <div onClick={(e) => e.stopPropagation()}>
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="xs"
+                  className={cn(
+                    "size-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity",
+                    hasImage
+                      ? "text-white/80 hover:text-white hover:bg-white/20"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <MoreHorizontalIcon className="size-3.5" />
+                </Button>
+              }
+            />
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => onEdit(place)}>
+                수정
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="text-red-600"
+                onClick={() => onDelete(place)}
               >
-                {PLACE_CATEGORY_LABEL[place.category]}
-              </Badge>
-              {/* 더보기 메뉴 */}
-              <div onClick={(e) => e.stopPropagation()}>
-                <DropdownMenu>
-                  <DropdownMenuTrigger
-                    render={
-                      <Button variant="ghost" size="xs" className="size-6 p-0">
-                        <MoreHorizontalIcon className="size-3.5" />
-                      </Button>
-                    }
-                  />
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => onEdit(place)}>
-                      수정
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="text-red-600"
-                      onClick={() => onDelete(place)}
-                    >
-                      삭제
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </div>
+                삭제
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+
+      {/* 하단 — 장소 정보 오버레이 */}
+      <div className={cn(
+        "absolute inset-x-0 bottom-0 p-3 flex flex-col gap-0.5 z-10",
+        hasImage ? "text-white" : "text-foreground"
+      )}>
+        <h3 className="text-sm font-semibold line-clamp-1 drop-shadow-sm">
+          {place.name}
+        </h3>
+
+        {shortAddress && (
+          <p className={cn(
+            "flex items-center gap-1 text-xs",
+            hasImage ? "text-white/70" : "text-muted-foreground"
+          )}>
+            <MapPinIcon className="size-3 shrink-0" />
+            <span className="truncate">{shortAddress}</span>
+          </p>
+        )}
+
+        {place.rating !== null && (
+          <div className="flex items-center gap-0.5">
+            <StarIcon className="size-3 fill-yellow-400 text-yellow-400" />
+            <span className={cn(
+              "text-xs font-medium",
+              hasImage ? "text-white" : "text-foreground"
+            )}>
+              {place.rating}
+            </span>
           </div>
-        </CardHeader>
+        )}
 
-        <CardContent className="flex flex-col gap-1 pt-0 sm:gap-1.5">
-          {/* 주소 + 평점 — 모바일: 한 줄로 합침, 데스크톱: 각각 */}
-          <div className="flex items-center gap-2 sm:hidden">
-            {shortAddress && (
-              <div className="flex min-w-0 items-center gap-1 text-xs text-muted-foreground">
-                <MapPinIcon className="size-3 shrink-0" />
-                <span className="truncate">{shortAddress}</span>
-              </div>
-            )}
-            {place.rating !== null && (
-              <div className="flex items-center gap-0.5 shrink-0">
-                <StarIcon className="size-3 fill-yellow-400 text-yellow-400" />
-                <span className="text-xs font-medium">{place.rating}</span>
-              </div>
-            )}
-          </div>
-
-          {/* 데스크톱 전용: 주소 */}
-          {shortAddress && (
-            <div className="hidden items-center gap-1 text-xs text-muted-foreground sm:flex">
-              <MapPinIcon className="size-3 shrink-0" />
-              <span className="line-clamp-1">{shortAddress}</span>
-            </div>
-          )}
-
-          {/* 데스크톱 전용: 평점 */}
-          {place.rating !== null && (
-            <div className="hidden items-center gap-1 sm:flex">
-              <StarIcon className="size-3 fill-yellow-400 text-yellow-400" />
-              <span className="text-xs font-medium">{place.rating}</span>
-              {place.review_count !== null && (
-                <span className="text-xs text-muted-foreground">
-                  ({place.review_count.toLocaleString()})
-                </span>
-              )}
-            </div>
-          )}
-
-          {/* 카테고리별 보조 정보 — 데스크톱만 */}
-          <div className="hidden sm:block">
-            <CategoryMeta place={place} />
-          </div>
-
-          {/* 메모 — 데스크톱만 */}
-          {place.memo && (
-            <p className="hidden line-clamp-1 text-xs text-muted-foreground sm:block">
-              {place.memo}
-            </p>
-          )}
-
-          {/* 비교 모드 체크박스 */}
-          {compareMode && (
-            <div className="flex justify-end pt-0.5" onClick={(e) => e.stopPropagation()}>
-              <button
-                type="button"
-                onClick={() => onToggleSelect(place.id)}
-                className={cn(
-                  "flex h-5 w-5 items-center justify-center rounded border-2 transition-colors",
-                  selected
-                    ? "border-primary bg-primary text-primary-foreground"
+        {/* 비교 모드 체크박스 */}
+        {compareMode && (
+          <div className="flex justify-end pt-0.5" onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              onClick={() => onToggleSelect(place.id)}
+              className={cn(
+                "flex h-5 w-5 items-center justify-center rounded border-2 transition-colors",
+                selected
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : hasImage
+                    ? "border-white/60"
                     : "border-muted-foreground"
-                )}
-                aria-label={selected ? "선택 해제" : "선택"}
-              >
-                {selected && (
-                  <svg
-                    viewBox="0 0 12 12"
-                    fill="none"
-                    className="size-3"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <polyline points="1.5,6 4.5,9 10.5,3" />
-                  </svg>
-                )}
-              </button>
-            </div>
-          )}
-        </CardContent>
+              )}
+              aria-label={selected ? "선택 해제" : "선택"}
+            >
+              {selected && (
+                <svg
+                  viewBox="0 0 12 12"
+                  fill="none"
+                  className="size-3"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <polyline points="1.5,6 4.5,9 10.5,3" />
+                </svg>
+              )}
+            </button>
+          </div>
+        )}
       </div>
     </Card>
   );
@@ -517,7 +457,7 @@ export default function PlacesPage() {
         {TAB_VALUES.map((tab) => (
           <TabsContent key={tab} value={tab} className={cn("mt-4", viewMode === "map" && "hidden")}>
             {loading ? (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
                 {[...Array(4)].map((_, i) => (
                   <PlaceCardSkeleton key={i} />
                 ))}
@@ -549,7 +489,7 @@ export default function PlacesPage() {
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 animate-stagger">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 animate-stagger">
                 {filtered.map((place) => (
                   <PlaceCard
                     key={place.id}

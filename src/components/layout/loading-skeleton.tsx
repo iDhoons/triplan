@@ -24,13 +24,12 @@ export function TripCardSkeleton() {
 
 export function PlaceCardSkeleton() {
   return (
-    <Card>
-      <Skeleton className="h-40 w-full rounded-b-none" />
-      <CardContent className="p-4 space-y-2.5">
-        <Skeleton className="h-5 w-3/4" />
-        <Skeleton className="h-4 w-1/2" />
-        <Skeleton className="h-4 w-1/3" />
-      </CardContent>
+    <Card className="relative h-44 sm:h-52 overflow-hidden border-0">
+      <Skeleton className="absolute inset-0 h-full w-full rounded-lg" />
+      <div className="absolute inset-x-0 bottom-0 p-3 space-y-1.5">
+        <Skeleton className="h-4 w-3/4 bg-white/20" />
+        <Skeleton className="h-3 w-1/2 bg-white/15" />
+      </div>
     </Card>
   );
 }
