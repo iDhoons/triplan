@@ -374,14 +374,14 @@ function MiniMap({
 
   if (!hasApiKey()) {
     return (
-      <div className="h-40 rounded-lg bg-muted/50 flex items-center justify-center text-xs text-muted-foreground">
+      <div className="h-40 md:h-full rounded-lg bg-muted/50 flex items-center justify-center text-xs text-muted-foreground">
         지도 API 키가 필요합니다
       </div>
     );
   }
 
   return (
-    <div className="relative h-40 rounded-lg overflow-hidden border">
+    <div className="relative h-40 md:h-full rounded-lg overflow-hidden border">
       {!loaded && (
         <div className="absolute inset-0 flex items-center justify-center bg-muted/50 z-10">
           <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
@@ -520,46 +520,50 @@ export function TravelInfoCard({
   ) {
     return (
       <div className="mx-4 mb-2 space-y-2 animate-in slide-in-from-top-1 duration-200">
-        {/* 상세 경로 단계 */}
-        {fetchingDetails && !routeDetails && (
-          <div className="flex items-center justify-center py-3">
-            <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
-            <span className="text-xs text-muted-foreground ml-1.5">
-              경로 상세 조회 중...
-            </span>
+        {/* 경로 단계 + 지도 (데스크톱: 수평 배치) */}
+        <div className="flex flex-col md:flex-row gap-2">
+          {/* 왼쪽: 경로 단계 */}
+          <div className="flex-1 min-w-0">
+            {fetchingDetails && !routeDetails ? (
+              <div className="flex items-center justify-center py-3">
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
+                <span className="text-xs text-muted-foreground ml-1.5">
+                  경로 상세 조회 중...
+                </span>
+              </div>
+            ) : routeDetails?.steps && routeDetails.steps.length > 0 ? (
+              <StepList steps={routeDetails.steps} />
+            ) : (
+              <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-primary/5 border border-primary/10 h-full">
+                {getModeIcon(displayMode, "w-4 h-4 text-primary shrink-0")}
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-[11px] font-semibold text-foreground">
+                    추천 경로
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {getModeLabel(displayMode)} {formatDuration(displayDuration)}{" "}
+                    &middot; {formatDistance(displayDistance)}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
-        )}
 
-        {routeDetails?.steps && routeDetails.steps.length > 0 ? (
-          <StepList steps={routeDetails.steps} />
-        ) : !fetchingDetails ? (
-          /* steps가 없으면 기존 "추천 경로" 카드 표시 */
-          <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-primary/5 border border-primary/10">
-            {getModeIcon(displayMode, "w-4 h-4 text-primary shrink-0")}
-            <div className="flex flex-col gap-0.5">
-              <span className="text-[11px] font-semibold text-foreground">
-                추천 경로
-              </span>
-              <span className="text-xs text-muted-foreground">
-                {getModeLabel(displayMode)} {formatDuration(displayDuration)}{" "}
-                &middot; {formatDistance(displayDistance)}
-              </span>
+          {/* 오른쪽: 미니맵 */}
+          {hasCoords && (
+            <div className="md:w-1/2 shrink-0 md:min-h-40">
+              <MiniMap
+                originLat={currentItem.place!.latitude!}
+                originLng={currentItem.place!.longitude!}
+                destLat={nextItem.place!.latitude!}
+                destLng={nextItem.place!.longitude!}
+                originLabel={currentItem.title}
+                destLabel={nextItem.title}
+                routePolyline={routeDetails?.overview_polyline}
+              />
             </div>
-          </div>
-        ) : null}
-
-        {/* 미니맵 */}
-        {hasCoords && (
-          <MiniMap
-            originLat={currentItem.place!.latitude!}
-            originLng={currentItem.place!.longitude!}
-            destLat={nextItem.place!.latitude!}
-            destLng={nextItem.place!.longitude!}
-            originLabel={currentItem.title}
-            destLabel={nextItem.title}
-            routePolyline={routeDetails?.overview_polyline}
-          />
-        )}
+          )}
+        </div>
 
         {/* Google Maps 연결 */}
         {hasCoords && (
