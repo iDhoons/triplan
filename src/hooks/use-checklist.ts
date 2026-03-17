@@ -161,26 +161,13 @@ export function useChecklistMutations(tripId: string) {
       id: string;
       is_checked: boolean;
     }) => {
-      if (!user) throw new Error("로그인이 필요합니다");
       const supabase = createClient();
-
-      // 핵심 동작: 체크 상태 변경
-      const { error: updateError } = await supabase
-        .from("checklist_items")
-        .update({ is_checked })
-        .eq("id", id);
-      if (updateError) throw updateError;
-
-      // 부수 동작: 히스토리 로그 (실패해도 체크 상태에 영향 없음)
-      try {
-        await supabase.from("checklist_logs").insert({
-          checklist_item_id: id,
-          action: is_checked ? "checked" : "unchecked",
-          performed_by: user.id,
-        });
-      } catch (e) {
-        console.error("[checklist] 로그 기록 실패:", e);
-      }
+      // RPC: is_checked만 변경 + 로그는 DB 트리거가 자동 기록
+      const { error } = await supabase.rpc("toggle_checklist_check", {
+        _item_id: id,
+        _is_checked: is_checked,
+      });
+      if (error) throw error;
     },
     onMutate: async ({ id, is_checked }) => {
       await queryClient.cancelQueries({ queryKey });
@@ -204,24 +191,20 @@ export function useChecklistMutations(tripId: string) {
 
   const reorderItems = useMutation({
     mutationFn: async ({
+      category,
       orderedIds,
     }: {
       category: ChecklistCategory;
       orderedIds: string[];
     }) => {
       const supabase = createClient();
-      const updates = orderedIds.map((id, index) => ({
-        id,
-        position: index,
-      }));
-
-      for (const { id, position } of updates) {
-        const { error } = await supabase
-          .from("checklist_items")
-          .update({ position })
-          .eq("id", id);
-        if (error) throw error;
-      }
+      // RPC: 단일 트랜잭션으로 배치 순서 변경
+      const { error } = await supabase.rpc("reorder_checklist_items", {
+        _trip_id: tripId,
+        _category: category,
+        _ordered_ids: orderedIds,
+      });
+      if (error) throw error;
     },
     onMutate: async ({ category, orderedIds }) => {
       await queryClient.cancelQueries({ queryKey });
