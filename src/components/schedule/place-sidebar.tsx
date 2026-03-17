@@ -1,7 +1,7 @@
 "use client";
 
 import { useDraggable } from "@dnd-kit/core";
-import { MapPin, Hotel, UtensilsCrossed, Star } from "lucide-react";
+import { MapPin, Hotel, UtensilsCrossed, Star, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -30,9 +30,10 @@ const CATEGORY_ICON: Record<PlaceCategory, React.ReactNode> = {
 interface PlaceCardProps {
   place: Place;
   isScheduled: boolean;
+  onAddClick?: (place: Place, triggerEl: HTMLElement) => void;
 }
 
-function PlaceCard({ place, isScheduled }: PlaceCardProps) {
+function PlaceCard({ place, isScheduled, onAddClick }: PlaceCardProps) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `place-${place.id}`,
     data: { type: "place", place },
@@ -45,7 +46,7 @@ function PlaceCard({ place, isScheduled }: PlaceCardProps) {
       {...attributes}
       {...listeners}
       className={cn(
-        "border rounded-lg p-2.5 select-none transition-all",
+        "border rounded-lg p-2.5 select-none transition-all relative group",
         isScheduled
           ? "opacity-40 cursor-not-allowed bg-muted"
           : "bg-card cursor-grab active:cursor-grabbing hover:border-primary/60 hover:shadow-sm",
@@ -97,6 +98,33 @@ function PlaceCard({ place, isScheduled }: PlaceCardProps) {
       {isScheduled && (
         <p className="text-[10px] text-muted-foreground mt-1">이미 배치됨</p>
       )}
+
+      {/* "+" 버튼 — 미배치 장소에만 표시 */}
+      {!isScheduled && onAddClick && (
+        <button
+          type="button"
+          aria-label={`${place.name} 일정에 추가`}
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            onAddClick(place, e.currentTarget);
+          }}
+          onPointerDown={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
+          className={cn(
+            "absolute top-1.5 right-1.5 z-10",
+            "flex items-center justify-center",
+            "w-7 h-7 rounded-full",
+            "bg-primary text-primary-foreground shadow-md",
+            "opacity-0 group-hover:opacity-100 md:group-hover:opacity-100",
+            "active:scale-90 transition-all",
+            // 모바일에서는 항상 표시
+            "max-md:opacity-100"
+          )}
+        >
+          <Plus className="w-3.5 h-3.5" />
+        </button>
+      )}
     </div>
   );
 }
@@ -107,9 +135,10 @@ function PlaceCard({ place, isScheduled }: PlaceCardProps) {
 interface PlaceSidebarProps {
   places: Place[];
   scheduledPlaceIds: Set<string>;
+  onAddClick?: (place: Place, triggerEl: HTMLElement) => void;
 }
 
-export function PlaceSidebar({ places, scheduledPlaceIds }: PlaceSidebarProps) {
+export function PlaceSidebar({ places, scheduledPlaceIds, onAddClick }: PlaceSidebarProps) {
   if (places.length === 0) {
     return (
       <aside className="flex flex-col h-full">
@@ -132,7 +161,7 @@ export function PlaceSidebar({ places, scheduledPlaceIds }: PlaceSidebarProps) {
         </span>
       </h3>
       <p className="text-xs text-muted-foreground mb-3 px-1">
-        카드를 날짜로 드래그해서 일정에 추가하세요.
+        카드의 + 버튼 또는 드래그로 일정에 추가하세요.
       </p>
       <ScrollArea className="flex-1">
         <div className="grid grid-cols-2 md:grid-cols-1 gap-2 pr-2">
@@ -141,6 +170,7 @@ export function PlaceSidebar({ places, scheduledPlaceIds }: PlaceSidebarProps) {
               key={place.id}
               place={place}
               isScheduled={scheduledPlaceIds.has(place.id)}
+              onAddClick={onAddClick}
             />
           ))}
         </div>

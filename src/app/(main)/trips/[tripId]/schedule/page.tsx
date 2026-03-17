@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import { useParams } from "next/navigation";
 import {
   DndContext,
@@ -25,6 +25,8 @@ import { PlaceSidebar } from "@/components/schedule/place-sidebar";
 import {
   ScheduleItemForm,
 } from "@/components/schedule/schedule-item-form";
+import { DayPickerSheet } from "@/components/schedule/day-picker-sheet";
+import { UnscheduledFAB } from "@/components/schedule/unscheduled-fab";
 import { RouteMap } from "@/components/maps/route-map";
 import { useScheduleData } from "@/hooks/use-schedule-data";
 import { useScheduleActions } from "@/hooks/use-schedule-actions";
@@ -71,6 +73,11 @@ export default function SchedulePage() {
   const [activePlaceId, setActivePlaceId] = useState<string | null>(null);
   const [activeItemId, setActiveItemId] = useState<string | null>(null);
 
+  // --- DayPickerSheet state ---
+  const [dayPickerOpen, setDayPickerOpen] = useState(false);
+  const [dayPickerPlace, setDayPickerPlace] = useState<Place | null>(null);
+  const dayPickerTriggerRef = useRef<HTMLElement | null>(null);
+
   // --- Actions (React Query invalidation) ---
   const {
     handleFormSubmit,
@@ -102,6 +109,23 @@ export default function SchedulePage() {
     setEditingItem(null);
     setFormOpen(true);
   };
+
+  /** "+" 버튼 클릭 → DayPickerSheet 열기 */
+  const handlePlaceAddClick = useCallback((place: Place, triggerEl: HTMLElement) => {
+    setDayPickerPlace(place);
+    dayPickerTriggerRef.current = triggerEl;
+    setDayPickerOpen(true);
+  }, []);
+
+  /** DayPickerSheet에서 날짜 선택 → 장소 추가 */
+  const handleAddPlaceToSchedule = useCallback(
+    async (scheduleId: string, place: Place) => {
+      const targetSchedule = schedules.find((s) => s.id === scheduleId);
+      const sortOrder = (targetSchedule?.items?.length ?? 0) + 1;
+      await handleDropPlace(scheduleId, place, sortOrder);
+    },
+    [schedules, handleDropPlace]
+  );
 
   const handleOpenEditForm = (item: ScheduleItem) => {
     const parentSchedule = schedules.find((s) =>
@@ -284,10 +308,10 @@ export default function SchedulePage() {
             )}
           </div>
 
-          {/* Place sidebar */}
+          {/* Place sidebar — 데스크톱만 표시, 모바일은 FAB으로 대체 */}
           <aside
             className={cn(
-              "shrink-0",
+              "shrink-0 hidden md:block",
               "md:w-56 md:min-h-[500px]",
               "border rounded-xl p-3"
             )}
@@ -295,6 +319,7 @@ export default function SchedulePage() {
             <PlaceSidebar
               places={places}
               scheduledPlaceIds={scheduledPlaceIds}
+              onAddClick={handlePlaceAddClick}
             />
           </aside>
         </div>
@@ -324,6 +349,22 @@ export default function SchedulePage() {
         editingItem={editingItem}
         places={places}
         onSubmit={handleFormSubmit}
+      />
+
+      {/* Tap-to-Assign: 날짜 선택 시트 */}
+      <DayPickerSheet
+        open={dayPickerOpen}
+        onOpenChange={setDayPickerOpen}
+        place={dayPickerPlace}
+        schedules={schedules}
+        onSelect={handleAddPlaceToSchedule}
+      />
+
+      {/* 모바일 전용: 미배치 장소 FAB */}
+      <UnscheduledFAB
+        places={places}
+        scheduledPlaceIds={scheduledPlaceIds}
+        onAddClick={handlePlaceAddClick}
       />
     </DndContext>
   );
