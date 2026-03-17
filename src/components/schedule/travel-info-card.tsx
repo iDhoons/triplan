@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   Footprints,
   Bus,
@@ -34,6 +34,9 @@ interface RouteStep {
     arrival_stop: string;
     num_stops: number;
   };
+  start_location?: { lat: number; lng: number };
+  end_location?: { lat: number; lng: number };
+  polyline?: string;
 }
 
 interface RouteDetails {
@@ -150,16 +153,34 @@ function getVehicleIcon(
 }
 
 // -----------------------------------------------------------------------
-// Step List (이동 단계 상세 표시)
+// Step List (클릭 가능한 이동 단계 목록)
 // -----------------------------------------------------------------------
-function StepList({ steps }: { steps: RouteStep[] }) {
+interface StepListProps {
+  steps: RouteStep[];
+  selectedIndex: number | null;
+  onStepClick: (index: number) => void;
+}
+
+function StepList({ steps, selectedIndex, onStepClick }: StepListProps) {
   return (
     <div className="rounded-lg border bg-card overflow-hidden divide-y divide-border">
       {steps.map((step, i) => {
+        const hasLocation = !!(step.start_location || step.polyline);
+        const isSelected = selectedIndex === i;
+
         if (step.travel_mode === "TRANSIT" && step.transit_details) {
           const td = step.transit_details;
           return (
-            <div key={i} className="flex items-start gap-2 px-3 py-2">
+            <button
+              key={i}
+              type="button"
+              onClick={() => hasLocation && onStepClick(i)}
+              className={cn(
+                "flex items-start gap-2 px-3 py-2 w-full text-left transition-colors",
+                hasLocation && "cursor-pointer hover:bg-accent/50",
+                isSelected && "bg-primary/5 ring-1 ring-inset ring-primary/30"
+              )}
+            >
               <div
                 className="w-1 self-stretch rounded-full shrink-0 mt-0.5"
                 style={{ backgroundColor: td.line_color || "#6b7280" }}
@@ -189,29 +210,47 @@ function StepList({ steps }: { steps: RouteStep[] }) {
                   {td.num_stops}정거장 · {step.duration_text}
                 </div>
               </div>
-            </div>
+            </button>
           );
         }
 
         if (step.travel_mode === "WALKING") {
           return (
-            <div key={i} className="flex items-center gap-2 px-3 py-1.5">
+            <button
+              key={i}
+              type="button"
+              onClick={() => hasLocation && onStepClick(i)}
+              className={cn(
+                "flex items-center gap-2 px-3 py-1.5 w-full text-left transition-colors",
+                hasLocation && "cursor-pointer hover:bg-accent/50",
+                isSelected && "bg-primary/5 ring-1 ring-inset ring-primary/30"
+              )}
+            >
               <Footprints className="w-3 h-3 text-muted-foreground/60 shrink-0" />
               <span className="text-[11px] text-muted-foreground">
                 도보 {step.duration_text} · {step.distance_text}
               </span>
-            </div>
+            </button>
           );
         }
 
         // DRIVING or other
         return (
-          <div key={i} className="flex items-center gap-2 px-3 py-1.5">
+          <button
+            key={i}
+            type="button"
+            onClick={() => hasLocation && onStepClick(i)}
+            className={cn(
+              "flex items-center gap-2 px-3 py-1.5 w-full text-left transition-colors",
+              hasLocation && "cursor-pointer hover:bg-accent/50",
+              isSelected && "bg-primary/5 ring-1 ring-inset ring-primary/30"
+            )}
+          >
             <Car className="w-3 h-3 text-muted-foreground/60 shrink-0" />
             <span className="text-[11px] text-muted-foreground">
               {step.instruction} · {step.duration_text}
             </span>
-          </div>
+          </button>
         );
       })}
     </div>
@@ -219,7 +258,7 @@ function StepList({ steps }: { steps: RouteStep[] }) {
 }
 
 // -----------------------------------------------------------------------
-// Inline Mini Map (출발/도착 마커 + 실제 경로)
+// Inline Mini Map (출발/도착 마커 + 실제 경로 + 단계 선택 연동)
 // -----------------------------------------------------------------------
 interface MiniMapProps {
   originLat: number;
@@ -229,6 +268,8 @@ interface MiniMapProps {
   originLabel: string;
   destLabel: string;
   routePolyline?: string;
+  steps?: RouteStep[];
+  selectedStepIndex: number | null;
 }
 
 function MiniMap({
@@ -239,16 +280,27 @@ function MiniMap({
   originLabel,
   destLabel,
   routePolyline,
+  steps,
+  selectedStepIndex,
 }: MiniMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
+  const overviewPolylineRef = useRef<google.maps.Polyline | null>(null);
+  const highlightPolylineRef = useRef<google.maps.Polyline | null>(null);
+  const stepMarkerRef = useRef<google.maps.Marker | null>(null);
+  const routeBoundsRef = useRef<google.maps.LatLngBounds | null>(null);
   const [loaded, setLoaded] = useState(false);
 
+  // 지도 초기화
   useEffect(() => {
     if (!hasApiKey()) return;
 
     let cancelled = false;
     setLoaded(false);
+    overviewPolylineRef.current = null;
+    highlightPolylineRef.current = null;
+    stepMarkerRef.current = null;
+    routeBoundsRef.current = null;
 
     async function init() {
       try {
@@ -321,7 +373,7 @@ function MiniMap({
           const path = decodePolyline(routePolyline);
           path.forEach((p) => bounds.extend(p));
 
-          new google.maps.Polyline({
+          overviewPolylineRef.current = new google.maps.Polyline({
             path,
             geodesic: true,
             strokeColor: "#4285f4",
@@ -351,6 +403,7 @@ function MiniMap({
           });
         }
 
+        routeBoundsRef.current = bounds;
         map.fitBounds(bounds, 40);
         setLoaded(true);
       } catch (e) {
@@ -371,6 +424,73 @@ function MiniMap({
     destLabel,
     routePolyline,
   ]);
+
+  // 단계 선택 시 지도 연동
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map || !loaded) return;
+
+    // 기존 하이라이트 정리
+    if (highlightPolylineRef.current) {
+      highlightPolylineRef.current.setMap(null);
+      highlightPolylineRef.current = null;
+    }
+    if (stepMarkerRef.current) {
+      stepMarkerRef.current.setMap(null);
+      stepMarkerRef.current = null;
+    }
+
+    if (selectedStepIndex !== null && steps?.[selectedStepIndex]) {
+      const step = steps[selectedStepIndex];
+      const lineColor = step.transit_details?.line_color || "#4285f4";
+
+      // 전체 경로 희미하게
+      overviewPolylineRef.current?.setOptions({ strokeOpacity: 0.2 });
+
+      // 선택된 단계 폴리라인 강조
+      if (step.polyline) {
+        const path = decodePolyline(step.polyline);
+        const stepBounds = new google.maps.LatLngBounds();
+        path.forEach((p) => stepBounds.extend(p));
+
+        highlightPolylineRef.current = new google.maps.Polyline({
+          path,
+          geodesic: true,
+          strokeColor: lineColor,
+          strokeOpacity: 1,
+          strokeWeight: 6,
+          map,
+        });
+
+        map.fitBounds(stepBounds, 50);
+      } else if (step.start_location) {
+        map.panTo(step.start_location);
+        map.setZoom(15);
+      }
+
+      // 시작 지점 마커
+      if (step.start_location) {
+        stepMarkerRef.current = new google.maps.Marker({
+          position: step.start_location,
+          map,
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 8,
+            fillColor: lineColor,
+            fillOpacity: 1,
+            strokeColor: "#fff",
+            strokeWeight: 2,
+          },
+        });
+      }
+    } else {
+      // 선택 해제 → 전체 경로 복원
+      overviewPolylineRef.current?.setOptions({ strokeOpacity: 0.85 });
+      if (routeBoundsRef.current) {
+        map.fitBounds(routeBoundsRef.current, 40);
+      }
+    }
+  }, [selectedStepIndex, steps, loaded]);
 
   if (!hasApiKey()) {
     return (
@@ -418,6 +538,11 @@ export function TravelInfoCard({
   const [routeDetails, setRouteDetails] = useState<RouteDetails | null>(null);
   const [fetchingDetails, setFetchingDetails] = useState(false);
 
+  // 선택된 경로 단계 인덱스
+  const [selectedStepIndex, setSelectedStepIndex] = useState<number | null>(
+    null
+  );
+
   const duration = nextItem.travel_duration_seconds;
   const distance = nextItem.travel_distance_meters;
   const mode = nextItem.travel_mode;
@@ -429,6 +554,11 @@ export function TravelInfoCard({
     nextItem.place?.longitude != null;
 
   const hasCachedInfo = duration != null && distance != null;
+
+  /** 경로 단계 클릭 토글 */
+  const handleStepClick = useCallback((index: number) => {
+    setSelectedStepIndex((prev) => (prev === index ? null : index));
+  }, []);
 
   /** 캐시된 아이템 확장 시 상세 경로 정보 조회 */
   async function fetchRouteDetails() {
@@ -487,6 +617,9 @@ export function TravelInfoCard({
     if (willExpand && !routeDetails) {
       fetchRouteDetails();
     }
+    if (!willExpand) {
+      setSelectedStepIndex(null);
+    }
   }
 
   // Loading 상태
@@ -532,7 +665,11 @@ export function TravelInfoCard({
                 </span>
               </div>
             ) : routeDetails?.steps && routeDetails.steps.length > 0 ? (
-              <StepList steps={routeDetails.steps} />
+              <StepList
+                steps={routeDetails.steps}
+                selectedIndex={selectedStepIndex}
+                onStepClick={handleStepClick}
+              />
             ) : (
               <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-primary/5 border border-primary/10 h-full">
                 {getModeIcon(displayMode, "w-4 h-4 text-primary shrink-0")}
@@ -560,6 +697,8 @@ export function TravelInfoCard({
                 originLabel={currentItem.title}
                 destLabel={nextItem.title}
                 routePolyline={routeDetails?.overview_polyline}
+                steps={routeDetails?.steps}
+                selectedStepIndex={selectedStepIndex}
               />
             </div>
           )}
@@ -636,7 +775,13 @@ export function TravelInfoCard({
           <button
             type="button"
             onClick={
-              fetchedInfo ? () => setExpanded(!expanded) : fetchDirections
+              fetchedInfo
+                ? () => {
+                    const willExpand = !expanded;
+                    setExpanded(willExpand);
+                    if (!willExpand) setSelectedStepIndex(null);
+                  }
+                : fetchDirections
             }
             disabled={fetching}
             className={cn(

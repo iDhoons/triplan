@@ -60,6 +60,9 @@ export interface DirectionStep {
   distance_text: string;
   instruction: string;
   transit_details?: TransitDetail;
+  start_location?: { lat: number; lng: number };
+  end_location?: { lat: number; lng: number };
+  polyline?: string;
 }
 
 export interface DirectionsResult {
@@ -89,6 +92,9 @@ interface GoogleDirectionsResponse {
         duration: { value: number; text: string };
         distance: { value: number; text: string };
         html_instructions: string;
+        start_location?: { lat: number; lng: number };
+        end_location?: { lat: number; lng: number };
+        polyline?: { points: string };
         transit_details?: {
           departure_stop: { name: string };
           arrival_stop: { name: string };
@@ -214,6 +220,9 @@ export async function getDirections(
           },
         }
       : {}),
+    start_location: s.start_location,
+    end_location: s.end_location,
+    polyline: s.polyline?.points,
   }));
 
   return {
