@@ -15,6 +15,16 @@ import { Plus, ListChecks } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   useChecklistItems,
   useChecklistMutations,
 } from "@/hooks/use-checklist";
@@ -46,6 +56,7 @@ export function ChecklistPage({ tripId, userRole }: ChecklistPageProps) {
   const [editItem, setEditItem] = useState<ChecklistItem | null>(null);
   const [historyItemId, setHistoryItemId] = useState<string | null>(null);
   const [historyItemTitle, setHistoryItemTitle] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; title: string } | null>(null);
 
   const canEdit = userRole === "admin" || userRole === "editor";
 
@@ -100,17 +111,23 @@ export function ChecklistPage({ tripId, userRole }: ChecklistPageProps) {
     [mutations.toggleCheck]
   );
 
-  const handleDelete = useCallback(
+  const handleDeleteRequest = useCallback(
     (id: string) => {
       const item = items?.find((i) => i.id === id);
-      mutations.deleteItem.mutate(id, {
-        onSuccess: () => {
-          toast.success(`"${item?.title}" 삭제했어요`);
-        },
-      });
+      setDeleteTarget({ id, title: item?.title ?? "" });
     },
-    [items, mutations.deleteItem]
+    [items]
   );
+
+  const handleDeleteConfirm = useCallback(() => {
+    if (!deleteTarget) return;
+    mutations.deleteItem.mutate(deleteTarget.id, {
+      onSuccess: () => {
+        toast.success(`"${deleteTarget.title}" 삭제했어요`);
+      },
+    });
+    setDeleteTarget(null);
+  }, [deleteTarget, mutations.deleteItem]);
 
   const handleShowHistory = useCallback(
     (itemId: string) => {
@@ -183,7 +200,7 @@ export function ChecklistPage({ tripId, userRole }: ChecklistPageProps) {
                   userRole={userRole}
                   onToggle={handleToggle}
                   onEdit={setEditItem}
-                  onDelete={handleDelete}
+                  onDelete={handleDeleteRequest}
                   onShowHistory={handleShowHistory}
                 />
               ))}
@@ -216,6 +233,7 @@ export function ChecklistPage({ tripId, userRole }: ChecklistPageProps) {
       />
 
       <EditItemSheet
+        key={editItem?.id ?? "closed"}
         item={editItem}
         members={members ?? []}
         onSave={(data) => {
@@ -231,6 +249,26 @@ export function ChecklistPage({ tripId, userRole }: ChecklistPageProps) {
         itemTitle={historyItemTitle}
         onClose={() => setHistoryItemId(null)}
       />
+
+      <AlertDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>정말 삭제할까요?</AlertDialogTitle>
+            <AlertDialogDescription>
+              &ldquo;{deleteTarget?.title}&rdquo; 항목을 삭제하면 되돌릴 수 없어요.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>취소</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm}>
+              삭제
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
