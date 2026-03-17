@@ -31,6 +31,16 @@ import { useScheduleActions } from "@/hooks/use-schedule-actions";
 import type { Schedule, ScheduleItem, Place } from "@/types/database";
 
 // -----------------------------------------------------------------------
+// Helpers
+// -----------------------------------------------------------------------
+function formatDateShort(dateStr: string): string {
+  return new Date(dateStr).toLocaleDateString("ko-KR", {
+    month: "short",
+    day: "numeric",
+  });
+}
+
+// -----------------------------------------------------------------------
 // Types
 // -----------------------------------------------------------------------
 type ViewMode = "planner" | "route";
@@ -47,7 +57,9 @@ export default function SchedulePage() {
     schedules,
     places,
     loading,
+    error,
     supabase,
+    refetch,
   } = useScheduleData(tripId);
 
   // --- UI state ---
@@ -195,6 +207,18 @@ export default function SchedulePage() {
     );
   }
 
+  // --- Error ---
+  if (error) {
+    return (
+      <div className="flex flex-col items-center gap-4 py-20 text-center">
+        <p className="text-4xl">😵</p>
+        <p className="font-medium text-foreground/80">데이터를 불러오지 못했어요</p>
+        <p className="text-sm text-muted-foreground">네트워크 연결을 확인하고 다시 시도해주세요.</p>
+        <Button variant="outline" onClick={() => refetch()}>다시 시도</Button>
+      </div>
+    );
+  }
+
   // --- Render ---
   return (
     <DndContext
@@ -226,7 +250,7 @@ export default function SchedulePage() {
           </div>
 
           <span className="text-xs text-muted-foreground">
-            {trip ? `${trip.start_date} ~ ${trip.end_date}` : ""}
+            {trip ? `${formatDateShort(trip.start_date)} ~ ${formatDateShort(trip.end_date)}` : ""}
           </span>
         </div>
 
@@ -353,7 +377,7 @@ function RouteView({
             >
               {`Day ${idx + 1}`}
               <span className="ml-1 text-[10px] opacity-70">
-                {schedule.date}
+                {formatDateShort(schedule.date)}
               </span>
             </button>
           ))}

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/auth-store";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -62,6 +63,13 @@ export default function DashboardPage() {
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     if (!user) return;
+
+    // 날짜 검증: 종료일이 시작일 이전이면 차단
+    if (startDate && endDate && endDate < startDate) {
+      toast.error("도착일이 출발일보다 이전이에요.");
+      return;
+    }
+
     setCreating(true);
 
     const inviteCode = nanoid(10);
@@ -75,6 +83,7 @@ export default function DashboardPage() {
     });
 
     if (error || !tripId) {
+      toast.error("여행 생성에 실패했어요. 다시 시도해주세요.");
       setCreating(false);
       return;
     }

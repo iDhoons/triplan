@@ -86,12 +86,14 @@ export function useScheduleData(tripId: string) {
   }, [schedulesQuery.data != null]);
 
   const loading = tripQuery.isLoading || schedulesQuery.isLoading || placesQuery.isLoading;
+  const error = tripQuery.error || schedulesQuery.error || placesQuery.error;
 
   return {
     trip: tripQuery.data ?? null,
     schedules: schedulesQuery.data ?? [],
     places: placesQuery.data ?? [],
     loading,
+    error,
     supabase,
     refetch: async () => {
       await queryClient.invalidateQueries({ queryKey: ["schedules", tripId] });
