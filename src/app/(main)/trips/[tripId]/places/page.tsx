@@ -134,18 +134,18 @@ const PlaceCard = memo(function PlaceCard({
     <Card
       className={cn(
         "relative cursor-pointer transition-shadow hover:shadow-md overflow-hidden",
+        "flex flex-row sm:flex-col",
         selected && "ring-2 ring-primary"
       )}
       onClick={() => onOpenDetail(place)}
     >
-      {/* 이미지 */}
+      {/* 이미지 — 모바일: 좌측 썸네일, 데스크톱: 상단 풀너비 */}
       {place.image_urls?.length > 0 ? (
         <img
           src={place.image_urls[0]}
           alt={place.name}
-          className="h-36 w-full object-cover"
+          className="h-20 w-20 shrink-0 rounded-l-lg object-cover sm:h-36 sm:w-full sm:rounded-l-none sm:rounded-t-lg"
           onError={(e) => {
-            // 만료된 URL fallback → placeholder로 교체
             const target = e.currentTarget;
             target.style.display = "none";
             target.parentElement?.querySelector("[data-placeholder]")?.classList.remove("hidden");
@@ -155,7 +155,8 @@ const PlaceCard = memo(function PlaceCard({
       <div
         data-placeholder
         className={cn(
-          "h-24 w-full flex items-center justify-center",
+          "flex shrink-0 items-center justify-center",
+          "h-20 w-20 rounded-l-lg sm:h-24 sm:w-full sm:rounded-l-none sm:rounded-t-lg",
           place.image_urls?.length > 0 && "hidden",
           place.category === "accommodation" && "bg-cat-accommodation/20",
           place.category === "attraction" && "bg-cat-attraction/20",
@@ -163,110 +164,131 @@ const PlaceCard = memo(function PlaceCard({
           place.category === "other" && "bg-muted",
         )}
       >
-        <MapPinIcon className="size-8 text-muted-foreground/30" />
+        <MapPinIcon className="size-6 text-muted-foreground/30 sm:size-8" />
       </div>
 
-      <CardHeader className="pb-1">
-        <div className="flex items-start justify-between gap-2">
-          <CardTitle className="text-sm line-clamp-1">{place.name}</CardTitle>
-          <div className="flex items-center gap-1 shrink-0">
-            <Badge
-              className={cn(
-                "shrink-0 border text-[10px] px-1.5 py-0",
-                PLACE_CATEGORY_BADGE_CLASS[place.category]
-              )}
-              variant="outline"
-            >
-              {PLACE_CATEGORY_LABEL[place.category]}
-            </Badge>
-            {/* 더보기 메뉴 */}
-            <div onClick={(e) => e.stopPropagation()}>
-              <DropdownMenu>
-                <DropdownMenuTrigger
-                  render={
-                    <Button variant="ghost" size="xs" className="size-6 p-0">
-                      <MoreHorizontalIcon className="size-3.5" />
-                    </Button>
-                  }
-                />
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => onEdit(place)}>
-                    수정
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="text-red-600"
-                    onClick={() => onDelete(place)}
-                  >
-                    삭제
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+      {/* 정보 영역 */}
+      <div className="flex min-w-0 flex-1 flex-col">
+        <CardHeader className="pb-1 sm:pb-1">
+          <div className="flex items-start justify-between gap-2">
+            <CardTitle className="text-sm line-clamp-1">{place.name}</CardTitle>
+            <div className="flex items-center gap-1 shrink-0">
+              <Badge
+                className={cn(
+                  "shrink-0 border text-[10px] px-1.5 py-0",
+                  PLACE_CATEGORY_BADGE_CLASS[place.category]
+                )}
+                variant="outline"
+              >
+                {PLACE_CATEGORY_LABEL[place.category]}
+              </Badge>
+              {/* 더보기 메뉴 */}
+              <div onClick={(e) => e.stopPropagation()}>
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    render={
+                      <Button variant="ghost" size="xs" className="size-6 p-0">
+                        <MoreHorizontalIcon className="size-3.5" />
+                      </Button>
+                    }
+                  />
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => onEdit(place)}>
+                      수정
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="text-red-600"
+                      onClick={() => onDelete(place)}
+                    >
+                      삭제
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
           </div>
-        </div>
-      </CardHeader>
+        </CardHeader>
 
-      <CardContent className="flex flex-col gap-1.5 pt-0">
-        {/* 주소 (짧은 한글) */}
-        {shortAddress && (
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <MapPinIcon className="size-3 shrink-0" />
-            <span className="line-clamp-1">{shortAddress}</span>
-          </div>
-        )}
-
-        {/* 평점 + 리뷰 수 */}
-        {place.rating !== null && (
-          <div className="flex items-center gap-1">
-            <StarIcon className="size-3 fill-yellow-400 text-yellow-400" />
-            <span className="text-xs font-medium">{place.rating}</span>
-            {place.review_count !== null && (
-              <span className="text-xs text-muted-foreground">
-                ({place.review_count.toLocaleString()})
-              </span>
+        <CardContent className="flex flex-col gap-1 pt-0 sm:gap-1.5">
+          {/* 주소 + 평점 — 모바일: 한 줄로 합침, 데스크톱: 각각 */}
+          <div className="flex items-center gap-2 sm:hidden">
+            {shortAddress && (
+              <div className="flex min-w-0 items-center gap-1 text-xs text-muted-foreground">
+                <MapPinIcon className="size-3 shrink-0" />
+                <span className="truncate">{shortAddress}</span>
+              </div>
+            )}
+            {place.rating !== null && (
+              <div className="flex items-center gap-0.5 shrink-0">
+                <StarIcon className="size-3 fill-yellow-400 text-yellow-400" />
+                <span className="text-xs font-medium">{place.rating}</span>
+              </div>
             )}
           </div>
-        )}
 
-        {/* 카테고리별 보조 정보 */}
-        <CategoryMeta place={place} />
+          {/* 데스크톱 전용: 주소 */}
+          {shortAddress && (
+            <div className="hidden items-center gap-1 text-xs text-muted-foreground sm:flex">
+              <MapPinIcon className="size-3 shrink-0" />
+              <span className="line-clamp-1">{shortAddress}</span>
+            </div>
+          )}
 
-        {/* 메모 (1줄) */}
-        {place.memo && (
-          <p className="line-clamp-1 text-xs text-muted-foreground">
-            {place.memo}
-          </p>
-        )}
-
-        {/* 비교 모드 체크박스 */}
-        {compareMode && (
-          <div className="flex justify-end pt-0.5" onClick={(e) => e.stopPropagation()}>
-            <button
-              type="button"
-              onClick={() => onToggleSelect(place.id)}
-              className={cn(
-                "flex h-5 w-5 items-center justify-center rounded border-2 transition-colors",
-                selected
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-muted-foreground"
+          {/* 데스크톱 전용: 평점 */}
+          {place.rating !== null && (
+            <div className="hidden items-center gap-1 sm:flex">
+              <StarIcon className="size-3 fill-yellow-400 text-yellow-400" />
+              <span className="text-xs font-medium">{place.rating}</span>
+              {place.review_count !== null && (
+                <span className="text-xs text-muted-foreground">
+                  ({place.review_count.toLocaleString()})
+                </span>
               )}
-              aria-label={selected ? "선택 해제" : "선택"}
-            >
-              {selected && (
-                <svg
-                  viewBox="0 0 12 12"
-                  fill="none"
-                  className="size-3"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <polyline points="1.5,6 4.5,9 10.5,3" />
-                </svg>
-              )}
-            </button>
+            </div>
+          )}
+
+          {/* 카테고리별 보조 정보 — 데스크톱만 */}
+          <div className="hidden sm:block">
+            <CategoryMeta place={place} />
           </div>
-        )}
-      </CardContent>
+
+          {/* 메모 — 데스크톱만 */}
+          {place.memo && (
+            <p className="hidden line-clamp-1 text-xs text-muted-foreground sm:block">
+              {place.memo}
+            </p>
+          )}
+
+          {/* 비교 모드 체크박스 */}
+          {compareMode && (
+            <div className="flex justify-end pt-0.5" onClick={(e) => e.stopPropagation()}>
+              <button
+                type="button"
+                onClick={() => onToggleSelect(place.id)}
+                className={cn(
+                  "flex h-5 w-5 items-center justify-center rounded border-2 transition-colors",
+                  selected
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-muted-foreground"
+                )}
+                aria-label={selected ? "선택 해제" : "선택"}
+              >
+                {selected && (
+                  <svg
+                    viewBox="0 0 12 12"
+                    fill="none"
+                    className="size-3"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <polyline points="1.5,6 4.5,9 10.5,3" />
+                  </svg>
+                )}
+              </button>
+            </div>
+          )}
+        </CardContent>
+      </div>
     </Card>
   );
 });
@@ -527,7 +549,7 @@ export default function PlacesPage() {
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 animate-stagger">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 animate-stagger">
                 {filtered.map((place) => (
                   <PlaceCard
                     key={place.id}
