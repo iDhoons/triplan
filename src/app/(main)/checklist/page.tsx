@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import {
@@ -7,20 +8,25 @@ import {
   ChevronRight,
   MapPin,
   Calendar,
+  Plus,
 } from "lucide-react";
+import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/auth-store";
+import { useChecklistMutations } from "@/hooks/use-checklist";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { InlineAddInput } from "@/components/checklist/inline-add-input";
 import { cn } from "@/lib/utils";
 import { CATEGORY_MAP } from "@/components/checklist/constants";
-import type { ChecklistItem, Trip } from "@/types/database";
+import type { ChecklistItem, Trip, MemberRole } from "@/types/database";
 
 interface TripWithChecklist {
   trip: Trip;
   items: ChecklistItem[];
   total: number;
   checked: number;
+  userRole: MemberRole;
 }
 
 const GLOBAL_QUERY_KEY = ["checklist_global"];
@@ -67,6 +73,7 @@ function useAllChecklists() {
           items,
           total: items.length,
           checked: items.filter((i) => i.is_checked).length,
+          userRole: m.role as MemberRole,
         });
       }
 
@@ -147,7 +154,6 @@ export default function GlobalChecklistPage() {
   }
 
   const isEmpty = !tripChecklists || tripChecklists.length === 0;
-  const hasNoItems = tripChecklists?.every((t) => t.total === 0);
 
   return (
     <div className="flex flex-col h-full">
@@ -156,30 +162,17 @@ export default function GlobalChecklistPage() {
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-4 pb-24 space-y-5">
-        {isEmpty || hasNoItems ? (
+        {isEmpty ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <ListChecks className="h-12 w-12 text-muted-foreground/40 mb-4" />
             <p className="text-muted-foreground">
-              {isEmpty
-                ? "참여 중인 여행이 없어요"
-                : "아직 체크리스트가 없어요"}
-            </p>
-            <p className="text-sm text-muted-foreground/60 mt-1">
-              여행 상세에서 체크리스트를 추가해 보세요
+              참여 중인 여행이 없어요
             </p>
           </div>
         ) : (
-          tripChecklists
-            .filter((t) => t.total > 0)
-            .map(({ trip, items, total, checked }) => (
-              <TripChecklistSection
-                key={trip.id}
-                trip={trip}
-                items={items}
-                total={total}
-                checked={checked}
-              />
-            ))
+          tripChecklists.map((tc) => (
+            <TripChecklistSection key={tc.trip.id} {...tc} />
+          ))
         )}
       </div>
     </div>
@@ -191,46 +184,65 @@ function TripChecklistSection({
   items,
   total,
   checked,
+  userRole,
 }: TripWithChecklist) {
+  const [showInlineAdd, setShowInlineAdd] = useState(false);
+  const mutations = useChecklistMutations(trip.id);
   const uncheckedItems = items.filter((i) => !i.is_checked);
   const checkedItems = items.filter((i) => i.is_checked);
   const progress = total > 0 ? Math.round((checked / total) * 100) : 0;
+  const canEdit = userRole === "admin" || userRole === "editor";
 
   return (
     <div className="space-y-2">
-      <Link
-        href={`/trips/${trip.id}/checklist`}
-        className="flex items-center justify-between group"
-      >
-        <div className="min-w-0">
-          <h2 className="text-sm font-semibold truncate group-hover:text-primary transition-colors">
-            {trip.title}
-          </h2>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
-            <span className="flex items-center gap-0.5">
-              <MapPin className="size-3" />
-              {trip.destination}
-            </span>
-            <span className="flex items-center gap-0.5">
-              <Calendar className="size-3" />
-              {formatDateRange(trip.start_date, trip.end_date)}
-            </span>
+      <div className="flex items-center justify-between">
+        <Link
+          href={`/trips/${trip.id}/checklist`}
+          className="flex items-center justify-between flex-1 group min-w-0"
+        >
+          <div className="min-w-0">
+            <h2 className="text-sm font-semibold truncate group-hover:text-primary transition-colors">
+              {trip.title}
+            </h2>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+              <span className="flex items-center gap-0.5">
+                <MapPin className="size-3" />
+                {trip.destination}
+              </span>
+              <span className="flex items-center gap-0.5">
+                <Calendar className="size-3" />
+                {formatDateRange(trip.start_date, trip.end_date)}
+              </span>
+            </div>
           </div>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <Badge variant="secondary" className="text-xs">
-            {checked}/{total}
-          </Badge>
-          <ChevronRight className="size-4 text-muted-foreground group-hover:text-primary transition-colors" />
-        </div>
-      </Link>
-
-      <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-        <div
-          className="h-full bg-primary rounded-full transition-all duration-300"
-          style={{ width: `${progress}%` }}
-        />
+          <div className="flex items-center gap-2 shrink-0">
+            {total > 0 && (
+              <Badge variant="secondary" className="text-xs">
+                {checked}/{total}
+              </Badge>
+            )}
+            <ChevronRight className="size-4 text-muted-foreground group-hover:text-primary transition-colors" />
+          </div>
+        </Link>
+        {canEdit && (
+          <button
+            className="p-1 rounded hover:bg-muted transition-colors ml-1 shrink-0"
+            onClick={() => setShowInlineAdd(true)}
+            aria-label="항목 추가"
+          >
+            <Plus className="size-4 text-muted-foreground" />
+          </button>
+        )}
       </div>
+
+      {total > 0 && (
+        <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+          <div
+            className="h-full bg-primary rounded-full transition-all duration-300"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+      )}
 
       <div className="space-y-1">
         {uncheckedItems.slice(0, 5).map((item) => (
@@ -250,6 +262,28 @@ function TripChecklistSection({
           </p>
         )}
       </div>
+
+      {showInlineAdd && (
+        <InlineAddInput
+          placeholder="항목 추가..."
+          onAdd={(title) => {
+            mutations.addItem.mutate(
+              { category: "shared", title, priority: "medium" },
+              { onSuccess: () => toast.success("추가했어요") }
+            );
+          }}
+          onCancel={() => setShowInlineAdd(false)}
+        />
+      )}
+
+      {total === 0 && !showInlineAdd && canEdit && (
+        <button
+          className="text-xs text-muted-foreground/60 hover:text-primary transition-colors py-1"
+          onClick={() => setShowInlineAdd(true)}
+        >
+          + 준비물을 추가해 보세요
+        </button>
+      )}
     </div>
   );
 }

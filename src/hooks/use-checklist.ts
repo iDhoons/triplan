@@ -106,11 +106,49 @@ export function useChecklistMutations(tripId: string) {
       if (error) throw error;
       return data as ChecklistItem;
     },
-    onError: () => {
+    onMutate: async (payload) => {
+      await queryClient.cancelQueries({ queryKey });
+      const previous = queryClient.getQueryData<ChecklistItem[]>(queryKey);
+
+      const items = previous ?? [];
+      const categoryItems = items.filter(
+        (i) => i.category === payload.category
+      );
+      const nextPosition =
+        categoryItems.length > 0
+          ? Math.max(...categoryItems.map((i) => i.position)) + 1
+          : 0;
+
+      const optimisticItem: ChecklistItem = {
+        id: `temp-${crypto.randomUUID()}`,
+        trip_id: tripId,
+        category: payload.category,
+        title: payload.title,
+        is_checked: false,
+        priority: payload.priority ?? "medium",
+        position: nextPosition,
+        assigned_to: payload.assigned_to ?? null,
+        memo: payload.memo ?? null,
+        created_by: user?.id ?? "",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      queryClient.setQueryData<ChecklistItem[]>(queryKey, [
+        ...items,
+        optimisticItem,
+      ]);
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(queryKey, context.previous);
+      }
       toast.error("추가에 실패했어요");
     },
-    onSuccess: () => {
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({ queryKey: ["checklist_global"] });
     },
   });
 

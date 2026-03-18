@@ -166,23 +166,12 @@ export function ChecklistPage({ tripId, userRole }: ChecklistPageProps) {
 
       {/* 콘텐츠 */}
       <div className="flex-1 overflow-y-auto px-4 py-4 pb-24">
-        {isEmpty ? (
+        {isEmpty && !canEdit ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <ListChecks className="h-12 w-12 text-muted-foreground/40 mb-4" />
             <p className="text-muted-foreground mb-1">
               아직 준비물이 없어요
             </p>
-            {canEdit && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="mt-3"
-                onClick={() => setShowAddForm(true)}
-              >
-                <Plus className="h-4 w-4 mr-1" />
-                추가해볼까요?
-              </Button>
-            )}
           </div>
         ) : (
           <DndContext
@@ -202,6 +191,16 @@ export function ChecklistPage({ tripId, userRole }: ChecklistPageProps) {
                   onEdit={setEditItem}
                   onDelete={handleDeleteRequest}
                   onShowHistory={handleShowHistory}
+                  onAdd={
+                    canEdit
+                      ? (title, category) => {
+                          mutations.addItem.mutate(
+                            { category, title, priority: "medium" },
+                            { onSuccess: () => toast.success("추가했어요") }
+                          );
+                        }
+                      : undefined
+                  }
                 />
               ))}
             </div>
