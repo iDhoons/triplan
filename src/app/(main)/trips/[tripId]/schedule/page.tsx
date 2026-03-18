@@ -383,7 +383,7 @@ export default function SchedulePage() {
       {/* Drag overlay */}
       <DragOverlay
         modifiers={OVERLAY_MODIFIERS}
-        dropAnimation={{ duration: 200, easing: "ease" }}
+        dropAnimation={null}
       >
         {activePlaceObj && (
           <div className="pointer-events-none w-40 bg-card border rounded-lg p-2 shadow-xl text-xs font-medium scale-105">
