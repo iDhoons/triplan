@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,7 +19,10 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { CHECKLIST_CATEGORIES } from "./constants";
+import { Badge } from "@/components/ui/badge";
+import { Loader2, Sparkles, Tag } from "lucide-react";
+import { CHECKLIST_CATEGORIES, CATEGORY_MAP } from "./constants";
+import { useAutoClassify } from "@/hooks/use-auto-classify";
 import type {
   ChecklistCategory,
   ChecklistPriority,
@@ -54,6 +57,15 @@ export function AddItemForm({
   const [priority, setPriority] = useState<ChecklistPriority>("medium");
   const [assignedTo, setAssignedTo] = useState<string>("none");
   const [memo, setMemo] = useState("");
+  const [manualOverride, setManualOverride] = useState(!!defaultCategory);
+
+  const {
+    classifiedCategory,
+    source,
+    isClassifying,
+    classify,
+    reset: resetClassify,
+  } = useAutoClassify();
 
   const reset = () => {
     setTitle("");
@@ -61,6 +73,29 @@ export function AddItemForm({
     setPriority("medium");
     setAssignedTo("none");
     setMemo("");
+    setManualOverride(!!defaultCategory);
+    resetClassify();
+  };
+
+  // 분류 결과 → 카테고리 반영
+  useEffect(() => {
+    if (classifiedCategory && !manualOverride) {
+      setCategory(classifiedCategory);
+    }
+  }, [classifiedCategory, manualOverride]);
+
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newTitle = e.target.value;
+    setTitle(newTitle);
+    if (!manualOverride) {
+      classify(newTitle);
+    }
+  };
+
+  const handleCategoryChange = (v: string | null) => {
+    if (!v) return;
+    setCategory(v as ChecklistCategory);
+    setManualOverride(true);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -77,8 +112,21 @@ export function AddItemForm({
     onClose();
   };
 
+  // Sheet 닫힐 때 초기화
+  const handleOpenChange = (v: boolean) => {
+    if (!v) {
+      reset();
+      onClose();
+    }
+  };
+
+  const classifyLabel =
+    source === "keyword" || source === "ai"
+      ? CATEGORY_MAP[classifiedCategory!]?.label
+      : null;
+
   return (
-    <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
+    <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto">
         <SheetHeader>
           <SheetTitle>항목 추가</SheetTitle>
@@ -90,16 +138,39 @@ export function AddItemForm({
               id="title"
               placeholder="예: 여권, 충전기..."
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={handleTitleChange}
               maxLength={200}
               autoFocus
             />
+            {/* 자동 분류 피드백 */}
+            {!manualOverride && title.trim() && (
+              <div className="flex items-center gap-1.5 min-h-[20px]">
+                {isClassifying ? (
+                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    분류 중...
+                  </span>
+                ) : classifyLabel ? (
+                  <Badge
+                    variant="secondary"
+                    className="text-[10px] px-1.5 py-0 h-4 gap-0.5"
+                  >
+                    {source === "ai" ? (
+                      <Sparkles className="h-2.5 w-2.5" />
+                    ) : (
+                      <Tag className="h-2.5 w-2.5" />
+                    )}
+                    {classifyLabel}
+                  </Badge>
+                ) : null}
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>카테고리 *</Label>
-              <Select value={category} onValueChange={(v) => setCategory(v as ChecklistCategory)}>
+              <Select value={category} onValueChange={handleCategoryChange}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -115,7 +186,10 @@ export function AddItemForm({
 
             <div className="space-y-1.5">
               <Label>우선순위</Label>
-              <Select value={priority} onValueChange={(v) => setPriority(v as ChecklistPriority)}>
+              <Select
+                value={priority}
+                onValueChange={(v) => setPriority(v as ChecklistPriority)}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -130,7 +204,10 @@ export function AddItemForm({
 
           <div className="space-y-1.5">
             <Label>담당자</Label>
-            <Select value={assignedTo} onValueChange={(v) => setAssignedTo(v ?? "none")}>
+            <Select
+              value={assignedTo}
+              onValueChange={(v) => setAssignedTo(v ?? "none")}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="미배정" />
               </SelectTrigger>
@@ -166,7 +243,15 @@ export function AddItemForm({
           </div>
 
           <div className="flex gap-2 pt-2">
-            <Button type="button" variant="outline" className="flex-1" onClick={onClose}>
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1"
+              onClick={() => {
+                reset();
+                onClose();
+              }}
+            >
               취소
             </Button>
             <Button type="submit" className="flex-1" disabled={!title.trim()}>
