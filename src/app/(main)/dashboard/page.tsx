@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "@/stores/auth-store";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -20,13 +21,14 @@ import type { Trip } from "@/types/database";
 import { nanoid } from "nanoid";
 import { MapPin, CalendarDays, Compass, Share2, X } from "lucide-react";
 import { TripCardSkeleton } from "@/components/layout/loading-skeleton";
+import { useTrips, tripsQueryKey } from "@/hooks/use-trips";
 
 export default function DashboardPage() {
-  const [trips, setTrips] = useState<Trip[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: trips = [], isLoading: loading } = useTrips();
   const [open, setOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const supabase = createClient();
+  const queryClient = useQueryClient();
   const router = useRouter();
   const { user } = useAuthStore();
 
@@ -45,20 +47,6 @@ export default function DashboardPage() {
   const [destination, setDestination] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-
-  useEffect(() => {
-    fetchTrips();
-  }, []);
-
-  async function fetchTrips() {
-    const { data } = await supabase
-      .from("trips")
-      .select("id, title, destination, start_date, end_date, created_at")
-      .order("created_at", { ascending: false });
-
-    if (data) setTrips(data as Trip[]);
-    setLoading(false);
-  }
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -94,6 +82,7 @@ export default function DashboardPage() {
     setStartDate("");
     setEndDate("");
     setCreating(false);
+    queryClient.invalidateQueries({ queryKey: tripsQueryKey });
     router.push(`/trips/${tripId}/places`);
   }
 
