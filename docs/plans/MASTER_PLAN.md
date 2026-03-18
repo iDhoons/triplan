@@ -3,7 +3,7 @@ title: Travel Planner 마스터 플랜
 version: v1.0
 status: active
 created: 2026-03-11
-updated: 2026-03-11
+updated: 2026-03-18
 owner: daehoonkim
 ---
 
@@ -27,6 +27,9 @@ owner: daehoonkim
 | 상태 | 계획 | 폴더 | 남은 작업 | 예상 공수 |
 | :--: | ---- | ---- | --------- | --------- |
 | `완료` | 반응형 네비게이션 | `responsive-nav/` | 완료 | - |
+| `완료` | 체크리스트 기능 | - | 완료 | - |
+| `완료` | 보안 강화 (Phase 0-1) | - | 완료 | - |
+| `완료` | Schedule 리팩토링 | - | 완료 | - |
 | `대기` | (아직 없음) | - | - | - |
 
 > **상태**: `진행` = 코드 일부 존재, `대기` = 코드 없음, `완료` = archive 이동 대상
@@ -83,7 +86,7 @@ owner: daehoonkim
 | **N-19** | 푸시 알림 (Web Push) | 멤버 활동 알림 | 1~2일 |
 | **N-20** | 여행 템플릿 | "도쿄 3박4일" 등 인기 템플릿 | 1주 |
 | **N-21** | 여행 공개/탐색 | 다른 사용자의 여행 계획 탐색 | 1~2주 |
-| **N-22** | 날씨 연동 | 여행 기간 날씨 예보 표시 | 2~3일 |
+| **N-22** | 날씨 연동 | 여행 기간 날씨 예보 표시 ✅ 완료 | 2~3일 |
 | **N-23** | 항공편 연동 | 항공편 검색 + 일정 자동 추가 | 2~3주 |
 
 ---
@@ -97,7 +100,7 @@ owner: daehoonkim
 - [ ] **N-04** 에러 핸들링 통일 (4~6시간)
 - [ ] ESLint + Prettier 설정 (2시간)
 - [ ] Git 브랜칭 전략 + 커밋 컨벤션 수립 (1시간)
-- [ ] Supabase 타입 자동 생성 전환 (1시간)
+- [x] Supabase 타입 자동 생성 전환 (완료 2026-03-13)
 - [ ] console.log 정리 (1시간)
 
 ### Phase 1 — CRUD 완성 (2~4주)
@@ -141,7 +144,7 @@ owner: daehoonkim
 - [ ] **N-19** 푸시 알림
 - [ ] **N-20** 여행 템플릿
 - [ ] **N-21** 여행 공개/탐색
-- [ ] **N-22** 날씨 연동
+- [x] **N-22** 날씨 연동 (완료 2026-03-15)
 - [ ] E2E 테스트 (Playwright)
 
 ---
@@ -175,6 +178,19 @@ owner: daehoonkim
 
 | 완료일 | 기능 | 비고 |
 | ------ | ---- | ---- |
+| 03-18 | PlaceCard Next/Image 전환 | Card plain variant 추가 |
+| 03-18 | 체크리스트 인라인 빠른 추가 | 카테고리별 '+' 버튼 |
+| 03-17 | 글로벌 체크리스트 페이지 | BottomNav 탭 추가 |
+| 03-17 | 모바일 장소 추가 UX 개선 | DayPickerSheet + UnscheduledFAB |
+| 03-16 | 이동 경로 상세 표시 | StepList + 폴리라인 |
+| 03-15 | 체크리스트 기능 | 카테고리/우선순위/할당/이력 + RPC 전환 |
+| 03-15 | 날씨 연동 (N-22) | Open-Meteo API, 일정별 날씨 배지 |
+| 03-14 | 예산/후기 기능 제거 | 핵심 기능에 집중 |
+| 03-14 | UX 개선 (Undo/온보딩/진행배너) | confirm→Undo, 웰컴 토스트 |
+| 03-14 | Directions Gateway | Google Directions API 분리 |
+| 03-13 | 보안 강화 | CSP, 초대 코드, withAuth 가드, AI 보안 |
+| 03-13 | Schedule 리팩토링 | React Query 전환 + 훅 분리 |
+| 03-12 | GitHub Actions CI | 빌드+테스트 파이프라인 (98+ tests) |
 | 03-11 | Google Places API 연동 | PWA Share Target + 비동기 풍부화 |
 | 03-10 | 반응형 네비게이션 | 사이드바 + BottomNav |
 | 03-09 | 여행 정보 수정 | 제목/목적지/날짜 |

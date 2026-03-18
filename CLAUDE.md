@@ -32,20 +32,29 @@ src/
 ├── app/                    # Next.js App Router
 │   ├── (auth)/             # 로그인/회원가입 (별도 레이아웃)
 │   ├── (main)/             # 메인 앱 (AppShell 래핑)
-│   │   └── trips/[tripId]/ # 여행별: places/schedule/budget/journal/members
+│   │   ├── dashboard/      # 여행 목록
+│   │   ├── checklist/      # 글로벌 체크리스트
+│   │   ├── notifications/  # 알림
+│   │   ├── profile/        # 프로필
+│   │   └── trips/[tripId]/ # 여행별: places/schedule/checklist/members
 │   ├── api/                # 서버 API Routes
 │   └── share-target/       # PWA Share Target
 ├── components/             # 도메인별 컴포넌트
+│   ├── checklist/          # 체크리스트 (카테고리, 항목, 편집, 이력)
 │   ├── layout/             # AppShell, Sidebar, BottomNav
 │   ├── realtime/           # RealtimeProvider, Presence
 │   └── ui/                 # shadcn/ui 기본 컴포넌트
 ├── lib/
 │   ├── supabase/           # client.ts(브라우저) / server.ts(서버) / middleware.ts
-│   ├── google-places/      # Places API 래퍼
-│   └── scraper/            # URL 스크래핑 (SSRF 방어)
+│   ├── google-places/      # Places API 래퍼 + URL 파서 + Enricher
+│   ├── weather/            # Open-Meteo 날씨 API
+│   ├── youtube/            # YouTube 자막 → 장소 추출
+│   ├── directions/         # Google Directions API
+│   ├── services/           # 비즈니스 로직 (travel-info, ai-context)
+│   └── api/                # API 공통 (guards, schemas)
 ├── stores/                 # Zustand (auth-store.ts)
 ├── config/                 # navigation.ts
-├── hooks/                  # use-supabase.ts
+├── hooks/                  # use-supabase, use-places, use-schedule-*, use-checklist
 ├── types/                  # database.ts (DB 스키마 매핑)
 └── middleware.ts           # 인증 경로 보호 (Edge)
 ```
@@ -117,7 +126,7 @@ npm run lint    # ESLint
 
 ## DB 테이블 (Supabase PostgreSQL)
 
-profiles, trips, trip_members, places, place_votes, schedules, schedule_items, budgets, expenses, settlements, trip_journals, activity_logs
+profiles, trips, trip_members, places, place_votes, schedules, schedule_items, checklist_items, checklist_logs, activity_logs
 
 타입 정의: `src/types/database.ts`
 

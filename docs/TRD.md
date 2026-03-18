@@ -3,7 +3,7 @@ title: 여행 플래너 TRD
 version: v1.0
 status: active
 created: 2026-03-11
-updated: 2026-03-11
+updated: 2026-03-18
 owner: daehoonkim
 ---
 
@@ -88,14 +88,13 @@ src/
 │   │   └── signup/
 │   ├── (main)/               # 메인 앱 그룹 (AppShell 래핑)
 │   │   ├── dashboard/        # 여행 목록
-│   │   ├── explore/          # 탐색
+│   │   ├── checklist/        # 글로벌 체크리스트
 │   │   ├── notifications/    # 알림
 │   │   ├── profile/          # 프로필
 │   │   └── trips/[tripId]/   # 여행 상세 (동적 라우팅)
 │   │       ├── places/       # 장소 목록 + 지도
 │   │       ├── schedule/     # 일정
-│   │       ├── budget/       # 예산
-│   │       ├── journal/      # 후기
+│   │       ├── checklist/    # 여행별 체크리스트
 │   │       └── members/      # 멤버
 │   ├── api/                  # API Routes (서버사이드)
 │   ├── join/[inviteCode]/    # 초대 참가
@@ -104,21 +103,24 @@ src/
 │
 ├── components/               # React 컴포넌트
 │   ├── ai/                   # AI 채팅 (FAB + 바텀시트)
-│   ├── layout/               # 레이아웃 (AppShell, Sidebar, BottomNav)
-│   ├── maps/                 # Google Maps 관련
-│   ├── places/               # 장소 폼, 투표
-│   ├── schedule/             # 일정 (캘린더, 타임라인, DnD)
+│   ├── checklist/            # 체크리스트 (카테고리 섹션, 항목, 편집, 이력)
+│   ├── layout/               # 레이아웃 (AppShell, Sidebar, BottomNav, InstallBanner)
+│   ├── maps/                 # Google Maps (PlaceMap, RouteMap, PlaceSearch)
+│   ├── places/               # 장소 (폼, 투표, 상세 Drawer, YouTube 피커)
+│   ├── schedule/             # 일정 (PlannerView, DnD, WeatherBadge, TravelInfoCard, DayPickerSheet)
 │   ├── realtime/             # 실시간 (Presence, Activity)
-│   ├── trip/                 # 여행 헤더, 탭, 수정
-│   ├── budget/               # 예산 관련
-│   ├── journal/              # 후기 관련
+│   ├── trip/                 # 여행 (헤더, 탭, 수정, 진행 배너)
 │   └── ui/                   # shadcn/ui 기본 컴포넌트
 │
 ├── lib/                      # 유틸리티 & 외부 서비스
 │   ├── supabase/             # Supabase 클라이언트 (browser/server/middleware)
-│   ├── google-places/        # Google Places API 래퍼
+│   ├── google-places/        # Google Places API 래퍼 + URL 파서 + Enricher
 │   ├── maps/                 # Google Maps Loader
-│   ├── scraper/              # URL 스크래핑 (SSRF 방어)
+│   ├── weather/              # Open-Meteo 날씨 API 클라이언트
+│   ├── youtube/              # YouTube 자막 → 장소 추출 (Gemini)
+│   ├── directions/           # Google Directions API 클라이언트
+│   ├── services/             # 비즈니스 로직 (travel-info, ai-context, ai-sanitize)
+│   ├── api/                  # API 공통 (guards, schemas)
 │   └── utils.ts              # 공통 유틸 (cn 등)
 │
 ├── stores/                   # Zustand 스토어
@@ -128,7 +130,12 @@ src/
 │   └── navigation.ts         # 네비게이션 항목 정의
 │
 ├── hooks/                    # 커스텀 React 훅
-│   └── use-supabase.ts
+│   ├── use-supabase.ts       # Supabase 클라이언트 훅
+│   ├── use-places.ts         # 장소 데이터 훅
+│   ├── use-schedule-data.ts  # 일정 데이터 훅
+│   ├── use-schedule-actions.ts # 일정 액션 훅
+│   ├── use-trip-members.ts   # 멤버 데이터 훅
+│   └── use-checklist.ts      # 체크리스트 데이터 훅
 │
 └── types/                    # TypeScript 타입 정의
     └── database.ts           # DB 스키마 매핑 타입
@@ -202,30 +209,27 @@ src/
         │ transport_next │
         └────────────────┘
 
-        ┌────────────────┐     ┌────────────────┐
-        │    budgets     │     │   expenses     │
-        ├────────────────┤     ├────────────────┤
-        │ id (PK)        │     │ id (PK)        │
-        │ trip_id (FK)   │     │ trip_id (FK)   │
-        │ total_budget   │     │ category       │
-        │ currency       │     │ title          │
-        └────────────────┘     │ amount         │
-                               │ currency       │
-        ┌────────────────┐     │ paid_by (FK)   │
-        │  settlements   │     │ date           │
-        ├────────────────┤     │ memo           │
-        │ id (PK)        │     └────────────────┘
-        │ trip_id (FK)   │
-        │ from_user (FK) │     ┌────────────────┐
-        │ to_user (FK)   │     │ trip_journals  │
-        │ amount         │     ├────────────────┤
-        │ is_settled     │     │ id (PK)        │
-        └────────────────┘     │ trip_id (FK)   │
-                               │ author_id (FK) │
-        ┌────────────────┐     │ date           │
-        │ activity_logs  │     │ content        │
-        ├────────────────┤     │ photo_urls[]   │
-        │ id (PK)        │     └────────────────┘
+        ┌──────────────────┐     ┌──────────────────┐
+        │ checklist_items  │     │ checklist_logs   │
+        ├──────────────────┤     ├──────────────────┤
+        │ id (PK)          │     │ id (PK)          │
+        │ trip_id (FK)     │     │ checklist_item_id│
+        │ category         │─────│ (FK)             │
+        │ title            │     │ action           │
+        │ is_checked       │     │ performed_by(FK) │
+        │ priority         │     │ performed_at     │
+        │ position         │     └──────────────────┘
+        │ assigned_to (FK) │
+        │ memo             │
+        │ created_by (FK)  │
+        │ created_at       │
+        │ updated_at       │
+        └──────────────────┘
+
+        ┌────────────────┐
+        │ activity_logs  │
+        ├────────────────┤
+        │ id (PK)        │
         │ trip_id (FK)   │
         │ user_id (FK)   │
         │ action         │
@@ -246,10 +250,8 @@ src/
 | trips → schedules | 1:N (한 여행에 날짜별 일정) |
 | schedules → schedule_items | 1:N (한 일정에 여러 항목) |
 | schedule_items → places | N:1 (일정 항목이 장소 참조, nullable) |
-| trips → budgets | 1:N (한 여행에 통화별 예산) |
-| trips → expenses | 1:N (한 여행에 여러 지출) |
-| trips → settlements | 1:N (한 여행에 여러 정산) |
-| trips → trip_journals | 1:N (한 여행에 여러 후기) |
+| trips → checklist_items | 1:N (한 여행에 여러 체크리스트 항목) |
+| checklist_items → checklist_logs | 1:N (한 항목에 여러 변경 이력) |
 | trips → activity_logs | 1:N (한 여행에 여러 활동 로그) |
 
 ### 3.3 타입 정의
@@ -261,11 +263,14 @@ type MemberRole = "admin" | "editor" | "viewer";
 // 장소 카테고리
 type PlaceCategory = "accommodation" | "attraction" | "restaurant" | "other";
 
-// 지출 카테고리
-type ExpenseCategory = "accommodation" | "food" | "transport" | "activity" | "shopping" | "other";
+// 체크리스트 카테고리
+type ChecklistCategory = "documents" | "clothing" | "electronics" | "hygiene" | "shared" | "todo" | "shopping";
 
-// 지원 통화
-type CurrencyCode = "KRW" | "JPY" | "USD" | "EUR" | "CNY" | "THB" | "VND";
+// 체크리스트 우선순위
+type ChecklistPriority = "high" | "medium" | "low";
+
+// 이동 수단
+type TravelMode = "walking" | "transit" | "driving";
 ```
 
 ---
@@ -280,8 +285,14 @@ type CurrencyCode = "KRW" | "JPY" | "USD" | "EUR" | "CNY" | "THB" | "VND";
 | `/api/ai/recommend` | POST | 필수 | AI 추천/일정 생성 |
 | `/api/places/share` | POST | 필수 | Share Target 장소 저장 |
 | `/api/places/[id]/enrich` | POST | 필수 | 장소 정보 풍부화 트리거 |
+| `/api/places/photo` | GET | 필수 | Google Places 사진 프록시 |
+| `/api/places/resolve-photos` | POST | 필수 | 장소 사진 URL 일괄 해석 |
 | `/api/scrape` | POST | 필수 | URL 메타데이터 스크래핑 |
 | `/api/share/receive` | POST | 필수 | 공유 링크 수신 처리 |
+| `/api/weather` | GET | 필수 | Open-Meteo 날씨 조회 |
+| `/api/directions` | POST | 필수 | Google Directions 경로 조회 |
+| `/api/youtube/extract-places` | POST | 필수 | YouTube 자막에서 장소 추출 (Gemini) |
+| `/api/youtube/add-places` | POST | 필수 | 추출된 장소 일괄 등록 |
 
 ### 4.2 API 상세: `/api/ai/recommend`
 
@@ -485,7 +496,7 @@ matcher: ['/login', '/signup', '/join/:inviteCode', '/offline']
 
 ## 8. 보안
 
-### 8.1 SSRF 방어 (`lib/scraper/index.ts`)
+### 8.1 SSRF 방어 (`lib/google-places/` + Google Places API 기반)
 
 ```
 [URL 입력] → 프로토콜 검증 (https만)
@@ -566,7 +577,7 @@ matcher: ['/login', '/signup', '/join/:inviteCode', '/offline']
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase 서비스 키 (서버만) |
 | `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | Google Maps API 키 |
 | `GOOGLE_PLACES_API_KEY` | Google Places API 키 (서버만) |
-| `GOOGLE_GEMINI_API_KEY` | Gemini AI API 키 (서버만) |
+| `GEMINI_API_KEY` | Gemini AI API 키 (서버만) |
 
 ---
 
@@ -574,7 +585,10 @@ matcher: ['/login', '/signup', '/join/:inviteCode', '/offline']
 
 ### 11.1 현재 상태
 
-테스트 코드 없음. MVP 단계로 수동 테스트 진행 중.
+98개 이상의 테스트 구축됨. GitHub Actions CI 파이프라인 운영 중.
+- Unit 테스트: resolveInput, haversineDistance, estimateDuration, weatherMeta, ai-sanitize
+- Integration 테스트: API Route withAuth 가드 검증 (27개)
+- URL 파서 테스트
 
 ### 11.2 목표 테스트 커버리지
 
@@ -587,10 +601,9 @@ matcher: ['/login', '/signup', '/join/:inviteCode', '/offline']
 
 ### 11.3 우선 테스트 대상
 
-1. `lib/google-places/` - URL 파싱, Places API 호출
-2. `lib/scraper/` - SSRF 방어, 메타데이터 추출
-3. `/api/places/share` - Rate limiting, 중복 감지
-4. `/api/ai/recommend` - 컨텍스트 구성, 에러 처리
+1. `lib/google-places/` - URL 파싱, Places API 호출, Enricher
+2. `/api/places/share` - Rate limiting, 중복 감지
+3. `/api/ai/recommend` - 컨텍스트 구성, 에러 처리
 
 ---
 
@@ -598,11 +611,11 @@ matcher: ['/login', '/signup', '/join/:inviteCode', '/offline']
 
 | 항목 | 현재 | 개선 방향 | 우선순위 |
 |------|------|----------|---------|
-| 에러 핸들링 | API별 개별 처리 | 통일된 에러 바운더리 + 사용자 메시지 | P1 |
+| 에러 핸들링 | withAuth 가드 + API 공통 처리 도입 | 통일된 에러 바운더리 + 사용자 메시지 | P1 |
 | 타입 안전성 | database.ts 수동 관리 | Supabase CLI 자동 타입 생성 | P1 |
 | Rate Limiting | In-memory (서버리스에서 리셋됨) | Redis 또는 Supabase 기반 | P2 |
-| 이미지 최적화 | 외부 URL 직접 렌더링 | Next/Image + Supabase Storage 프록시 | P2 |
+| 이미지 최적화 | Next/Image 부분 전환 완료 (PlaceCard) | Next/Image + Supabase Storage 프록시 | P2 |
 | 번들 분석 | 미수행 | @next/bundle-analyzer 도입 | P2 |
 | 모니터링 | 없음 | Sentry 에러 트래킹 | P1 |
-| CI/CD | 없음 | GitHub Actions (빌드/테스트/배포) | P1 |
+| CI/CD | GitHub Actions CI 구축 완료 | CD: Vercel 자동 배포 추가 | P1 |
 | 환경 분리 | .env.local 단일 | 개발/스테이징/프로덕션 분리 | P2 |

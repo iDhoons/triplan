@@ -3,7 +3,7 @@ title: 여행 플래너 기술 사양
 version: v1.0
 status: active
 created: 2026-03-11
-updated: 2026-03-11
+updated: 2026-03-18
 owner: daehoonkim
 ---
 
@@ -96,9 +96,16 @@ owner: daehoonkim
 | place_id | string | ❌ | null | 연결된 장소 ID |
 | memo | string | ❌ | null | 메모 |
 | transport_to_next | string | ❌ | null | 다음 장소 이동수단 |
+| arrival_by | string | ❌ | null | 도착 예정 시간 (HH:MM) |
+| travel_duration_seconds | number | ❌ | null | 이동 소요 시간 (초) |
+| travel_distance_meters | number | ❌ | null | 이동 거리 (미터) |
+| travel_mode | enum | ❌ | null | 이동 수단: walking / transit / driving |
+| notify_before_minutes | number | ❌ | 0 | 알림 시간 (분 전) |
 | sort_order | number | ✅ | 자동 | 정렬 순서 |
 
 ### 1.6 지출 기록
+
+> ⚠️ **제거됨** (2026-03-14) — 예산/후기 기능 제거에 따라 이 섹션은 비활성.
 
 | 필드 | 타입 | 필수 | 설명 |
 | ---- | ---- | ---- | ---- |
@@ -118,6 +125,33 @@ owner: daehoonkim
 | message | string | ✅ | 사용자 메시지 |
 | type | enum | ❌ | recommend / generate-schedule / route-check / fill-empty |
 | history | array | ❌ | 이전 대화 히스토리 `[{ role, content }]` |
+
+### 1.8 체크리스트 항목
+
+| 필드 | 타입 | 필수 | 기본값 | 설명 |
+| ---- | ---- | ---- | ------ | ---- |
+| title | string | ✅ | - | 항목명 (1~200자) |
+| category | enum | ✅ | "todo" | documents / clothing / electronics / hygiene / shared / todo / shopping |
+| priority | enum | ❌ | "medium" | high / medium / low |
+| assigned_to | string | ❌ | null | 담당자 user_id |
+| memo | string | ❌ | null | 메모 |
+| position | number | ✅ | 자동 | 정렬 순서 |
+
+### 1.9 날씨 조회
+
+| 필드 | 타입 | 필수 | 설명 |
+| ---- | ---- | ---- | ---- |
+| latitude | number | ✅ | 위도 |
+| longitude | number | ✅ | 경도 |
+| date | date | ✅ | 조회 날짜 (YYYY-MM-DD) |
+
+### 1.10 경로 조회
+
+| 필드 | 타입 | 필수 | 설명 |
+| ---- | ---- | ---- | ---- |
+| origin | string | ✅ | 출발지 (좌표 "lat,lng" 또는 place_id) |
+| destination | string | ✅ | 도착지 (좌표 "lat,lng" 또는 place_id) |
+| mode | enum | ❌ | walking / transit / driving (기본: transit) |
 
 ---
 
@@ -148,8 +182,13 @@ owner: daehoonkim
 | 드래그앤드롭 | dnd-kit으로 항목 순서 변경 |
 | 장소 사이드바 | 왼쪽에 미배치 장소 목록 → 일정으로 드래그 |
 | 경로 지도 | 하루 동선을 지도에 표시 |
+| 날씨 배지 | 날짜별 날씨 예보 (기온, 강수 확률, 아이콘) |
+| 이동 경로 상세 | 노선명, 정거장, 도보 구간, 소요 시간/거리 |
+| 미배치 장소 FAB | 모바일: 미배치 장소 목록 플로팅 버튼 |
 
 ### 2.4 예산
+
+> ⚠️ **제거됨** (2026-03-14) — 예산 기능 제거에 따라 이 섹션은 비활성.
 
 | 출력 | 설명 |
 | ---- | ---- |
@@ -172,6 +211,16 @@ owner: daehoonkim
 | 온라인 멤버 | 현재 접속 중인 멤버 아바타 표시 |
 | 활동 토스트 | "OOO님이 장소를 추가했습니다" 실시간 알림 |
 | 데이터 동기화 | 다른 멤버의 변경사항 자동 반영 |
+
+### 2.7 체크리스트
+
+| 출력 | 설명 |
+| ---- | ---- |
+| 카테고리별 그룹 | 서류/의류/전자기기/위생/공용/할일/쇼핑으로 분류된 항목 목록 |
+| 체크/언체크 | 체크박스 토글 + 변경 이력 기록 |
+| 인라인 추가 | 카테고리 섹션 내 '+' 버튼으로 빠른 항목 추가 |
+| 담당자 표시 | 항목별 할당된 멤버 아바타 |
+| 글로벌 뷰 | 모든 여행의 체크리스트를 한 페이지에서 확인 |
 
 ---
 
@@ -271,6 +320,8 @@ owner: daehoonkim
 | place_votes | * | `["places", tripId]`, `["place_votes", tripId]` |
 | schedule_items | * | `["schedules", tripId]` |
 | activity_logs | INSERT | `["activity_logs", tripId]` + CustomEvent |
+| checklist_items | * | `["checklist", tripId]` |
+| checklist_logs | INSERT | `["checklist_logs", tripId]` |
 
 ### 4.6 PWA
 
@@ -314,7 +365,6 @@ owner: daehoonkim
 | 항목 | 기본값 |
 | ---- | ------ |
 | 장소 카테고리 | "other" |
-| 예산 통화 | "KRW" |
 | 멤버 역할 (초대 참가 시) | "editor" |
 | 멤버 역할 (생성자) | "admin" |
 | React Query staleTime | 60초 |
@@ -325,6 +375,10 @@ owner: daehoonkim
 | AI 모델 | gemini-2.0-flash |
 | Share Target Sticky 기간 | 30분 |
 | 풍부화 초기 상태 | enriched: false |
+| 체크리스트 카테고리 | "todo" |
+| 체크리스트 우선순위 | "medium" |
+| 이동 수단 | transit (기본값) |
+| 알림 시간 | 0분 (비활성) |
 
 ---
 

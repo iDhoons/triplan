@@ -3,7 +3,7 @@ title: 여행 플래너 TASKS
 version: v1.0
 status: active
 created: 2026-03-11
-updated: 2026-03-11
+updated: 2026-03-18
 owner: daehoonkim
 ---
 
@@ -17,7 +17,7 @@ owner: daehoonkim
 
 # TASKS: Travel Planner
 
-> **최종 수정일**: 2026-03-11
+> **최종 수정일**: 2026-03-18
 > **관련 문서**: [PRD](./PRD.md) | [TRD](./TRD.md) | [CHECKLIST](./DEVELOPMENT-CHECKLIST.md)
 
 ---
@@ -45,7 +45,7 @@ owner: daehoonkim
 
 | 작업 | 상태 | 설명 | 관련 문서 |
 | ---- | ---- | ---- | --------- |
-| 기획 문서 체계 구축 | 🟡 | PRD/TRD/TASKS/CHECKLIST 작성 | [CHECKLIST](./DEVELOPMENT-CHECKLIST.md) |
+| (없음) | - | - | - |
 
 ---
 
@@ -58,8 +58,6 @@ owner: daehoonkim
 | **여행 삭제 기능**             | 🟢   | cascade 삭제 또는 soft delete. admin만 가능            | -         |
 | **장소 수정 기능**             | 🟢   | 기존 place-form 재활용, 수정 모드 추가                 | -         |
 | **에러 핸들링 통일**           | 🟢   | 공통 에러 바운더리 + API 응답 형식 `{ success, data, error }` | -         |
-| **Supabase RLS 정책 점검**     | 🟢   | 모든 테이블에 RLS 활성화 확인                          | -         |
-| **보안 헤더 설정**             | 🟢   | CSP, HSTS, X-Frame-Options (next.config.ts)            | -         |
 
 ### P1 - CRUD 보완
 
@@ -77,16 +75,12 @@ owner: daehoonkim
 | ESLint + Prettier 설정         | 🟢   | 코드 스타일 통일                                       | -         |
 | Git 브랜칭 전략 수립           | 🟢   | trunk-based 또는 feature branch                        | -         |
 | 커밋 메시지 컨벤션             | 🟢   | Conventional Commits (feat/fix/docs)                   | -         |
-| CI: 빌드 + 타입 체크           | 🟢   | GitHub Actions (`next build` + `tsc --noEmit`)         | -         |
 | CD: Vercel 자동 배포           | 🟢   | main → production, PR → preview                       | -         |
 
 ### P1 - 테스트
 
 | 작업                           | 상태 | 설명                                                  | 관련 문서 |
 | ------------------------------ | ---- | ----------------------------------------------------- | --------- |
-| Vitest 환경 구축               | 🟢   | `vitest.config.ts` + Testing Library                  | -         |
-| Unit: google-places/url-parser | 🟢   | URL 파싱 정확성 검증                                   | -         |
-| Unit: scraper SSRF 방어        | 🟢   | 사설 IP 차단 검증                                      | -         |
 | Integration: /api/places/share | 🟢   | Rate limit, 중복 감지, 인증 체크                       | -         |
 
 ### P1 - 모니터링
@@ -129,10 +123,34 @@ owner: daehoonkim
 
 ## ✅ 완료됨
 
-### 2026-03 (03-01 ~ 03-11)
+### 2026-03 (03-01 ~ 03-18)
 
 | 작업                              | 완료일     | 설명                                                        |
 | --------------------------------- | ---------- | ----------------------------------------------------------- |
+| **PlaceCard 이미지 Next/Image 전환** | 2026-03-18 | Next/Image 적용, Card plain variant 추가 |
+| **체크리스트 인라인 빠른 추가** | 2026-03-18 | 카테고리별 '+' 버튼, 글로벌 페이지 추가 지원 |
+| **체크리스트 액션 DropdownMenu 통합** | 2026-03-17 | 모바일 가독성 개선, 제목 가시 영역 60% 증가 |
+| **모바일 장소 추가 UX 개선** | 2026-03-17 | Tap-to-Assign DayPickerSheet + UnscheduledFAB |
+| **글로벌 체크리스트 페이지** | 2026-03-17 | BottomNav에 체크리스트 탭 배치 |
+| **모바일 장소 카드 레이아웃 변경** | 2026-03-16 | 컴팩트 수평 레이아웃 |
+| **경로 단계 클릭 → 지도 확대** | 2026-03-16 | StepList-MiniMap 인터랙션 |
+| **이동 경로 상세 표시** | 2026-03-16 | 노선명/정거장/도보 구간 StepList, 폴리라인 |
+| **체크리스트 RPC + DB 트리거** | 2026-03-15 | Phase 2 — 보안/원자성 강화 |
+| **UX 검토 수정** | 2026-03-15 | 여행 생성 에러, 일정 에러 UI, 날짜 형식 통일 |
+| **예산/후기 기능 제거** | 2026-03-14 | 핵심 기능(장소/일정/체크리스트/멤버)만 유지 |
+| **Undo 삭제 패턴 도입** | 2026-03-14 | confirm() 제거, 5초 되돌리기 토스트 |
+| **참여자 온보딩 강화** | 2026-03-14 | 참여 후 웰컴 토스트 + 초대 페이지 미리보기 |
+| **여행 진행 배너** | 2026-03-14 | 장소/일정 완성도 한눈에 확인 |
+| **Directions Gateway + AI 보안** | 2026-03-14 | 경로 API 분리 + 프롬프트 인젝션 방어 (111 tests) |
+| **CSP 강화 + 타입 자동 생성** | 2026-03-13 | unsafe-eval 제거, Supabase 타입 자동 생성 스크립트 |
+| **초대 코드 보안 강화** | 2026-03-13 | 최대 멤버 수 제한(20명), admin 코드 재생성 |
+| **Schedule React Query 전환** | 2026-03-13 | Realtime invalidation 자동 연결 |
+| **Schedule 페이지 분해** | 2026-03-13 | useScheduleData/useScheduleActions 훅 추출 (646→310줄) |
+| **GitHub Actions CI 파이프라인** | 2026-03-12 | 빌드+린트+타입체크 + 98 tests |
+| **전 API Route withAuth 가드** | 2026-03-12 | 가드 적용 검증 테스트 27개 |
+| **photo 프록시 인증 + weather/directions 보안** | 2026-03-12 | withAuth 전환 |
+| **순수 함수 테스트 추가** | 2026-03-12 | resolveInput, haversine, duration, weatherMeta (31→71 tests) |
+| **기획 문서 체계 구축** | 2026-03-11 | PRD/TRD/TASKS/CHECKLIST 작성 |
 | **Google Places API 연동**        | 2026-03-11 | Text Search + Place Details + Photo URL + 비동기 풍부화     |
 | **PWA Share Target**              | 2026-03-11 | 모바일 공유 → 자동 저장 + Sticky Context (30분)             |
 | **반응형 네비게이션**             | 2026-03-10 | 데스크톱 사이드바(64px) + 모바일 BottomNav                  |
@@ -173,10 +191,10 @@ owner: daehoonkim
 | 항목                       | 우선순위 | 설명                                                          |
 | -------------------------- | -------- | ------------------------------------------------------------- |
 | Rate Limiting In-memory    | P1       | 서버리스에서 리셋됨 → Redis 또는 Supabase 기반 전환 필요       |
-| Supabase 타입 수동 관리    | P1       | `supabase gen types typescript` 자동 생성으로 전환             |
 | 이미지 최적화              | P2       | 외부 URL 직접 렌더링 → Next/Image + Supabase Storage 프록시   |
 | 번들 분석 미수행            | P2       | `@next/bundle-analyzer` 도입 필요                             |
 | 환경 분리                   | P2       | .env.local 단일 → 개발/스테이징/프로덕션 분리                 |
+| 예산/후기 기능 복원 검토   | P2       | 제거된 기능의 재도입 시점/범위 판단 필요                       |
 | console.log 잔존           | P3       | 프로덕션 빌드 전 제거 필요                                     |
 
 ---
@@ -190,8 +208,6 @@ owner: daehoonkim
 | 여행 템플릿               | "도쿄 3박4일" 등 인기 여행 템플릿 제공  | -         |
 | 여행 공개/탐색            | 다른 사용자의 여행 계획 탐색            | -         |
 | 환율 계산기               | 앱 내 실시간 환율 변환 도구             | -         |
-| 날씨 연동                 | 여행 기간 날씨 예보 표시                | -         |
-| 체크리스트                | 여행 준비물 체크리스트                  | -         |
 | 항공편/교통편 연동        | 항공편 검색 및 일정 자동 추가           | -         |
 
 ---
@@ -200,4 +216,5 @@ owner: daehoonkim
 
 | 날짜       | 변경 내용                                                          |
 | ---------- | ------------------------------------------------------------------ |
+| 2026-03-18 | 완료 항목 24개 추가, 백로그에서 완료된 항목 제거, 기술부채 업데이트 |
 | 2026-03-11 | 초안 작성 — git log 기반으로 완료 항목 역추적, 백로그 우선순위 정리 |
