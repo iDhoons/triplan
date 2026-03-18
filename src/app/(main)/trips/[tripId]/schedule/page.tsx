@@ -14,6 +14,7 @@ import {
   type CollisionDetection,
   type DragStartEvent,
   type DragEndEvent,
+  type Modifier,
 } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
 import { ListOrdered, RouteIcon } from "lucide-react";
@@ -35,6 +36,48 @@ import type { Schedule, ScheduleItem, Place } from "@/types/database";
 // -----------------------------------------------------------------------
 // Helpers
 // -----------------------------------------------------------------------
+
+/** 포인터/터치 이벤트에서 좌표 추출 */
+function getPointerCoords(event: Event): { x: number; y: number } | null {
+  if ("clientX" in event) {
+    return { x: (event as MouseEvent).clientX, y: (event as MouseEvent).clientY };
+  }
+  if ("touches" in event) {
+    const touch = (event as TouchEvent).touches[0];
+    if (touch) return { x: touch.clientX, y: touch.clientY };
+  }
+  return null;
+}
+
+/**
+ * DragOverlay 중심을 커서 위치에 맞추는 modifier.
+ * PlaceCard(원본)와 DragOverlay(작은 프리뷰)의 크기 차이로 인한
+ * 오버레이 위치 오프셋 문제를 해결한다.
+ */
+const snapCenterToCursor: Modifier = ({
+  activatorEvent,
+  draggingNodeRect,
+  transform,
+}) => {
+  if (!draggingNodeRect || !activatorEvent) return transform;
+
+  const coords = getPointerCoords(activatorEvent);
+  if (!coords) return transform;
+
+  const offsetX =
+    coords.x - draggingNodeRect.left - draggingNodeRect.width / 2;
+  const offsetY =
+    coords.y - draggingNodeRect.top - draggingNodeRect.height / 2;
+
+  return {
+    ...transform,
+    x: transform.x + offsetX,
+    y: transform.y + offsetY,
+  };
+};
+
+const OVERLAY_MODIFIERS: Modifier[] = [snapCenterToCursor];
+
 function formatDateShort(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString("ko-KR", {
     month: "short",
@@ -142,8 +185,17 @@ export default function SchedulePage() {
     useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } })
   );
 
+  // 장소 드래그 여부를 ref로 추적 (collision callback 안에서 즉시 읽기 위해)
+  const isDraggingPlaceRef = useRef(false);
+
   const collisionDetection: CollisionDetection = useCallback(
     (args) => {
+      // 장소 카드 드래그: 포인터가 드롭존 안에 있을 때만 반응
+      // → closestCenter 폴백 제거하여 먼 거리의 드롭존이 잡히지 않도록
+      if (isDraggingPlaceRef.current) {
+        return pointerWithin(args);
+      }
+      // 일정 아이템 재정렬: closestCenter로 부드러운 정렬
       const pointerCollisions = pointerWithin(args);
       if (pointerCollisions.length > 0) return pointerCollisions;
       return closestCenter(args);
@@ -155,14 +207,17 @@ export default function SchedulePage() {
     const id = event.active.id as string;
     if (id.startsWith("place-")) {
       setActivePlaceId(id);
+      isDraggingPlaceRef.current = true;
     } else {
       setActiveItemId(id);
+      isDraggingPlaceRef.current = false;
     }
   };
 
   const handleTopDragEnd = async (event: DragEndEvent) => {
     setActivePlaceId(null);
     setActiveItemId(null);
+    isDraggingPlaceRef.current = false;
     const { active, over } = event;
     if (!over) return;
 
@@ -326,7 +381,10 @@ export default function SchedulePage() {
       </div>
 
       {/* Drag overlay */}
-      <DragOverlay dropAnimation={{ duration: 200, easing: "ease" }}>
+      <DragOverlay
+        modifiers={OVERLAY_MODIFIERS}
+        dropAnimation={{ duration: 200, easing: "ease" }}
+      >
         {activePlaceObj && (
           <div className="pointer-events-none w-40 bg-card border rounded-lg p-2 shadow-xl text-xs font-medium scale-105">
             {activePlaceObj.name}
