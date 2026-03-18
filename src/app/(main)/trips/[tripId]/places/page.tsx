@@ -2,6 +2,7 @@
 
 import { memo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Image from "next/image";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -80,9 +81,12 @@ const PlaceCard = memo(function PlaceCard({
 }: PlaceCardProps) {
   const shortAddress = formatShortAddress(place.address_components, place.address);
   const hasImage = place.image_urls?.length > 0;
+  const [imageLoadFailed, setImageLoadFailed] = useState(false);
+  const hasVisibleImage = hasImage && !imageLoadFailed;
 
   return (
     <Card
+      variant="plain"
       className={cn(
         "relative cursor-pointer overflow-hidden group border-0",
         "h-44 sm:h-52 transition-all hover:shadow-lg",
@@ -91,22 +95,22 @@ const PlaceCard = memo(function PlaceCard({
       onClick={() => onOpenDetail(place)}
     >
       {/* 배경 이미지 (전체 카드) */}
-      {hasImage ? (
-        <img
+      {hasVisibleImage ? (
+        <Image
           src={place.image_urls[0]}
           alt={place.name}
+          fill
+          sizes="(min-width: 1024px) 33vw, 50vw"
+          unoptimized
           className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-          onError={(e) => {
-            e.currentTarget.style.display = "none";
-            e.currentTarget.parentElement?.querySelector("[data-placeholder]")?.classList.remove("hidden");
-          }}
+          onError={() => setImageLoadFailed(true)}
         />
       ) : null}
       <div
         data-placeholder
         className={cn(
           "absolute inset-0 flex items-center justify-center",
-          hasImage && "hidden",
+          hasVisibleImage && "hidden",
           place.category === "accommodation" && "bg-cat-accommodation/20",
           place.category === "attraction" && "bg-cat-attraction/20",
           place.category === "restaurant" && "bg-cat-restaurant/20",
@@ -116,9 +120,15 @@ const PlaceCard = memo(function PlaceCard({
         <MapPinIcon className="size-8 text-muted-foreground/30" />
       </div>
 
-      {/* 그라디언트 오버레이 */}
-      {hasImage && (
-        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/5 to-transparent" />
+      {/* 그라디언트 오버레이 — ease-in 곡선 다중 stop으로 검정 띠 방지 */}
+      {hasVisibleImage && (
+        <div
+          className="absolute inset-0 z-[1]"
+          style={{
+            background:
+              "linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 28%, rgba(0,0,0,0.6) 45%, rgba(0,0,0,0.25) 60%, rgba(0,0,0,0.05) 72%, transparent 80%)",
+          }}
+        />
       )}
 
       {/* 상단 — 카테고리 뱃지 + 더보기 */}
@@ -126,7 +136,7 @@ const PlaceCard = memo(function PlaceCard({
         <Badge
           className={cn(
             "shrink-0 text-[10px] px-1.5 py-0",
-            hasImage
+            hasVisibleImage
               ? "bg-black/40 text-white border-white/20 backdrop-blur-sm"
               : cn("border", PLACE_CATEGORY_BADGE_CLASS[place.category])
           )}
@@ -143,7 +153,7 @@ const PlaceCard = memo(function PlaceCard({
                   size="xs"
                   className={cn(
                     "size-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity",
-                    hasImage
+                    hasVisibleImage
                       ? "text-white/80 hover:text-white hover:bg-white/20"
                       : "text-muted-foreground hover:text-foreground"
                   )}
@@ -170,7 +180,7 @@ const PlaceCard = memo(function PlaceCard({
       {/* 하단 — 장소 정보 오버레이 */}
       <div className={cn(
         "absolute inset-x-0 bottom-0 p-3 flex flex-col gap-0.5 z-10",
-        hasImage ? "text-white" : "text-foreground"
+        hasVisibleImage ? "text-white" : "text-foreground"
       )}>
         <h3 className="text-sm font-semibold line-clamp-1 drop-shadow-sm">
           {place.name}
@@ -179,7 +189,7 @@ const PlaceCard = memo(function PlaceCard({
         {shortAddress && (
           <p className={cn(
             "flex items-center gap-1 text-xs",
-            hasImage ? "text-white/70" : "text-muted-foreground"
+            hasVisibleImage ? "text-white/70" : "text-muted-foreground"
           )}>
             <MapPinIcon className="size-3 shrink-0" />
             <span className="truncate">{shortAddress}</span>
@@ -191,7 +201,7 @@ const PlaceCard = memo(function PlaceCard({
             <StarIcon className="size-3 fill-yellow-400 text-yellow-400" />
             <span className={cn(
               "text-xs font-medium",
-              hasImage ? "text-white" : "text-foreground"
+              hasVisibleImage ? "text-white" : "text-foreground"
             )}>
               {place.rating}
             </span>
@@ -208,7 +218,7 @@ const PlaceCard = memo(function PlaceCard({
                 "flex h-5 w-5 items-center justify-center rounded border-2 transition-colors",
                 selected
                   ? "border-primary bg-primary text-primary-foreground"
-                  : hasImage
+                  : hasVisibleImage
                     ? "border-white/60"
                     : "border-muted-foreground"
               )}

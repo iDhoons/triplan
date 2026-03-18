@@ -24,7 +24,7 @@ export function TripCardSkeleton() {
 
 export function PlaceCardSkeleton() {
   return (
-    <Card className="relative h-44 sm:h-52 overflow-hidden border-0">
+    <Card variant="plain" className="relative h-44 sm:h-52 overflow-hidden border-0">
       <Skeleton className="absolute inset-0 h-full w-full rounded-lg" />
       <div className="absolute inset-x-0 bottom-0 p-3 space-y-1.5">
         <Skeleton className="h-4 w-3/4 bg-white/20" />
