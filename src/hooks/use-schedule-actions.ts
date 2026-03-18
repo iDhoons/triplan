@@ -200,10 +200,81 @@ export function useScheduleActions({
     }
   };
 
+  const handleMoveItem = async (
+    itemId: string,
+    fromScheduleId: string,
+    toScheduleId: string,
+    sortOrder: number
+  ) => {
+    try {
+      // 1. 대상 스케줄에서 sort_order 밀기
+      const targetSchedule = schedules.find((s) => s.id === toScheduleId);
+      const itemsToShift = (targetSchedule?.items ?? []).filter(
+        (i) => i.sort_order >= sortOrder
+      );
+      if (itemsToShift.length > 0) {
+        await Promise.all(
+          itemsToShift.map((item) =>
+            supabase
+              .from("schedule_items")
+              .update({
+                sort_order: item.sort_order + 1,
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", item.id)
+          )
+        );
+      }
+
+      // 2. 아이템을 새 스케줄로 이동
+      const { error } = await supabase
+        .from("schedule_items")
+        .update({
+          schedule_id: toScheduleId,
+          sort_order: sortOrder,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", itemId);
+      if (error) throw error;
+
+      // 3. 소스 스케줄 sort_order 정리
+      const sourceSchedule = schedules.find((s) => s.id === fromScheduleId);
+      const remainingItems = (sourceSchedule?.items ?? [])
+        .filter((i) => i.id !== itemId)
+        .sort((a, b) => a.sort_order - b.sort_order);
+      if (remainingItems.length > 0) {
+        await Promise.all(
+          remainingItems.map((item, idx) =>
+            supabase
+              .from("schedule_items")
+              .update({
+                sort_order: idx + 1,
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", item.id)
+          )
+        );
+      }
+
+      toast.success("일정을 이동했습니다.");
+      await invalidateSchedules();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await Promise.all([
+        computeTravelInfoForSchedule(supabase as any, fromScheduleId),
+        computeTravelInfoForSchedule(supabase as any, toScheduleId),
+      ]);
+      await invalidateSchedules();
+    } catch (err) {
+      console.error(err);
+      toast.error("일정 이동에 실패했습니다.");
+    }
+  };
+
   return {
     handleFormSubmit,
     handleDeleteItem,
     handleReorderItems,
     handleDropPlace,
+    handleMoveItem,
   };
 }

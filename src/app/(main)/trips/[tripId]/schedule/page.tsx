@@ -136,6 +136,7 @@ export default function SchedulePage() {
     handleDeleteItem,
     handleReorderItems,
     handleDropPlace,
+    handleMoveItem,
   } = useScheduleActions({
     tripId,
     supabase,
@@ -197,27 +198,28 @@ export default function SchedulePage() {
   // 장소 드래그 여부를 ref로 추적 (collision callback 안에서 즉시 읽기 위해)
   const isDraggingPlaceRef = useRef(false);
 
+  // 드래그 소스 스케줄 추적 (아이템 드래그 시 같은/다른 스케줄 구분)
+  const dragSourceScheduleRef = useRef<string | null>(null);
+
   const collisionDetection: CollisionDetection = useCallback(
     (args) => {
-      if (isDraggingPlaceRef.current) {
-        const pw = pointerWithin(args);
-        if (pw.length > 0) {
-          // item droppable 우선 → 삽입 위치 감지
-          const itemHits = pw.filter(
-            (c) => !String(c.id).startsWith("schedule-")
-          );
-          if (itemHits.length > 0) return itemHits;
-          // item 없으면 schedule droppable (빈 영역)
-          return pw.filter((c) =>
-            String(c.id).startsWith("schedule-")
-          );
-        }
-        return [];
+      const pw = pointerWithin(args);
+      if (pw.length > 0) {
+        // item droppable 우선 → 삽입 위치 감지
+        const itemHits = pw.filter(
+          (c) => !String(c.id).startsWith("schedule-")
+        );
+        if (itemHits.length > 0) return itemHits;
+        // item 없으면 schedule droppable (빈 영역)
+        return pw.filter((c) =>
+          String(c.id).startsWith("schedule-")
+        );
       }
-      // 일정 아이템 재정렬: closestCenter로 부드러운 정렬
-      const pointerCollisions = pointerWithin(args);
-      if (pointerCollisions.length > 0) return pointerCollisions;
-      return closestCenter(args);
+      // 포인터가 드롭존 밖일 때: 아이템 드래그만 closestCenter 폴백
+      if (!isDraggingPlaceRef.current) {
+        return closestCenter(args);
+      }
+      return [];
     },
     []
   );
@@ -227,18 +229,25 @@ export default function SchedulePage() {
     if (id.startsWith("place-")) {
       setActivePlaceId(id);
       isDraggingPlaceRef.current = true;
+      dragSourceScheduleRef.current = null;
     } else {
       setActiveItemId(id);
       isDraggingPlaceRef.current = false;
+      // 소스 스케줄 기록
+      for (const s of schedules) {
+        if ((s.items ?? []).some((i) => i.id === id)) {
+          dragSourceScheduleRef.current = s.id;
+          break;
+        }
+      }
     }
     setInsertIndicator(null);
     insertIndicatorRef.current = null;
   };
 
-  /** 장소 드래그 중 삽입 위치 계산 */
+  /** 드래그 중 삽입 위치 계산 (장소 + 아이템 크로스 스케줄) */
   const handleDragMove = useCallback(
     (event: DragMoveEvent) => {
-      if (!isDraggingPlaceRef.current) return;
       const { over, activatorEvent, delta } = event;
 
       if (!over) {
@@ -253,7 +262,6 @@ export default function SchedulePage() {
       let newIndicator: InsertIndicator | null = null;
 
       if (overId.startsWith("schedule-")) {
-        // 빈 영역 또는 패딩 → 맨 끝 삽입
         const scheduleId = overId.replace("schedule-", "");
         const schedule = schedules.find((s) => s.id === scheduleId);
         newIndicator = {
@@ -261,7 +269,6 @@ export default function SchedulePage() {
           insertIndex: schedule?.items?.length ?? 0,
         };
       } else {
-        // 특정 아이템 위 → above/below 판별
         for (const s of schedules) {
           const itemIdx = (s.items ?? []).findIndex((i) => i.id === overId);
           if (itemIdx === -1) continue;
@@ -279,7 +286,19 @@ export default function SchedulePage() {
         }
       }
 
-      // 값이 바뀔 때만 state 업데이트 (불필요한 리렌더 방지)
+      // 같은 스케줄 내 아이템 드래그 → SortableContext가 처리하므로 라인 불필요
+      if (
+        !isDraggingPlaceRef.current &&
+        newIndicator &&
+        dragSourceScheduleRef.current === newIndicator.scheduleId
+      ) {
+        if (insertIndicatorRef.current) {
+          insertIndicatorRef.current = null;
+          setInsertIndicator(null);
+        }
+        return;
+      }
+
       const prev = insertIndicatorRef.current;
       if (
         prev?.scheduleId !== newIndicator?.scheduleId ||
@@ -299,6 +318,7 @@ export default function SchedulePage() {
     setActivePlaceId(null);
     setActiveItemId(null);
     isDraggingPlaceRef.current = false;
+    dragSourceScheduleRef.current = null;
     setInsertIndicator(null);
     insertIndicatorRef.current = null;
 
@@ -325,7 +345,7 @@ export default function SchedulePage() {
       return;
     }
 
-    // Case 2: 일정 아이템 재정렬
+    // Case 2: 일정 아이템 재정렬 / 크로스 스케줄 이동
     let sourceSchedule: Schedule | undefined;
     for (const s of schedules) {
       if ((s.items ?? []).some((i) => i.id === activeId)) {
@@ -335,18 +355,33 @@ export default function SchedulePage() {
     }
     if (!sourceSchedule) return;
 
-    const dropScheduleId = resolveDropScheduleId(overId, schedules);
-    if (!dropScheduleId || sourceSchedule.id !== dropScheduleId) return;
+    const dropScheduleId =
+      indicator?.scheduleId ?? resolveDropScheduleId(overId, schedules);
+    if (!dropScheduleId) return;
 
-    const items = sourceSchedule.items ?? [];
-    const oldIndex = items.findIndex((i) => i.id === activeId);
-    const newIndex = items.findIndex((i) => i.id === overId);
-    if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return;
+    if (sourceSchedule.id === dropScheduleId) {
+      // 같은 스케줄 내 재정렬
+      const items = sourceSchedule.items ?? [];
+      const oldIndex = items.findIndex((i) => i.id === activeId);
+      const newIndex = items.findIndex((i) => i.id === overId);
+      if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return;
 
-    const reordered = arrayMove(items, oldIndex, newIndex).map(
-      (item, idx) => ({ ...item, sort_order: idx + 1 })
-    );
-    await handleReorderItems(sourceSchedule.id, reordered);
+      const reordered = arrayMove(items, oldIndex, newIndex).map(
+        (item, idx) => ({ ...item, sort_order: idx + 1 })
+      );
+      await handleReorderItems(sourceSchedule.id, reordered);
+    } else {
+      // 다른 스케줄로 이동
+      const totalItems =
+        schedules.find((s) => s.id === dropScheduleId)?.items?.length ?? 0;
+      const sortOrder = (indicator?.insertIndex ?? totalItems) + 1;
+      await handleMoveItem(
+        activeId,
+        sourceSchedule.id,
+        dropScheduleId,
+        sortOrder
+      );
+    }
   };
 
   const activePlaceObj = activePlaceId
