@@ -42,26 +42,20 @@ export function DraggableItem({
 
   return (
     <div
+      {...dragHandleProps?.attributes}
+      {...dragHandleProps?.listeners}
       className={cn(
         "group relative bg-card border rounded-lg p-3 flex gap-2.5 items-start",
-        "hover:border-primary/50 transition-colors",
+        "hover:border-primary/50 transition-colors cursor-grab active:cursor-grabbing touch-none",
         isDragging && "opacity-50 shadow-lg border-primary"
       )}
     >
-      {/* Order number badge */}
+      {/* Order number badge + grip icon */}
       <div className="flex flex-col items-center gap-1 shrink-0">
         <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground">
           {orderNumber}
         </span>
-        {/* Drag handle */}
-        <button
-          {...dragHandleProps?.attributes}
-          {...dragHandleProps?.listeners}
-          className="text-muted-foreground/40 hover:text-muted-foreground cursor-grab active:cursor-grabbing touch-none"
-          aria-label="드래그 핸들"
-        >
-          <GripVertical className="w-4 h-4" />
-        </button>
+        <GripVertical className="w-4 h-4 text-muted-foreground/40" />
       </div>
 
       {/* Content */}
@@ -70,7 +64,10 @@ export function DraggableItem({
           <p className="font-medium text-sm leading-snug truncate">{item.title}</p>
 
           {/* Action buttons - visible on hover */}
-          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+          <div
+            className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+            onPointerDown={(e) => e.stopPropagation()}
+          >
             <Button
               variant="ghost"
               size="icon-sm"
