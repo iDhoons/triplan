@@ -14,6 +14,7 @@ import {
   type CollisionDetection,
   type DragStartEvent,
   type DragEndEvent,
+  type DragMoveEvent,
   type Modifier,
 } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
@@ -90,6 +91,12 @@ function formatDateShort(dateStr: string): string {
 // -----------------------------------------------------------------------
 type ViewMode = "planner" | "route";
 
+/** 드래그 중 삽입 위치 표시용 */
+export interface InsertIndicator {
+  scheduleId: string;
+  insertIndex: number;
+}
+
 // -----------------------------------------------------------------------
 // Page Component
 // -----------------------------------------------------------------------
@@ -115,6 +122,8 @@ export default function SchedulePage() {
   const [editingItem, setEditingItem] = useState<ScheduleItem | null>(null);
   const [activePlaceId, setActivePlaceId] = useState<string | null>(null);
   const [activeItemId, setActiveItemId] = useState<string | null>(null);
+  const [insertIndicator, setInsertIndicator] = useState<InsertIndicator | null>(null);
+  const insertIndicatorRef = useRef<InsertIndicator | null>(null);
 
   // --- DayPickerSheet state ---
   const [dayPickerOpen, setDayPickerOpen] = useState(false);
@@ -190,10 +199,20 @@ export default function SchedulePage() {
 
   const collisionDetection: CollisionDetection = useCallback(
     (args) => {
-      // 장소 카드 드래그: 포인터가 드롭존 안에 있을 때만 반응
-      // → closestCenter 폴백 제거하여 먼 거리의 드롭존이 잡히지 않도록
       if (isDraggingPlaceRef.current) {
-        return pointerWithin(args);
+        const pw = pointerWithin(args);
+        if (pw.length > 0) {
+          // item droppable 우선 → 삽입 위치 감지
+          const itemHits = pw.filter(
+            (c) => !String(c.id).startsWith("schedule-")
+          );
+          if (itemHits.length > 0) return itemHits;
+          // item 없으면 schedule droppable (빈 영역)
+          return pw.filter((c) =>
+            String(c.id).startsWith("schedule-")
+          );
+        }
+        return [];
       }
       // 일정 아이템 재정렬: closestCenter로 부드러운 정렬
       const pointerCollisions = pointerWithin(args);
@@ -212,12 +231,77 @@ export default function SchedulePage() {
       setActiveItemId(id);
       isDraggingPlaceRef.current = false;
     }
+    setInsertIndicator(null);
+    insertIndicatorRef.current = null;
   };
 
+  /** 장소 드래그 중 삽입 위치 계산 */
+  const handleDragMove = useCallback(
+    (event: DragMoveEvent) => {
+      if (!isDraggingPlaceRef.current) return;
+      const { over, activatorEvent, delta } = event;
+
+      if (!over) {
+        if (insertIndicatorRef.current) {
+          insertIndicatorRef.current = null;
+          setInsertIndicator(null);
+        }
+        return;
+      }
+
+      const overId = String(over.id);
+      let newIndicator: InsertIndicator | null = null;
+
+      if (overId.startsWith("schedule-")) {
+        // 빈 영역 또는 패딩 → 맨 끝 삽입
+        const scheduleId = overId.replace("schedule-", "");
+        const schedule = schedules.find((s) => s.id === scheduleId);
+        newIndicator = {
+          scheduleId,
+          insertIndex: schedule?.items?.length ?? 0,
+        };
+      } else {
+        // 특정 아이템 위 → above/below 판별
+        for (const s of schedules) {
+          const itemIdx = (s.items ?? []).findIndex((i) => i.id === overId);
+          if (itemIdx === -1) continue;
+
+          const pointerY =
+            (activatorEvent as PointerEvent).clientY + delta.y;
+          const midpoint =
+            over.rect.top + over.rect.height / 2;
+
+          newIndicator = {
+            scheduleId: s.id,
+            insertIndex: pointerY < midpoint ? itemIdx : itemIdx + 1,
+          };
+          break;
+        }
+      }
+
+      // 값이 바뀔 때만 state 업데이트 (불필요한 리렌더 방지)
+      const prev = insertIndicatorRef.current;
+      if (
+        prev?.scheduleId !== newIndicator?.scheduleId ||
+        prev?.insertIndex !== newIndicator?.insertIndex
+      ) {
+        insertIndicatorRef.current = newIndicator;
+        setInsertIndicator(newIndicator);
+      }
+    },
+    [schedules]
+  );
+
   const handleTopDragEnd = async (event: DragEndEvent) => {
+    // 삽입 위치 캡처 (state 초기화 전에)
+    const indicator = insertIndicatorRef.current;
+
     setActivePlaceId(null);
     setActiveItemId(null);
     isDraggingPlaceRef.current = false;
+    setInsertIndicator(null);
+    insertIndicatorRef.current = null;
+
     const { active, over } = event;
     if (!over) return;
 
@@ -229,10 +313,14 @@ export default function SchedulePage() {
       const place = active.data.current?.place as Place | undefined;
       if (!place) return;
 
-      let dropScheduleId = resolveDropScheduleId(overId, schedules);
+      const dropScheduleId =
+        indicator?.scheduleId ?? resolveDropScheduleId(overId, schedules);
       if (!dropScheduleId) return;
+
       const targetSchedule = schedules.find((s) => s.id === dropScheduleId);
-      const sortOrder = (targetSchedule?.items?.length ?? 0) + 1;
+      const totalItems = targetSchedule?.items?.length ?? 0;
+      // indicator가 있으면 해당 위치, 없으면 맨 끝
+      const sortOrder = (indicator?.insertIndex ?? totalItems) + 1;
       await handleDropPlace(dropScheduleId, place, sortOrder);
       return;
     }
@@ -304,6 +392,7 @@ export default function SchedulePage() {
       sensors={sensors}
       collisionDetection={collisionDetection}
       onDragStart={handleTopDragStart}
+      onDragMove={handleDragMove}
       onDragEnd={handleTopDragEnd}
     >
       <div className="space-y-4">
@@ -350,6 +439,7 @@ export default function SchedulePage() {
             ) : viewMode === "planner" ? (
               <PlannerView
                 schedules={schedules}
+                insertIndicator={insertIndicator}
                 onAddItem={handleOpenAddForm}
                 onEditItem={handleOpenEditForm}
                 onDeleteItem={handleDeleteItem}

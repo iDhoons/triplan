@@ -15,6 +15,20 @@ import { DraggableItem } from "./draggable-item";
 import { TravelInfoCard } from "./travel-info-card";
 import { WeatherBadge } from "./weather-badge";
 import type { Schedule, ScheduleItem } from "@/types/database";
+import type { InsertIndicator } from "@/app/(main)/trips/[tripId]/schedule/page";
+
+// -----------------------------------------------------------------------
+// Insertion line — 드래그 중 삽입 위치를 보여주는 파란 라인
+// -----------------------------------------------------------------------
+function InsertionLine() {
+  return (
+    <div className="relative flex items-center py-1" aria-hidden>
+      <div className="absolute left-0 h-1.5 w-1.5 rounded-full bg-primary -translate-x-0.5" />
+      <div className="flex-1 h-0.5 bg-primary rounded-full" />
+      <div className="absolute right-0 h-1.5 w-1.5 rounded-full bg-primary translate-x-0.5" />
+    </div>
+  );
+}
 
 // -----------------------------------------------------------------------
 // Sortable wrapper — useSortable을 wrapper 레벨에 적용하여
@@ -72,6 +86,7 @@ function SortableItemWrapper({
 interface DayCardProps {
   schedule: Schedule;
   dayIndex: number;
+  insertIndex?: number;
   onAddItem: (scheduleId: string) => void;
   onEditItem: (item: ScheduleItem) => void;
   onDeleteItem: (itemId: string, scheduleId: string) => void;
@@ -80,10 +95,12 @@ interface DayCardProps {
 function DayCard({
   schedule,
   dayIndex,
+  insertIndex,
   onAddItem,
   onEditItem,
   onDeleteItem,
 }: DayCardProps) {
+  const isInsertTarget = insertIndex !== undefined;
   const { setNodeRef, isOver } = useDroppable({
     id: `schedule-${schedule.id}`,
     data: { type: "schedule", scheduleId: schedule.id },
@@ -94,7 +111,7 @@ function DayCard({
   const dateLabel = format(dateObj, "M/d EEE", { locale: ko });
 
   return (
-    <div className="space-y-2">
+    <div ref={setNodeRef} className="space-y-2">
       {/* Day header */}
       <div className="flex items-center gap-2">
         <div className="flex items-center gap-2">
@@ -116,12 +133,11 @@ function DayCard({
         )}
       </div>
 
-      {/* Drop zone */}
+      {/* Drop zone — visual feedback only here */}
       <div
-        ref={setNodeRef}
         className={cn(
           "rounded-xl border-2 border-dashed p-3 min-h-[80px] transition-colors",
-          isOver
+          isOver || isInsertTarget
             ? "border-primary bg-primary/5"
             : items.length === 0
             ? "border-muted-foreground/20"
@@ -130,17 +146,23 @@ function DayCard({
       >
         {items.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full py-4 gap-2">
-            <p className="text-xs text-muted-foreground">
-              일정이 없습니다. 장소를 드래그하거나 추가하세요.
-            </p>
-            <Button
-              variant="outline"
-              size="xs"
-              onClick={() => onAddItem(schedule.id)}
-            >
-              <Plus className="w-3 h-3 mr-1" />
-              일정 추가
-            </Button>
+            {isInsertTarget ? (
+              <InsertionLine />
+            ) : (
+              <>
+                <p className="text-xs text-muted-foreground">
+                  일정이 없습니다. 장소를 드래그하거나 추가하세요.
+                </p>
+                <Button
+                  variant="outline"
+                  size="xs"
+                  onClick={() => onAddItem(schedule.id)}
+                >
+                  <Plus className="w-3 h-3 mr-1" />
+                  일정 추가
+                </Button>
+              </>
+            )}
           </div>
         ) : (
           <SortableContext
@@ -148,16 +170,21 @@ function DayCard({
             strategy={verticalListSortingStrategy}
           >
             <div className="space-y-0">
+              {/* 맨 위 삽입 라인 */}
+              {insertIndex === 0 && <InsertionLine />}
               {items.map((item, idx) => (
-                <SortableItemWrapper
-                  key={item.id}
-                  item={item}
-                  orderNumber={idx + 1}
-                  nextItem={idx < items.length - 1 ? items[idx + 1] : undefined}
-                  isLast={idx === items.length - 1}
-                  onEdit={onEditItem}
-                  onDelete={(id) => onDeleteItem(id, schedule.id)}
-                />
+                <div key={item.id}>
+                  <SortableItemWrapper
+                    item={item}
+                    orderNumber={idx + 1}
+                    nextItem={idx < items.length - 1 ? items[idx + 1] : undefined}
+                    isLast={idx === items.length - 1}
+                    onEdit={onEditItem}
+                    onDelete={(id) => onDeleteItem(id, schedule.id)}
+                  />
+                  {/* 이 아이템 뒤에 삽입 라인 */}
+                  {insertIndex === idx + 1 && <InsertionLine />}
+                </div>
               ))}
             </div>
           </SortableContext>
@@ -192,6 +219,7 @@ function cn(...classes: (string | false | null | undefined)[]) {
 // -----------------------------------------------------------------------
 interface PlannerViewProps {
   schedules: Schedule[];
+  insertIndicator: InsertIndicator | null;
   onAddItem: (scheduleId: string) => void;
   onEditItem: (item: ScheduleItem) => void;
   onDeleteItem: (itemId: string, scheduleId: string) => void;
@@ -199,6 +227,7 @@ interface PlannerViewProps {
 
 export function PlannerView({
   schedules,
+  insertIndicator,
   onAddItem,
   onEditItem,
   onDeleteItem,
@@ -210,6 +239,11 @@ export function PlannerView({
           key={schedule.id}
           schedule={schedule}
           dayIndex={idx}
+          insertIndex={
+            insertIndicator?.scheduleId === schedule.id
+              ? insertIndicator.insertIndex
+              : undefined
+          }
           onAddItem={onAddItem}
           onEditItem={onEditItem}
           onDeleteItem={onDeleteItem}

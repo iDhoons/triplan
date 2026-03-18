@@ -155,6 +155,27 @@ export function useScheduleActions({
     sortOrder: number
   ) => {
     try {
+      // 중간 삽입: 기존 아이템의 sort_order를 밀어서 자리 확보
+      const schedule = schedules.find((s) => s.id === scheduleId);
+      const existingItems = schedule?.items ?? [];
+      const itemsToShift = existingItems.filter(
+        (i) => i.sort_order >= sortOrder
+      );
+
+      if (itemsToShift.length > 0) {
+        await Promise.all(
+          itemsToShift.map((item) =>
+            supabase
+              .from("schedule_items")
+              .update({
+                sort_order: item.sort_order + 1,
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", item.id)
+          )
+        );
+      }
+
       const { error } = await supabase.from("schedule_items").insert({
         schedule_id: scheduleId,
         place_id: place.id,
