@@ -1,0 +1,220 @@
+{
+  "analysis_date": "2026-03-19",
+  "project": "Travel Planner",
+  "decision": "Recommended: Option A (Database Triggers)",
+  
+  "current_state": {
+    "implemented": [
+      {
+        "component": "RealtimeProvider",
+        "action": "activity_logs INSERT 구독",
+        "file": "src/components/realtime/realtime-provider.tsx:113-131"
+      },
+      {
+        "component": "YouTube Analysis",
+        "action": "youtube_analyze 로깅",
+        "file": "src/app/api/youtube/extract-places/route.ts:88-102",
+        "method": "fire-and-forget"
+      },
+      {
+        "component": "ActivityToast",
+        "action": "포맷만 정의",
+        "file": "src/components/realtime/activity-toast.tsx",
+        "note": "실제 INSERT 연동 없음"
+      }
+    ],
+    "coverage": {
+      "youtube_analyze": "✅ 작동",
+      "place_added": "❌ 포맷만 있음",
+      "place_removed": "❌ 미구현",
+      "place_updated": "❌ 미구현",
+      "schedule_item_*": "❌ 미구현",
+      "member_joined": "❌ 미구현",
+      "vote_added": "❌ 미구현"
+    }
+  },
+
+  "comparison": {
+    "option_a_database_triggers": {
+      "name": "Database Triggers (RECOMMENDED)",
+      "advantages": [
+        "일관성: 모든 INSERT/UPDATE/DELETE 자동 캡처",
+        "확장성: 새 기능 추가 시 코드 변경 불필요",
+        "성능: 클라이언트 왕복 감소",
+        "운영: 중복 로깅 방지, 권한 검증 DB에서 실행",
+        "감사: Audit trail 자동 완성"
+      ],
+      "disadvantages": [
+        "초기 개발: PL/pgSQL 학습 필요 (1-2시간)",
+        "디버깅: Trigger silent failure 가능",
+        "권한: DB 사용자 권한으로만 실행"
+      ],
+      "rls_consideration": {
+        "issue": "activity_logs INSERT RLS 정책이 is_trip_editor_or_admin 필요",
+        "solution": "Trigger는 SECURITY DEFINER로 RLS 우회 가능"
+      },
+      "implementation_effort": "3-4시간",
+      "maintenance_burden": "낮음 (중앙화)"
+    },
+    "option_b_application_level": {
+      "name": "Application-Level",
+      "advantages": [
+        "명시성: 어느 시점에 로그 기록되는지 명확",
+        "유연성: 조건부 로깅 가능"
+      ],
+      "disadvantages": [
+        "버그: 누락 위험 높음",
+        "코드: 각 API route에 반복 코드",
+        "권한: viewer 사용자 로그 기록 불가능",
+        "비동기: 메인 응답과 분리되면 유실 가능"
+      ],
+      "implementation_effort": "낮음 (각 route마다 추가)",
+      "maintenance_burden": "높음 (산재됨)"
+    }
+  },
+
+  "technical_design": {
+    "trigger_strategy": "SECURITY DEFINER + auth.uid()",
+    "target_tables": [
+      {
+        "table": "places",
+        "actions": ["place_added", "place_updated", "place_removed"],
+        "trigger_type": "AFTER INSERT/UPDATE/DELETE"
+      },
+      {
+        "table": "schedule_items",
+        "actions": ["schedule_item_added", "schedule_item_updated", "schedule_item_removed"],
+        "trigger_type": "AFTER INSERT/UPDATE/DELETE"
+      },
+      {
+        "table": "checklist_items",
+        "actions": ["checklist_item_added", "checklist_item_checked", "checklist_item_unchecked", "checklist_item_removed"],
+        "trigger_type": "AFTER INSERT/UPDATE/DELETE"
+      },
+      {
+        "table": "place_votes",
+        "actions": ["vote_added"],
+        "trigger_type": "AFTER INSERT"
+      },
+      {
+        "table": "trip_members",
+        "actions": ["member_joined"],
+        "trigger_type": "AFTER INSERT"
+      }
+    ],
+    "helper_functions": [
+      "get_trip_id_from_place()",
+      "get_trip_id_from_schedule_item()",
+      "get_trip_id_from_checklist_item()"
+    ]
+  },
+
+  "critical_considerations": {
+    "rls_policy_interaction": {
+      "problem": "activity_logs INSERT는 is_trip_editor_or_admin 정책 필요",
+      "solution": "SECURITY DEFINER로 trigger 실행하면 RLS 우회 가능",
+      "result": "모든 사용자의 액션 자동 기록 가능"
+    },
+    "auth_uid_availability": {
+      "works": "Authenticated session이 있을 때",
+      "fails": "Service role / cron job 실행 시",
+      "recommendation": "Service role 작업에서는 명시적 user_id 전달"
+    },
+    "performance_impact": {
+      "places_bulk_20": "20 triggers (~100ms) - 수용 가능",
+      "schedule_reorder_10": "10 triggers - 최적화 가능",
+      "youtube_add_places": "Async trigger - 빠름"
+    }
+  },
+
+  "implementation_roadmap": {
+    "phase_1": {
+      "name": "Trigger 기반 로깅",
+      "steps": [
+        "Migration 작성: 20260320_activity_triggers.sql",
+        "5개 Trigger 함수 추가",
+        "Direct DB INSERT 테스트",
+        "Realtime socket 구독 테스트",
+        "UI (activity-toast.tsx) 정상 표시 확인"
+      ],
+      "effort": "3-4시간"
+    },
+    "phase_2": {
+      "name": "Application 정리",
+      "steps": [
+        "/api/youtube/extract-places 유지 (이미 작동)",
+        "기타 API route는 trigger에 맡김",
+        "Rate limit 쿼리 그대로 사용"
+      ],
+      "effort": "1시간"
+    },
+    "phase_3": {
+      "name": "Notification System (향후)",
+      "steps": [
+        "activity_logs INSERT (트리거)",
+        "Realtime subscription (RealtimeProvider)",
+        "ActivityToast 표시 (현재 작동)",
+        "특정 action 감시",
+        "Email/Push 발송"
+      ]
+    }
+  },
+
+  "scoring": {
+    "criteria": {
+      "consistency": {
+        "triggers": "⭐⭐⭐",
+        "app_level": "⭐"
+      },
+      "scalability": {
+        "triggers": "⭐⭐⭐",
+        "app_level": "⭐"
+      },
+      "performance": {
+        "triggers": "⭐⭐",
+        "app_level": "⭐"
+      },
+      "development_difficulty": {
+        "triggers": "⭐⭐ (medium)",
+        "app_level": "⭐ (easy)"
+      },
+      "maintainability": {
+        "triggers": "⭐⭐⭐ (centralized)",
+        "app_level": "⭐ (scattered)"
+      },
+      "permission_management": {
+        "triggers": "⭐⭐⭐ (automatic)",
+        "app_level": "⭐ (manual)"
+      },
+      "audit_trail": {
+        "triggers": "⭐⭐⭐",
+        "app_level": "⭐⭐"
+      }
+    }
+  },
+
+  "recommendation": {
+    "choice": "Option A: Database Triggers",
+    "reasons": [
+      "이미 Realtime + RLS 인프라 완성",
+      "activity_logs 기반 rate limit 이미 작동 중 (youtube_analyze)",
+      "notification 확장 계획에 최적",
+      "누락 위험 제거",
+      "권한 일관성 보장"
+    ],
+    "trade_offs": [
+      "PL/pgSQL 학습: 1-2시간 (중요하지 않음)",
+      "Trigger 작성 + 테스트: 3-4시간",
+      "장기 유지보수: 크게 감소 (이득)"
+    ]
+  },
+
+  "related_files": {
+    "schema": "/Users/daehoonkim/Dev/travel-planner/src/types/database.ts",
+    "realtime": "/Users/daehoonkim/Dev/travel-planner/src/components/realtime/realtime-provider.tsx",
+    "toast": "/Users/daehoonkim/Dev/travel-planner/src/components/realtime/activity-toast.tsx",
+    "youtube_api": "/Users/daehoonkim/Dev/travel-planner/src/app/api/youtube/extract-places/route.ts",
+    "rls_policies": "/Users/daehoonkim/Dev/travel-planner/supabase/migrations/20260311_add_rls_policies.sql",
+    "migration_template": ".claude/analysis/activity-logs-strategy.md"
+  }
+}

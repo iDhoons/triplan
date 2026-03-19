@@ -1,0 +1,191 @@
+[     449ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://triplan-relfyai8a-deckctr.vercel.app/dashboard:0
+[    1467ms] [WARNING] [GSI_LOGGER]: Your client application uses one of the Google One Tap prompt UI status methods that may stop functioning when FedCM becomes mandatory. Refer to the migration guide to update your code accordingly and opt-in to FedCM to test your changes. Learn more: https://developers.google.com/identity/gsi/web/guides/fedcm-migration?s=dc#display_moment and https://developers.google.com/identity/gsi/web/guides/fedcm-migration?s=dc#skipped_moment @ https://accounts.google.com/gsi/client:80
+[    1568ms] [WARNING] Deprecated API for given entry type. @ https://vercel.com/_next/static/chunks/0zvuduiqjrihi.js?dpl=dpl_ECQsrujS3GaVHobLggC9qb31n3SP:18
+[    1584ms] [ERROR] Failed to load resource: the server responded with a status of 403 () @ https://vercel.com/api/jwt:0
+[    4878ms] [WARNING] The resource https://vercel.com/_next/static/media/ebay-light.0.zq80asej6~e.svg?dpl=dpl_ECQsrujS3GaVHobLggC9qb31n3SP was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Ftriplan-relfyai8a-deckctr.vercel.app%252Fdashboard%26nonce%3D63bf4f1d22e76773a032a67b7fb2325a2da68bc6a3810caee05af0b44e3452ce:0
+[    4878ms] [WARNING] The resource https://vercel.com/_next/static/media/adobe-light.16u.6rcfr9g6l.svg?dpl=dpl_ECQsrujS3GaVHobLggC9qb31n3SP was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Ftriplan-relfyai8a-deckctr.vercel.app%252Fdashboard%26nonce%3D63bf4f1d22e76773a032a67b7fb2325a2da68bc6a3810caee05af0b44e3452ce:0
+[    4878ms] [WARNING] The resource https://vercel.com/_next/static/media/stripe-dark.0dt0ok4u3unh4.svg?dpl=dpl_ECQsrujS3GaVHobLggC9qb31n3SP was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Ftriplan-relfyai8a-deckctr.vercel.app%252Fdashboard%26nonce%3D63bf4f1d22e76773a032a67b7fb2325a2da68bc6a3810caee05af0b44e3452ce:0
+[    4878ms] [WARNING] The resource https://vercel.com/_next/static/media/ebay-dark.0_h.rq4h81wly.svg?dpl=dpl_ECQsrujS3GaVHobLggC9qb31n3SP was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Ftriplan-relfyai8a-deckctr.vercel.app%252Fdashboard%26nonce%3D63bf4f1d22e76773a032a67b7fb2325a2da68bc6a3810caee05af0b44e3452ce:0
+[    4878ms] [WARNING] The resource https://vercel.com/_next/static/media/stripe-light.0u487ky2~r_zm.svg?dpl=dpl_ECQsrujS3GaVHobLggC9qb31n3SP was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Ftriplan-relfyai8a-deckctr.vercel.app%252Fdashboard%26nonce%3D63bf4f1d22e76773a032a67b7fb2325a2da68bc6a3810caee05af0b44e3452ce:0
+[    8260ms] [ERROR] The request has been aborted. @ https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Ftriplan-relfyai8a-deckctr.vercel.app%252Fdashboard%26nonce%3D63bf4f1d22e76773a032a67b7fb2325a2da68bc6a3810caee05af0b44e3452ce:0
+[    8265ms] [ERROR] [GSI_LOGGER]: FedCM get() rejects with AbortError: signal is aborted without reason @ https://vercel.com/_next/static/chunks/0xf85.44p4168.js?dpl=dpl_ECQsrujS3GaVHobLggC9qb31n3SP:2
+[    8316ms] [ERROR] Failed to load resource: the server responded with a status of 429 () @ https://o205439.ingest.sentry.io/api/1323670/envelope/?sentry_key=d00780d432ac4ccf882f60dd02062e14&sentry_version=7&sentry_client=sentry.javascript.browser%2F7.111.0:0
+[    9638ms] [WARNING] Deprecated API for given entry type. @ https://vercel.com/_next/static/chunks/0a7_gp.2j~nf9.js?dpl=dpl_ECQsrujS3GaVHobLggC9qb31n3SP:18
+[   10021ms] [ERROR] Failed to load resource: the server responded with a status of 403 () @ https://vercel.com/api/jwt:0
+[   12632ms] [ERROR] Loading the stylesheet 'https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css' violates the following Content Security Policy directive: "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com". Note that 'style-src-elem' was not explicitly set, so 'style-src' is used as a fallback. The action has been blocked. @ https://triplan-relfyai8a-deckctr.vercel.app/login:0
+[   12633ms] [ERROR] Loading the stylesheet 'https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css' violates the following Content Security Policy directive: "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com". Note that 'style-src-elem' was not explicitly set, so 'style-src' is used as a fallback. The action has been blocked. @ https://triplan-relfyai8a-deckctr.vercel.app/login:0
+[   12633ms] [ERROR] Loading the stylesheet 'https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css' violates the following Content Security Policy directive: "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com". Note that 'style-src-elem' was not explicitly set, so 'style-src' is used as a fallback. The action has been blocked. @ https://triplan-relfyai8a-deckctr.vercel.app/login:0
+[   12999ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://triplan-relfyai8a-deckctr.vercel.app/manifest.webmanifest:0
+[   13000ms] [ERROR] Manifest fetch from https://triplan-relfyai8a-deckctr.vercel.app/manifest.webmanifest failed, code 401 @ https://triplan-relfyai8a-deckctr.vercel.app/login:0
+[   13365ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://triplan-relfyai8a-deckctr.vercel.app/manifest.webmanifest:0
+[   13366ms] [ERROR] Manifest fetch from https://triplan-relfyai8a-deckctr.vercel.app/manifest.webmanifest failed, code 401 @ https://triplan-relfyai8a-deckctr.vercel.app/login:0
+[   13474ms] [ERROR] The script resource is behind a redirect, which is disallowed. @ :0
+[   13474ms] [ERROR] [SW] 등록 실패: SecurityError: Failed to register a ServiceWorker for scope ('https://triplan-relfyai8a-deckctr.vercel.app/') with script ('https://triplan-relfyai8a-deckctr.vercel.app/sw.js'): The script resource is behind a redirect, which is disallowed. @ https://triplan-relfyai8a-deckctr.vercel.app/_next/static/chunks/2bf268523b7c7abf.js:0
+[   17060ms] [ERROR] Loading the stylesheet 'https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css' violates the following Content Security Policy directive: "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com". Note that 'style-src-elem' was not explicitly set, so 'style-src' is used as a fallback. The action has been blocked. @ http://localhost:3000/dashboard:0
+[   17060ms] [ERROR] Loading the stylesheet 'https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css' violates the following Content Security Policy directive: "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com". Note that 'style-src-elem' was not explicitly set, so 'style-src' is used as a fallback. The action has been blocked. @ http://localhost:3000/dashboard:0
+[   17060ms] [ERROR] Loading the stylesheet 'https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css' violates the following Content Security Policy directive: "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com". Note that 'style-src-elem' was not explicitly set, so 'style-src' is used as a fallback. The action has been blocked. @ http://localhost:3000/dashboard:0
+[   17159ms] [ERROR] Manifest: Line: 1, column: 1, Syntax error. @ http://localhost:3000/manifest.webmanifest:0
+[   17303ms] [ERROR] Manifest: Line: 1, column: 1, Syntax error. @ http://localhost:3000/manifest.webmanifest:0
+[   17543ms] [ERROR] Base UI: A component that acts as a button expected a native <button> because the `nativeButton` prop is true. Rendering a non-<button> removes native button semantics, which can impact forms and accessibility. Use a real <button> in the `render` prop, or set `nativeButton` to `false`.
+    at CollapsibleTrigger (http://localhost:3000/_next/static/chunks/src_56374a60._.js:861:214)
+    at http://localhost:3000/_next/static/chunks/src_56374a60._.js:1095:239
+    at Array.map (<anonymous>)
+    at Sidebar (http://localhost:3000/_next/static/chunks/src_56374a60._.js:1090:41)
+    at AppShell (http://localhost:3000/_next/static/chunks/src_56374a60._.js:1385:215)
+    at fn (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_9212ccad._.js:1915:24) @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_f3530cac._.js:3127
+[   20094ms] NotFoundError: Failed to execute 'insertBefore' on 'Node': The node before which the new node is to be inserted is not a child of this node.
+    at insertOrAppendPlacementNodeIntoContainer (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:7477:211)
+    at insertOrAppendPlacementNodeIntoContainer (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:7478:283)
+    at insertOrAppendPlacementNodeIntoContainer (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:7478:158)
+    at commitPlacement (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:7516:17)
+    at runWithFiberInDEV (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:965:74)
+    at commitReconciliationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8422:17)
+    at commitMutationEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8222:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8212:106)
+    at commitMutationEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8226:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8212:106)
+    at commitMutationEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8221:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8212:106)
+    at commitMutationEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8226:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8212:106)
+    at commitMutationEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8221:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8212:106)
+    at commitMutationEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8221:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8212:106)
+    at commitMutationEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8226:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8212:106)
+    at commitMutationEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8221:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8212:106)
+    at commitMutationEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8410:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8212:106)
+    at commitMutationEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8410:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8212:106)
+    at commitMutationEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8410:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8212:106)
+    at commitMutationEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8410:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8212:106)
+    at commitMutationEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8410:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8212:106)
+    at commitMutationEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8410:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8212:106)
+    at commitMutationEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8410:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8212:106)
+    at commitMutationEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8221:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8212:106)
+    at commitMutationEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8226:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8212:106)
+    at commitMutationEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8221:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8212:106)
+    at commitMutationEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8221:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8212:106)
+    at commitMutationEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8221:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8212:106)
+    at commitMutationEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8410:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8212:106)
+    at commitMutationEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8221:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8212:106)
+[   20094ms] NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at removeChildFromContainer (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:11879:128)
+    at runWithFiberInDEV (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:965:74)
+    at commitDeletionEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8073:21)
+    at recursivelyTraverseDeletionEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8039:53)
+    at commitDeletionEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8122:17)
+    at recursivelyTraverseDeletionEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8039:53)
+    at commitDeletionEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8101:17)
+    at recursivelyTraverseDeletionEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8039:53)
+    at commitDeletionEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8105:17)
+    at recursivelyTraverseDeletionEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8039:53)
+    at commitDeletionEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8101:17)
+    at recursivelyTraverseDeletionEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8039:53)
+    at commitDeletionEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8105:17)
+    at recursivelyTraverseDeletionEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8039:53)
+    at commitDeletionEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8101:17)
+    at recursivelyTraverseDeletionEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8039:53)
+    at commitDeletionEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8101:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8202:13)
+    at commitMutationEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8226:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8212:106)
+    at commitMutationEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8221:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8212:106)
+    at commitMutationEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8410:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8212:106)
+    at commitMutationEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8410:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8212:106)
+    at commitMutationEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8410:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8212:106)
+    at commitMutationEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8410:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8212:106)
+    at commitMutationEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8410:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8212:106)
+    at commitMutationEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8410:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8212:106)
+    at commitMutationEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8410:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8212:106)
+    at commitMutationEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8221:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8212:106)
+    at commitMutationEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8226:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8212:106)
+    at commitMutationEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8221:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8212:106)
+    at commitMutationEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8221:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8212:106)
+    at commitMutationEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8221:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8212:106)
+    at commitMutationEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8410:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8212:106)
+    at commitMutationEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8221:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8212:106)
+[   20094ms] NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at removeChildFromContainer (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:11879:128)
+    at runWithFiberInDEV (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:965:74)
+    at commitDeletionEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8073:21)
+    at recursivelyTraverseDeletionEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8039:53)
+    at commitDeletionEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8058:17)
+    at recursivelyTraverseDeletionEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8039:53)
+    at commitDeletionEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8058:17)
+    at recursivelyTraverseDeletionEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8039:53)
+    at commitDeletionEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8122:17)
+    at recursivelyTraverseDeletionEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8039:53)
+    at commitDeletionEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8101:17)
+    at recursivelyTraverseDeletionEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8039:53)
+    at commitDeletionEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8101:17)
+    at recursivelyTraverseDeletionEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8039:53)
+    at commitDeletionEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8105:17)
+    at recursivelyTraverseDeletionEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8039:53)
+    at commitDeletionEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8101:17)
+    at recursivelyTraverseDeletionEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8039:53)
+    at commitDeletionEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8105:17)
+    at recursivelyTraverseDeletionEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8039:53)
+    at commitDeletionEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8101:17)
+    at recursivelyTraverseDeletionEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8039:53)
+    at commitDeletionEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8101:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8202:13)
+    at commitMutationEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8226:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8212:106)
+    at commitMutationEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8221:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8212:106)
+    at commitMutationEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8410:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8212:106)
+    at commitMutationEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8410:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8212:106)
+    at commitMutationEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8410:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8212:106)
+    at commitMutationEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8410:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8212:106)
+    at commitMutationEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8410:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8212:106)
+    at commitMutationEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8410:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8212:106)
+    at commitMutationEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8410:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8212:106)
+    at commitMutationEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8221:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8212:106)
+    at commitMutationEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8226:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8212:106)
+    at commitMutationEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8221:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8212:106)
+    at commitMutationEffectsOnFiber (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8221:17)
+    at recursivelyTraverseMutationEffects (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:8212:106)
+[   20118ms] [ERROR] WebSocket connection to 'wss://jndkizbpehyhckrhxvyr.supabase.co/realtime/v1/websocket?apikey=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpuZGtpemJwZWh5aGNrcmh4dnlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxMzkzMzcsImV4cCI6MjA4ODcxNTMzN30.3MjuXgT_vd1GRQ3k-W5guU_lkFocaLIotqFldsILTK8%0A&vsn=2.0.0' failed: HTTP Authentication failed; no valid credentials available @ http://localhost:3000/_next/static/chunks/node_modules_aecd32b8._.js:5869
+[   21171ms] [ERROR] WebSocket connection to 'wss://jndkizbpehyhckrhxvyr.supabase.co/realtime/v1/websocket?apikey=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpuZGtpemJwZWh5aGNrcmh4dnlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxMzkzMzcsImV4cCI6MjA4ODcxNTMzN30.3MjuXgT_vd1GRQ3k-W5guU_lkFocaLIotqFldsILTK8%0A&vsn=2.0.0' failed: HTTP Authentication failed; no valid credentials available @ http://localhost:3000/_next/static/chunks/node_modules_aecd32b8._.js:5869
+[   23236ms] [ERROR] WebSocket connection to 'wss://jndkizbpehyhckrhxvyr.supabase.co/realtime/v1/websocket?apikey=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpuZGtpemJwZWh5aGNrcmh4dnlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxMzkzMzcsImV4cCI6MjA4ODcxNTMzN30.3MjuXgT_vd1GRQ3k-W5guU_lkFocaLIotqFldsILTK8%0A&vsn=2.0.0' failed: HTTP Authentication failed; no valid credentials available @ http://localhost:3000/_next/static/chunks/node_modules_aecd32b8._.js:5869

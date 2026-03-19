@@ -1,0 +1,51 @@
+[     440ms] [ERROR] The script resource is behind a redirect, which is disallowed. @ :0
+[     440ms] [ERROR] [SW] 등록 실패: SecurityError: Failed to register a ServiceWorker for scope ('https://triplan-one.vercel.app/') with script ('https://triplan-one.vercel.app/sw.js'): The script resource is behind a redirect, which is disallowed. @ https://triplan-one.vercel.app/_next/static/chunks/7b205d8e35629e06.js:0
+[     467ms] [ERROR] Manifest: Line: 1, column: 1, Syntax error. @ https://triplan-one.vercel.app/manifest.webmanifest:0
+[    4879ms] [ERROR] Manifest: Line: 1, column: 1, Syntax error. @ https://triplan-one.vercel.app/manifest.webmanifest:0
+[    5301ms] [ERROR] A bad HTTP response code (404) was received when fetching the script. @ :0
+[    5301ms] [ERROR] [SW] 등록 실패: TypeError: Failed to register a ServiceWorker for scope ('https://triplan-one.vercel.app/') with script ('https://triplan-one.vercel.app/sw.js'): A bad HTTP response code (404) was received when fetching the script. @ https://triplan-one.vercel.app/_next/static/chunks/7b205d8e35629e06.js:0
+[    5411ms] [ERROR] Manifest: Line: 1, column: 1, Syntax error. @ https://triplan-one.vercel.app/manifest.webmanifest:0
+[    8125ms] NotFoundError: Failed to execute 'insertBefore' on 'Node': The node before which the new node is to be inserted is not a child of this node.
+    at e (https://triplan-one.vercel.app/_next/static/chunks/aee6c7720838f8a2.js:1:122835)
+    at e (https://triplan-one.vercel.app/_next/static/chunks/aee6c7720838f8a2.js:1:123135)
+    at e (https://triplan-one.vercel.app/_next/static/chunks/aee6c7720838f8a2.js:1:123102)
+    at ul (https://triplan-one.vercel.app/_next/static/chunks/aee6c7720838f8a2.js:1:123158)
+    at ur (https://triplan-one.vercel.app/_next/static/chunks/aee6c7720838f8a2.js:1:117893)
+    at ut (https://triplan-one.vercel.app/_next/static/chunks/aee6c7720838f8a2.js:1:117757)
+    at ur (https://triplan-one.vercel.app/_next/static/chunks/aee6c7720838f8a2.js:1:117961)
+    at ut (https://triplan-one.vercel.app/_next/static/chunks/aee6c7720838f8a2.js:1:117757)
+    at ur (https://triplan-one.vercel.app/_next/static/chunks/aee6c7720838f8a2.js:1:117883)
+    at ut (https://triplan-one.vercel.app/_next/static/chunks/aee6c7720838f8a2.js:1:117757)
+[    8125ms] NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at i8 (https://triplan-one.vercel.app/_next/static/chunks/aee6c7720838f8a2.js:1:115990)
+    at i6 (https://triplan-one.vercel.app/_next/static/chunks/aee6c7720838f8a2.js:1:115423)
+    at i8 (https://triplan-one.vercel.app/_next/static/chunks/aee6c7720838f8a2.js:1:116649)
+    at i6 (https://triplan-one.vercel.app/_next/static/chunks/aee6c7720838f8a2.js:1:115423)
+    at i8 (https://triplan-one.vercel.app/_next/static/chunks/aee6c7720838f8a2.js:1:116384)
+    at i6 (https://triplan-one.vercel.app/_next/static/chunks/aee6c7720838f8a2.js:1:115423)
+    at i8 (https://triplan-one.vercel.app/_next/static/chunks/aee6c7720838f8a2.js:1:116487)
+    at i6 (https://triplan-one.vercel.app/_next/static/chunks/aee6c7720838f8a2.js:1:115423)
+    at i8 (https://triplan-one.vercel.app/_next/static/chunks/aee6c7720838f8a2.js:1:116384)
+    at ut (https://triplan-one.vercel.app/_next/static/chunks/aee6c7720838f8a2.js:1:117631)
+[    8126ms] NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at i8 (https://triplan-one.vercel.app/_next/static/chunks/aee6c7720838f8a2.js:1:115990)
+    at i6 (https://triplan-one.vercel.app/_next/static/chunks/aee6c7720838f8a2.js:1:115423)
+    at i8 (https://triplan-one.vercel.app/_next/static/chunks/aee6c7720838f8a2.js:1:115772)
+    at i6 (https://triplan-one.vercel.app/_next/static/chunks/aee6c7720838f8a2.js:1:115423)
+    at i8 (https://triplan-one.vercel.app/_next/static/chunks/aee6c7720838f8a2.js:1:115772)
+    at i6 (https://triplan-one.vercel.app/_next/static/chunks/aee6c7720838f8a2.js:1:115423)
+    at i8 (https://triplan-one.vercel.app/_next/static/chunks/aee6c7720838f8a2.js:1:116649)
+    at i6 (https://triplan-one.vercel.app/_next/static/chunks/aee6c7720838f8a2.js:1:115423)
+    at i8 (https://triplan-one.vercel.app/_next/static/chunks/aee6c7720838f8a2.js:1:116384)
+    at i6 (https://triplan-one.vercel.app/_next/static/chunks/aee6c7720838f8a2.js:1:115423)
+[    8152ms] [ERROR] WebSocket connection to 'wss://jndkizbpehyhckrhxvyr.supabase.co/realtime/v1/websocket?apikey=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpuZGtpemJwZWh5aGNrcmh4dnlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxMzkzMzcsImV4cCI6MjA4ODcxNTMzN30.3MjuXgT_vd1GRQ3k-W5guU_lkFocaLIotqFldsILTK8%0A&vsn=2.0.0' failed: HTTP Authentication failed; no valid credentials available @ https://triplan-one.vercel.app/_next/static/chunks/ef41d986712b1c6d.js:5
+[    9203ms] [ERROR] WebSocket connection to 'wss://jndkizbpehyhckrhxvyr.supabase.co/realtime/v1/websocket?apikey=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpuZGtpemJwZWh5aGNrcmh4dnlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxMzkzMzcsImV4cCI6MjA4ODcxNTMzN30.3MjuXgT_vd1GRQ3k-W5guU_lkFocaLIotqFldsILTK8%0A&vsn=2.0.0' failed: HTTP Authentication failed; no valid credentials available @ https://triplan-one.vercel.app/_next/static/chunks/ef41d986712b1c6d.js:5
+[   11255ms] [ERROR] WebSocket connection to 'wss://jndkizbpehyhckrhxvyr.supabase.co/realtime/v1/websocket?apikey=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpuZGtpemJwZWh5aGNrcmh4dnlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxMzkzMzcsImV4cCI6MjA4ODcxNTMzN30.3MjuXgT_vd1GRQ3k-W5guU_lkFocaLIotqFldsILTK8%0A&vsn=2.0.0' failed: HTTP Authentication failed; no valid credentials available @ https://triplan-one.vercel.app/_next/static/chunks/ef41d986712b1c6d.js:5
+[   16307ms] [ERROR] WebSocket connection to 'wss://jndkizbpehyhckrhxvyr.supabase.co/realtime/v1/websocket?apikey=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpuZGtpemJwZWh5aGNrcmh4dnlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxMzkzMzcsImV4cCI6MjA4ODcxNTMzN30.3MjuXgT_vd1GRQ3k-W5guU_lkFocaLIotqFldsILTK8%0A&vsn=2.0.0' failed: HTTP Authentication failed; no valid credentials available @ https://triplan-one.vercel.app/_next/static/chunks/ef41d986712b1c6d.js:5
+[   26359ms] [ERROR] WebSocket connection to 'wss://jndkizbpehyhckrhxvyr.supabase.co/realtime/v1/websocket?apikey=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpuZGtpemJwZWh5aGNrcmh4dnlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxMzkzMzcsImV4cCI6MjA4ODcxNTMzN30.3MjuXgT_vd1GRQ3k-W5guU_lkFocaLIotqFldsILTK8%0A&vsn=2.0.0' failed: HTTP Authentication failed; no valid credentials available @ https://triplan-one.vercel.app/_next/static/chunks/ef41d986712b1c6d.js:5
+[   36419ms] [ERROR] WebSocket connection to 'wss://jndkizbpehyhckrhxvyr.supabase.co/realtime/v1/websocket?apikey=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpuZGtpemJwZWh5aGNrcmh4dnlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxMzkzMzcsImV4cCI6MjA4ODcxNTMzN30.3MjuXgT_vd1GRQ3k-W5guU_lkFocaLIotqFldsILTK8%0A&vsn=2.0.0' failed: HTTP Authentication failed; no valid credentials available @ https://triplan-one.vercel.app/_next/static/chunks/ef41d986712b1c6d.js:5
+[   46479ms] [ERROR] WebSocket connection to 'wss://jndkizbpehyhckrhxvyr.supabase.co/realtime/v1/websocket?apikey=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpuZGtpemJwZWh5aGNrcmh4dnlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxMzkzMzcsImV4cCI6MjA4ODcxNTMzN30.3MjuXgT_vd1GRQ3k-W5guU_lkFocaLIotqFldsILTK8%0A&vsn=2.0.0' failed: HTTP Authentication failed; no valid credentials available @ https://triplan-one.vercel.app/_next/static/chunks/ef41d986712b1c6d.js:5
+[   56543ms] [ERROR] WebSocket connection to 'wss://jndkizbpehyhckrhxvyr.supabase.co/realtime/v1/websocket?apikey=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpuZGtpemJwZWh5aGNrcmh4dnlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxMzkzMzcsImV4cCI6MjA4ODcxNTMzN30.3MjuXgT_vd1GRQ3k-W5guU_lkFocaLIotqFldsILTK8%0A&vsn=2.0.0' failed: HTTP Authentication failed; no valid credentials available @ https://triplan-one.vercel.app/_next/static/chunks/ef41d986712b1c6d.js:5
+[   66666ms] [ERROR] WebSocket connection to 'wss://jndkizbpehyhckrhxvyr.supabase.co/realtime/v1/websocket?apikey=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpuZGtpemJwZWh5aGNrcmh4dnlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxMzkzMzcsImV4cCI6MjA4ODcxNTMzN30.3MjuXgT_vd1GRQ3k-W5guU_lkFocaLIotqFldsILTK8%0A&vsn=2.0.0' failed: HTTP Authentication failed; no valid credentials available @ https://triplan-one.vercel.app/_next/static/chunks/ef41d986712b1c6d.js:5
+[   76761ms] [ERROR] WebSocket connection to 'wss://jndkizbpehyhckrhxvyr.supabase.co/realtime/v1/websocket?apikey=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpuZGtpemJwZWh5aGNrcmh4dnlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxMzkzMzcsImV4cCI6MjA4ODcxNTMzN30.3MjuXgT_vd1GRQ3k-W5guU_lkFocaLIotqFldsILTK8%0A&vsn=2.0.0' failed: HTTP Authentication failed; no valid credentials available @ https://triplan-one.vercel.app/_next/static/chunks/ef41d986712b1c6d.js:5
+[   86872ms] [ERROR] WebSocket connection to 'wss://jndkizbpehyhckrhxvyr.supabase.co/realtime/v1/websocket?apikey=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpuZGtpemJwZWh5aGNrcmh4dnlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxMzkzMzcsImV4cCI6MjA4ODcxNTMzN30.3MjuXgT_vd1GRQ3k-W5guU_lkFocaLIotqFldsILTK8%0A&vsn=2.0.0' failed: HTTP Authentication failed; no valid credentials available @ https://triplan-one.vercel.app/_next/static/chunks/ef41d986712b1c6d.js:5
