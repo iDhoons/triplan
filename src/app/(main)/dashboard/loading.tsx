@@ -1,16 +1,29 @@
-import { TripCardSkeleton } from "@/components/layout/loading-skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function DashboardLoading() {
   return (
-    <div>
-      <header className="flex items-center justify-between mb-8">
-        <div className="h-8 w-24 rounded bg-muted animate-pulse" />
-        <div className="h-9 w-24 rounded bg-muted animate-pulse" />
-      </header>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="space-y-6 md:space-y-8">
+      {/* Hero skeleton */}
+      <Skeleton className="h-48 md:h-56 w-full rounded-2xl" />
+
+      {/* Stats skeleton */}
+      <div className="grid grid-cols-3 gap-3 md:gap-5">
         {[1, 2, 3].map((i) => (
-          <TripCardSkeleton key={i} />
+          <Skeleton key={i} className="h-20 md:h-24 rounded-2xl" />
         ))}
+      </div>
+
+      {/* Trip list skeleton */}
+      <div className="space-y-4">
+        <Skeleton className="h-6 w-20 rounded" />
+        <div className="hidden md:block">
+          <Skeleton className="h-64 rounded-2xl" />
+        </div>
+        <div className="md:hidden space-y-3">
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-28 rounded-xl" />
+          ))}
+        </div>
       </div>
     </div>
   );

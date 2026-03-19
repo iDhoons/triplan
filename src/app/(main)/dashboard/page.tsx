@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -13,15 +13,86 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { Trip } from "@/types/database";
 import { nanoid } from "nanoid";
-import { MapPin, CalendarDays, Compass, Share2, X } from "lucide-react";
+import {
+  MapPin,
+  CalendarDays,
+  Compass,
+  Share2,
+  X,
+  Plane,
+  Clock,
+  CheckCircle2,
+  Plus,
+  ChevronRight,
+} from "lucide-react";
 import { TripCardSkeleton } from "@/components/layout/loading-skeleton";
 import { useTrips, tripsQueryKey } from "@/hooks/use-trips";
+import { cn } from "@/lib/utils";
+
+function getTripStatus(trip: Trip): "upcoming" | "ongoing" | "completed" {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const start = new Date(trip.start_date);
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(trip.end_date);
+  end.setHours(0, 0, 0, 0);
+  if (today < start) return "upcoming";
+  if (today > end) return "completed";
+  return "ongoing";
+}
+
+function StatCard({
+  icon,
+  iconBg,
+  label,
+  value,
+}: {
+  icon: React.ReactNode;
+  iconBg: string;
+  label: string;
+  value: string | number;
+}) {
+  return (
+    <div className="glass-card rounded-2xl p-3 md:p-5 flex flex-col md:flex-row items-center md:items-center gap-2 md:gap-4 text-center md:text-left">
+      <div
+        className={cn(
+          "w-9 h-9 md:w-12 md:h-12 rounded-xl md:rounded-2xl flex items-center justify-center shrink-0",
+          iconBg
+        )}
+      >
+        {icon}
+      </div>
+      <div className="min-w-0">
+        <p className="text-[9px] md:text-xs font-medium text-muted-foreground uppercase tracking-wider">
+          {label}
+        </p>
+        <p className="text-base md:text-2xl font-bold tracking-tight whitespace-nowrap">
+          {value}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+const statusConfig = {
+  upcoming: {
+    label: "예정",
+    className: "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300",
+  },
+  ongoing: {
+    label: "진행중",
+    className: "bg-green-100 text-green-700 dark:bg-green-500/15 dark:text-green-300",
+  },
+  completed: {
+    label: "완료",
+    className: "bg-muted text-muted-foreground",
+  },
+};
 
 export default function DashboardPage() {
   const { data: trips = [], isLoading: loading } = useTrips();
@@ -42,17 +113,44 @@ export default function DashboardPage() {
     setShowShareTip(false);
   }
 
-  // 폼 상태
   const [title, setTitle] = useState("");
   const [destination, setDestination] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
+  const stats = useMemo(() => {
+    const upcoming = trips.filter((t) => getTripStatus(t) === "upcoming");
+    const completed = trips.filter((t) => getTripStatus(t) === "completed");
+
+    const nextTrip = [...upcoming].sort(
+      (a, b) =>
+        new Date(a.start_date).getTime() - new Date(b.start_date).getTime()
+    )[0];
+
+    let dday: number | null = null;
+    if (nextTrip) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const start = new Date(nextTrip.start_date);
+      start.setHours(0, 0, 0, 0);
+      dday = Math.ceil(
+        (start.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+      );
+    }
+
+    return {
+      total: trips.length,
+      upcoming: upcoming.length,
+      completed: completed.length,
+      nextTrip,
+      dday,
+    };
+  }, [trips]);
+
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     if (!user) return;
 
-    // 날짜 검증: 종료일이 시작일 이전이면 차단
     if (startDate && endDate && endDate < startDate) {
       toast.error("도착일이 출발일보다 이전이에요.");
       return;
@@ -62,13 +160,16 @@ export default function DashboardPage() {
 
     const inviteCode = nanoid(10);
 
-    const { data: tripId, error } = await supabase.rpc("create_trip_with_member", {
-      p_title: title,
-      p_destination: destination,
-      p_start_date: startDate,
-      p_end_date: endDate,
-      p_invite_code: inviteCode,
-    });
+    const { data: tripId, error } = await supabase.rpc(
+      "create_trip_with_member",
+      {
+        p_title: title,
+        p_destination: destination,
+        p_start_date: startDate,
+        p_end_date: endDate,
+        p_invite_code: inviteCode,
+      }
+    );
 
     if (error || !tripId) {
       toast.error("여행 생성에 실패했어요. 다시 시도해주세요.");
@@ -102,68 +203,145 @@ export default function DashboardPage() {
     });
   }
 
-  return (
-    <div>
-      <header className="flex items-center justify-between mb-8">
-        <h1 className="text-2xl sm:text-3xl">내 여행</h1>
-        <div className="flex items-center gap-3">
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger render={<Button>+ 새 여행</Button>} />
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>새 여행 만들기</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleCreate} className="space-y-4">
-                <div className="space-y-2">
-                  <Label>여행 이름</Label>
-                  <Input
-                    placeholder="오사카 가족여행"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>여행지</Label>
-                  <Input
-                    placeholder="오사카, 일본"
-                    value={destination}
-                    onChange={(e) => setDestination(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-2">
-                    <Label>출발일</Label>
-                    <Input
-                      type="date"
-                      value={startDate}
-                      onChange={(e) => setStartDate(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>도착일</Label>
-                    <Input
-                      type="date"
-                      value={endDate}
-                      onChange={(e) => setEndDate(e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
-                <Button type="submit" className="w-full" disabled={creating}>
-                  {creating ? "만드는 중..." : "만들기"}
-                </Button>
-              </form>
-            </DialogContent>
-          </Dialog>
-        </div>
-      </header>
+  function formatDateLong(dateStr: string) {
+    return new Date(dateStr).toLocaleDateString("ko-KR", {
+      month: "long",
+      day: "numeric",
+      weekday: "short",
+    });
+  }
 
-      {/* Share Target 온보딩 배너 */}
+  const createDialog = (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>새 여행 만들기</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleCreate} className="space-y-4">
+          <div className="space-y-2">
+            <Label>여행 이름</Label>
+            <Input
+              placeholder="오사카 가족여행"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>여행지</Label>
+            <Input
+              placeholder="오사카, 일본"
+              value={destination}
+              onChange={(e) => setDestination(e.target.value)}
+              required
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label>출발일</Label>
+              <Input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>도착일</Label>
+              <Input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+          <Button type="submit" className="w-full" disabled={creating}>
+            {creating ? "만드는 중..." : "만들기"}
+          </Button>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+
+  return (
+    <div className="space-y-6 md:space-y-8">
+      {createDialog}
+
+      {/* Hero Section */}
+      <section className="relative overflow-hidden rounded-2xl bg-primary p-6 md:p-10">
+        <div className="absolute -top-20 -right-20 w-56 h-56 rounded-full bg-white/10 blur-3xl" />
+        <div className="absolute -bottom-12 -left-12 w-40 h-40 rounded-full bg-white/8 blur-2xl" />
+        <div className="absolute top-1/2 right-1/4 w-24 h-24 rounded-full bg-white/5 blur-xl" />
+
+        <div className="relative z-10 max-w-xl">
+          <h1 className="text-2xl md:text-4xl font-extrabold text-primary-foreground tracking-tight">
+            {user?.display_name
+              ? `${user.display_name}님,`
+              : "안녕하세요!"}
+            <br />
+            <span className="text-primary-foreground/80">어디로 떠날까요?</span>
+          </h1>
+          <p className="mt-2 md:mt-3 text-primary-foreground/60 text-sm md:text-base">
+            {stats.nextTrip && stats.dday !== null
+              ? stats.dday === 0
+                ? `${stats.nextTrip.destination} 여행이 오늘이에요!`
+                : `${stats.nextTrip.destination}까지 ${stats.dday}일 남았어요`
+              : stats.total > 0
+                ? `지금까지 ${stats.total}개의 여행을 함께 계획했어요`
+                : "새로운 여행을 계획하고, 함께 떠나보세요"}
+          </p>
+
+          <Button
+            size="lg"
+            className="mt-5 md:mt-7 bg-white/90 text-primary hover:bg-white shadow-lg font-bold gap-2 rounded-xl"
+            onClick={() => setOpen(true)}
+          >
+            <Plus className="w-4 h-4" />
+            새 여행 만들기
+          </Button>
+        </div>
+      </section>
+
+      {/* Stats Grid */}
+      {!loading && trips.length > 0 && (
+        <section className="grid grid-cols-3 gap-2.5 md:gap-5 animate-fade-in-up">
+          <StatCard
+            icon={<Plane className="w-4 h-4 md:w-5 md:h-5 text-primary" />}
+            iconBg="bg-primary/10"
+            label="여행"
+            value={stats.total}
+          />
+          <StatCard
+            icon={<Clock className="w-4 h-4 md:w-5 md:h-5 text-blue-500" />}
+            iconBg="bg-blue-500/10"
+            label="예정"
+            value={stats.upcoming}
+          />
+          <StatCard
+            icon={
+              stats.dday !== null ? (
+                <CalendarDays className="w-4 h-4 md:w-5 md:h-5 text-green-500" />
+              ) : (
+                <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5 text-green-500" />
+              )
+            }
+            iconBg="bg-green-500/10"
+            label={stats.dday !== null ? "D-Day" : "완료"}
+            value={
+              stats.dday !== null
+                ? stats.dday === 0
+                  ? "Today"
+                  : `D-${stats.dday}`
+                : stats.completed
+            }
+          />
+        </section>
+      )}
+
+      {/* Share Target 배너 */}
       {showShareTip && !loading && trips.length > 0 && (
-        <div className="mb-6 flex items-start gap-3 rounded-2xl glass-card p-4 animate-ios-spring">
+        <div className="flex items-start gap-3 rounded-2xl glass-card p-4 animate-ios-spring">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 glass-light">
             <Share2 className="h-4.5 w-4.5 text-primary" />
           </div>
@@ -185,14 +363,18 @@ export default function DashboardPage() {
         </div>
       )}
 
+      {/* Trip List */}
       {loading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {[1, 2, 3].map((i) => (
-            <TripCardSkeleton key={i} />
-          ))}
+        <div className="space-y-4">
+          <div className="h-6 w-20 rounded bg-muted animate-pulse" />
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3].map((i) => (
+              <TripCardSkeleton key={i} />
+            ))}
+          </div>
         </div>
       ) : trips.length === 0 ? (
-        <div className="flex flex-col items-center gap-4 py-20 text-center animate-fade-in-up">
+        <div className="flex flex-col items-center gap-4 py-16 text-center animate-fade-in-up">
           <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 glass-light">
             <Compass className="h-8 w-8 text-primary/60" />
           </div>
@@ -204,36 +386,107 @@ export default function DashboardPage() {
           </div>
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 animate-stagger">
-          {trips.map((trip) => (
-            <Card
-              key={trip.id}
-              className="cursor-pointer hover:-translate-y-1 active:scale-[0.97] transition-all duration-300"
-              onClick={() => router.push(`/trips/${trip.id}/places`)}
-            >
-              <CardContent className="p-5">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <h3 className="font-semibold text-base truncate">{trip.title}</h3>
-                    <div className="flex items-center gap-1.5 mt-1.5 text-muted-foreground">
-                      <MapPin className="h-3.5 w-3.5 shrink-0" />
-                      <span className="text-sm truncate">{trip.destination}</span>
+        <section className="animate-fade-in-up">
+          <h2 className="text-lg md:text-xl font-bold mb-4">내 여행</h2>
+
+          {/* Desktop: Table rows */}
+          <div className="hidden md:block glass-card rounded-2xl overflow-hidden">
+            <div className="divide-y divide-glass-border">
+              {trips.map((trip) => {
+                const status = getTripStatus(trip);
+                const config = statusConfig[status];
+                return (
+                  <div
+                    key={trip.id}
+                    className="flex items-center gap-5 px-6 py-4.5 cursor-pointer hover:bg-glass-light/60 transition-colors duration-200 group"
+                    onClick={() => router.push(`/trips/${trip.id}/places`)}
+                  >
+                    <div className="w-11 h-11 rounded-xl bg-primary/8 flex items-center justify-center shrink-0">
+                      <MapPin className="w-5 h-5 text-primary" />
                     </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-foreground truncate">
+                        {trip.title}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {trip.destination}
+                      </p>
+                    </div>
+                    <span className="text-sm text-muted-foreground hidden lg:block whitespace-nowrap">
+                      {formatDateLong(trip.start_date)} &mdash;{" "}
+                      {formatDateLong(trip.end_date)}
+                    </span>
+                    <span className="shrink-0 bg-primary/10 text-primary text-xs font-semibold px-2.5 py-1 rounded-full">
+                      {getDaysLabel(trip)}
+                    </span>
+                    <span
+                      className={cn(
+                        "shrink-0 px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wide",
+                        config.className
+                      )}
+                    >
+                      {config.label}
+                    </span>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors shrink-0" />
                   </div>
-                  <span className="shrink-0 bg-primary/12 text-primary text-xs font-semibold px-2.5 py-1 rounded-full glass-light">
-                    {getDaysLabel(trip)}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1.5 mt-4 pt-3 border-t border-glass-border text-xs text-muted-foreground">
-                  <CalendarDays className="h-3.5 w-3.5" />
-                  <span>
-                    {formatDate(trip.start_date)} ~ {formatDate(trip.end_date)}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Mobile: Cards */}
+          <div className="md:hidden grid gap-3 animate-stagger">
+            {trips.map((trip) => {
+              const status = getTripStatus(trip);
+              const config = statusConfig[status];
+              return (
+                <Card
+                  key={trip.id}
+                  className="cursor-pointer hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-300"
+                  onClick={() => router.push(`/trips/${trip.id}/places`)}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-start gap-3 min-w-0">
+                        <div className="w-10 h-10 rounded-xl bg-primary/8 flex items-center justify-center shrink-0 mt-0.5">
+                          <MapPin className="w-4 h-4 text-primary" />
+                        </div>
+                        <div className="min-w-0">
+                          <h3 className="font-semibold text-[15px] truncate">
+                            {trip.title}
+                          </h3>
+                          <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                            {trip.destination}
+                          </p>
+                        </div>
+                      </div>
+                      <span
+                        className={cn(
+                          "shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide",
+                          config.className
+                        )}
+                      >
+                        {config.label}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-glass-border">
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <CalendarDays className="h-3.5 w-3.5" />
+                        <span>
+                          {formatDate(trip.start_date)} &mdash;{" "}
+                          {formatDate(trip.end_date)}
+                        </span>
+                      </div>
+                      <span className="text-xs font-semibold text-primary/80">
+                        {getDaysLabel(trip)}
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </section>
       )}
     </div>
   );
