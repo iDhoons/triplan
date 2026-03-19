@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/auth-store";
@@ -13,32 +13,29 @@ export function AppShell({ children }: { children: ReactNode }) {
   const supabase = createClient();
   const router = useRouter();
   const { setUser } = useAuthStore();
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function getProfile() {
+    async function loadProfile() {
+      // getSession()은 쿠키에서 로컬로 읽음 — 네트워크 호출 없음
+      // (인증 검증은 middleware가 이미 수행함)
       const {
-        data: { user },
-      } = await supabase.auth.getUser();
+        data: { session },
+      } = await supabase.auth.getSession();
 
-      if (!user) {
-        router.push("/login");
-        return;
-      }
+      if (!session?.user) return; // middleware가 이미 리다이렉트 처리
 
       const { data: profile } = await supabase
         .from("profiles")
         .select("*")
-        .eq("id", user.id)
+        .eq("id", session.user.id)
         .single();
 
       if (profile) {
         setUser(profile as Profile);
       }
-      setLoading(false);
     }
 
-    getProfile();
+    loadProfile();
 
     const {
       data: { subscription },
@@ -52,14 +49,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, [supabase, router, setUser]);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse text-muted-foreground">로딩 중...</div>
-      </div>
-    );
-  }
-
+  // loading gate 제거 — children 즉시 렌더, trips fetch와 profile fetch 병렬 실행
   return (
     <div className="min-h-screen pb-[calc(50px+env(safe-area-inset-bottom,0px))] md:pb-0 md:pl-64">
       <OfflineBanner />

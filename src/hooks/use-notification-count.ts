@@ -9,7 +9,8 @@ export function useNotificationCount() {
       const json = await res.json();
       return json.unread_count ?? 0;
     },
-    refetchInterval: 30_000, // 30초마다 폴링
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false, // 탭 비활성 시 폴링 중지
     staleTime: 10_000,
   });
 }
