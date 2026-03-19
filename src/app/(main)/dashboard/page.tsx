@@ -13,6 +13,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -211,97 +212,96 @@ export default function DashboardPage() {
     });
   }
 
-  const createDialog = (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>새 여행 만들기</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleCreate} className="space-y-4">
-          <div className="space-y-2">
-            <Label>여행 이름</Label>
-            <Input
-              placeholder="오사카 가족여행"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>여행지</Label>
-            <Input
-              placeholder="오사카, 일본"
-              value={destination}
-              onChange={(e) => setDestination(e.target.value)}
-              required
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label>출발일</Label>
-              <Input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>도착일</Label>
-              <Input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                required
-              />
-            </div>
-          </div>
-          <Button type="submit" className="w-full" disabled={creating}>
-            {creating ? "만드는 중..." : "만들기"}
-          </Button>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
-
   return (
     <div className="space-y-6 md:space-y-8">
-      {createDialog}
-
       {/* Hero Section */}
-      <section className="relative overflow-hidden rounded-2xl bg-primary p-6 md:p-10">
-        <div className="absolute -top-20 -right-20 w-56 h-56 rounded-full bg-white/10 blur-3xl" />
-        <div className="absolute -bottom-12 -left-12 w-40 h-40 rounded-full bg-white/8 blur-2xl" />
-        <div className="absolute top-1/2 right-1/4 w-24 h-24 rounded-full bg-white/5 blur-xl" />
+      <Dialog open={open} onOpenChange={setOpen}>
+        <section className="relative overflow-hidden rounded-2xl bg-primary p-6 md:p-10">
+          <div className="absolute -top-20 -right-20 w-56 h-56 rounded-full bg-white/10 blur-3xl" />
+          <div className="absolute -bottom-12 -left-12 w-40 h-40 rounded-full bg-white/8 blur-2xl" />
+          <div className="absolute top-1/2 right-1/4 w-24 h-24 rounded-full bg-white/5 blur-xl" />
 
-        <div className="relative z-10 max-w-xl">
-          <h1 className="text-2xl md:text-4xl font-extrabold text-primary-foreground tracking-tight">
-            {user?.display_name
-              ? `${user.display_name}님,`
-              : "안녕하세요!"}
-            <br />
-            <span className="text-primary-foreground/80">어디로 떠날까요?</span>
-          </h1>
-          <p className="mt-2 md:mt-3 text-primary-foreground/60 text-sm md:text-base">
-            {stats.nextTrip && stats.dday !== null
-              ? stats.dday === 0
-                ? `${stats.nextTrip.destination} 여행이 오늘이에요!`
-                : `${stats.nextTrip.destination}까지 ${stats.dday}일 남았어요`
-              : stats.total > 0
-                ? `지금까지 ${stats.total}개의 여행을 함께 계획했어요`
-                : "새로운 여행을 계획하고, 함께 떠나보세요"}
-          </p>
+          <div className="relative z-10 max-w-xl">
+            <h1 className="text-2xl md:text-4xl font-extrabold text-primary-foreground tracking-tight">
+              {user?.display_name
+                ? `${user.display_name}님,`
+                : "안녕하세요!"}
+              <br />
+              <span className="text-primary-foreground/80">어디로 떠날까요?</span>
+            </h1>
+            <p className="mt-2 md:mt-3 text-primary-foreground/60 text-sm md:text-base">
+              {stats.nextTrip && stats.dday !== null
+                ? stats.dday === 0
+                  ? `${stats.nextTrip.destination} 여행이 오늘이에요!`
+                  : `${stats.nextTrip.destination}까지 ${stats.dday}일 남았어요`
+                : stats.total > 0
+                  ? `지금까지 ${stats.total}개의 여행을 함께 계획했어요`
+                  : "새로운 여행을 계획하고, 함께 떠나보세요"}
+            </p>
 
-          <Button
-            size="lg"
-            className="mt-5 md:mt-7 bg-white/90 text-primary hover:bg-white shadow-lg font-bold gap-2 rounded-xl"
-            onClick={() => setOpen(true)}
-          >
-            <Plus className="w-4 h-4" />
-            새 여행 만들기
-          </Button>
-        </div>
-      </section>
+            <DialogTrigger
+              render={
+                <Button
+                  size="lg"
+                  className="mt-5 md:mt-7 bg-white/90 text-primary hover:bg-white shadow-lg font-bold gap-2 rounded-xl"
+                />
+              }
+            >
+              <Plus className="w-4 h-4" />
+              새 여행 만들기
+            </DialogTrigger>
+          </div>
+        </section>
+
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>새 여행 만들기</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleCreate} className="space-y-4">
+            <div className="space-y-2">
+              <Label>여행 이름</Label>
+              <Input
+                placeholder="오사카 가족여행"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>여행지</Label>
+              <Input
+                placeholder="오사카, 일본"
+                value={destination}
+                onChange={(e) => setDestination(e.target.value)}
+                required
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>출발일</Label>
+                <Input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>도착일</Label>
+                <Input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+            <Button type="submit" className="w-full" disabled={creating}>
+              {creating ? "만드는 중..." : "만들기"}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {/* Stats Grid */}
       {!loading && trips.length > 0 && (
