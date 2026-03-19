@@ -1,7 +1,7 @@
 "use client";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { ServiceWorkerRegister } from "@/components/layout/sw-register";
 import { InstallBanner } from "@/components/layout/install-banner";
@@ -19,6 +19,16 @@ export function Providers({ children }: { children: ReactNode }) {
         },
       })
   );
+
+  useEffect(() => {
+    const splash = document.getElementById("splash");
+    if (splash) {
+      splash.style.opacity = "0";
+      splash.addEventListener("transitionend", () => splash.remove(), {
+        once: true,
+      });
+    }
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

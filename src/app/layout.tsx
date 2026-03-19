@@ -48,6 +48,42 @@ export default function RootLayout({
         />
       </head>
       <body className={`${geistMono.variable} antialiased`}>
+        {/* Inline splash — JS 로드 전 즉시 표시, hydration 후 fade-out */}
+        <div
+          id="splash"
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 9999,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "1rem",
+            background: "oklch(0.97 0 0)",
+            transition: "opacity 0.4s ease-out",
+          }}
+        >
+          <div
+            style={{
+              width: 48,
+              height: 48,
+              borderRadius: "50%",
+              border: "3px solid oklch(0.636 0.178 47 / 20%)",
+              borderTopColor: "oklch(0.636 0.178 47)",
+              animation: "splash-spin 0.8s linear infinite",
+            }}
+          />
+          <p
+            style={{
+              fontSize: "0.875rem",
+              color: "oklch(0.45 0 0)",
+              letterSpacing: "-0.01em",
+            }}
+          >
+            여행 플래너
+          </p>
+        </div>
         <Providers>{children}</Providers>
       </body>
     </html>

@@ -288,6 +288,24 @@ body {
   border-radius: inherit;
 }
 
+/* Splash spinner */
+@keyframes splash-spin {
+  to { transform: rotate(360deg); }
+}
+
+.dark #splash {
+  background: oklch(0.1 0 0);
+}
+
+.dark #splash p {
+  color: oklch(0.65 0 0);
+}
+
+.dark #splash div:first-child {
+  border-color: oklch(0.72 0.16 47 / 20%);
+  border-top-color: oklch(0.72 0.16 47);
+}
+
 /* iOS Safe Area */
 .safe-area-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);
