@@ -24,9 +24,13 @@ export function Providers({ children }: { children: ReactNode }) {
     const splash = document.getElementById("splash");
     if (splash) {
       splash.style.opacity = "0";
-      splash.addEventListener("transitionend", () => splash.remove(), {
-        once: true,
-      });
+      splash.addEventListener(
+        "transitionend",
+        () => {
+          splash.style.display = "none";
+        },
+        { once: true }
+      );
     }
   }, []);
 

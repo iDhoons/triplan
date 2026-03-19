@@ -20,20 +20,19 @@ const securityHeaders = [
     key: "Permissions-Policy",
     value: "camera=(), microphone=(), geolocation=(self)",
   },
-  // CSP temporarily disabled for debugging — restore after root cause is found
-  // {
-  //   key: "Content-Security-Policy",
-  //   value: [
-  //     "default-src 'self'",
-  //     "script-src 'self' 'unsafe-inline' https://maps.googleapis.com https://vercel.live",
-  //     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net",
-  //     "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net",
-  //     "img-src 'self' data: blob: https:",
-  //     "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://maps.googleapis.com https://places.googleapis.com https://generativelanguage.googleapis.com https://api.open-meteo.com https://geocoding-api.open-meteo.com https://vercel.live wss://vercel.live",
-  //     "frame-src 'self' https://maps.googleapis.com https://vercel.live",
-  //     "worker-src 'self' blob:",
-  //   ].join("; "),
-  // },
+  {
+    key: "Content-Security-Policy",
+    value: [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' https://maps.googleapis.com https://vercel.live",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net",
+      "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net",
+      "img-src 'self' data: blob: https:",
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://maps.googleapis.com https://places.googleapis.com https://generativelanguage.googleapis.com https://api.open-meteo.com https://geocoding-api.open-meteo.com https://vercel.live wss://vercel.live",
+      "frame-src 'self' https://maps.googleapis.com https://vercel.live",
+      "worker-src 'self' blob:",
+    ].join("; "),
+  },
 ];
 
 const nextConfig: NextConfig = {
