@@ -11,7 +11,7 @@ export const PATCH = withAuth(async (_request, { supabase, user }) => {
     .select("id");
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 
   return NextResponse.json({ updated_count: data?.length ?? 0 });

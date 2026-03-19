@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/auth-store";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { Trip, TripMember } from "@/types/database";
+import { GuestTripPreview } from "@/components/guest/guest-trip-preview";
+import type { Trip } from "@/types/database";
 import { MapPin, CalendarDays, Users, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
@@ -27,7 +28,7 @@ function getDaysNights(start: string, end: string) {
 
 const MAX_MEMBERS = 20; // 여행당 최대 멤버 수
 
-type Status = "loading" | "not-found" | "full" | "already-member" | "ready" | "joining";
+type Status = "loading" | "guest" | "not-found" | "full" | "already-member" | "ready" | "joining";
 
 export default function JoinPage() {
   const params = useParams();
@@ -40,16 +41,10 @@ export default function JoinPage() {
   const [memberCount, setMemberCount] = useState(0);
   const [status, setStatus] = useState<Status>("loading");
 
-  useEffect(() => {
-    initialize();
-  }, [inviteCode]);
-
-  async function initialize() {
-    // Redirect to login if not authenticated
+  const initialize = useCallback(async () => {
+    // 비로그인 → 게스트 프리뷰 표시
     if (!user) {
-      router.push(
-        `/login?next=${encodeURIComponent(`/join/${inviteCode}`)}`
-      );
+      setStatus("guest");
       return;
     }
 
@@ -94,7 +89,12 @@ export default function JoinPage() {
     }
 
     setStatus("ready");
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inviteCode, user]);
+
+  useEffect(() => {
+    initialize();
+  }, [initialize]);
 
   async function handleJoin() {
     if (!trip || !user) return;
@@ -125,6 +125,10 @@ export default function JoinPage() {
         <p className="text-muted-foreground text-sm">잠시만요...</p>
       </div>
     );
+  }
+
+  if (status === "guest") {
+    return <GuestTripPreview inviteCode={inviteCode} />;
   }
 
   if (status === "not-found") {

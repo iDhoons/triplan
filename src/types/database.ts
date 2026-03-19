@@ -200,3 +200,20 @@ export interface ActivityLog {
   created_at: string;
   profile?: Profile;
 }
+
+export interface Notification {
+  id: string;
+  user_id: string;
+  trip_id: string | null;
+  type: string;
+  title: string;
+  body: string | null;
+  actor_id: string | null;
+  actor_name: string | null;
+  target_type: string | null;
+  target_id: string | null;
+  is_read: boolean;
+  read_at: string | null;
+  activity_log_id: string | null;
+  created_at: string;
+}

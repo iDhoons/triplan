@@ -13,10 +13,12 @@ import {
 } from "@/components/ui/collapsible";
 import { ChevronRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useNotificationCount } from "@/hooks/use-notification-count";
 
 export function Sidebar() {
   const pathname = usePathname();
   const { data: trips, isLoading, isError, refetch } = useTrips();
+  const { data: unreadCount } = useNotificationCount();
 
   const tripMatch = pathname.match(/\/trips\/([^/]+)/);
   const currentTripId = tripMatch?.[1] ?? null;
@@ -50,10 +52,17 @@ export function Sidebar() {
                   : "text-muted-foreground hover:text-foreground hover:bg-glass-light active:scale-[0.98]"
               )}
             >
-              <Icon
-                className="w-5 h-5"
-                strokeWidth={isActive ? 2 : 1.5}
-              />
+              <div className="relative">
+                <Icon
+                  className="w-5 h-5"
+                  strokeWidth={isActive ? 2 : 1.5}
+                />
+                {item.href === "/notifications" && !!unreadCount && unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1.5 min-w-[14px] h-[14px] flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold px-0.5">
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                )}
+              </div>
               {item.label}
             </Link>
           );

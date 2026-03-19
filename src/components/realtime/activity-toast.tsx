@@ -10,7 +10,13 @@ import type { ActivityLog } from "@/types/database";
 function formatAction(log: ActivityLog): string {
   const actor = log.profile?.display_name ?? "누군가";
   const targetName =
-    (log.metadata?.target_name as string) ?? log.target_type ?? "항목";
+    (log.metadata?.name as string) ??
+    (log.metadata?.title as string) ??
+    (log.metadata?.place_name as string) ??
+    (log.metadata?.member_name as string) ??
+    (log.metadata?.target_name as string) ??
+    log.target_type ??
+    "항목";
 
   switch (log.action) {
     case "place_added":
@@ -29,6 +35,14 @@ function formatAction(log: ActivityLog): string {
       return `${actor}이(가) 일정에서 '${targetName}'을(를) 제거했습니다`;
     case "member_joined":
       return `${actor}이(가) 여행에 참여했습니다`;
+    case "checklist_item_added":
+      return `${actor}이(가) 체크리스트에 '${targetName}'을(를) 추가했습니다`;
+    case "checklist_checked":
+      return `${actor}이(가) '${targetName}'을(를) 완료했습니다`;
+    case "checklist_unchecked":
+      return `${actor}이(가) '${targetName}' 완료를 취소했습니다`;
+    case "checklist_item_removed":
+      return `${actor}이(가) 체크리스트에서 '${targetName}'을(를) 삭제했습니다`;
     default:
       return `${actor}이(가) 활동했습니다`;
   }

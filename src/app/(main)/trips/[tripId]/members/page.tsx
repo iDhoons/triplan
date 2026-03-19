@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/auth-store";
@@ -15,8 +15,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { MemberContribution } from "@/components/members/member-contribution";
+import { ActivityTimeline } from "@/components/members/activity-timeline";
+import { ChecklistProgress } from "@/components/members/checklist-progress";
 import type { Trip, TripMember, MemberRole } from "@/types/database";
-import { Copy, Check, UserMinus, RefreshCw } from "lucide-react";
+import { Copy, Check, UserMinus, RefreshCw, Share2 } from "lucide-react";
 import { nanoid } from "nanoid";
 import { toast } from "sonner";
 
@@ -46,16 +50,15 @@ export default function MembersPage() {
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [updatingRole, setUpdatingRole] = useState<string | null>(null);
+  const [canShare] = useState(
+    () => typeof navigator !== "undefined" && !!navigator.share
+  );
 
   const isAdmin = members.some(
     (m) => m.user_id === user?.id && m.role === "admin"
   );
 
-  useEffect(() => {
-    fetchAll();
-  }, [tripId]);
-
-  async function fetchAll() {
+  const fetchAll = useCallback(async () => {
     setLoading(true);
     const [tripRes, membersRes] = await Promise.all([
       supabase.from("trips").select("*").eq("id", tripId).single(),
@@ -70,7 +73,12 @@ export default function MembersPage() {
     if (tripRes.data) setTrip(tripRes.data as Trip);
     if (membersRes.data) setMembers(membersRes.data as TripMember[]);
     setLoading(false);
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tripId]);
+
+  useEffect(() => {
+    fetchAll();
+  }, [fetchAll]);
 
   function getInviteUrl() {
     if (!trip) return "";
@@ -83,6 +91,25 @@ export default function MembersPage() {
     await navigator.clipboard.writeText(getInviteUrl());
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  }
+
+  async function handleShare() {
+    if (!trip) return;
+    const dateRange = trip.start_date && trip.end_date
+      ? ` (${new Date(trip.start_date).toLocaleDateString("ko-KR")}~${new Date(trip.end_date).toLocaleDateString("ko-KR")})`
+      : "";
+    try {
+      await navigator.share({
+        title: `${trip.title} 초대`,
+        text: `${trip.destination ?? "여행"}${dateRange}에 함께 가요!`,
+        url: getInviteUrl(),
+      });
+    } catch (err) {
+      // 사용자가 공유를 취소한 경우 무시
+      if ((err as Error).name !== "AbortError") {
+        toast.error("공유에 실패했습니다");
+      }
+    }
   }
 
   async function handleRegenerateInvite() {
@@ -199,6 +226,17 @@ export default function MembersPage() {
                 </>
               )}
             </Button>
+            {canShare && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleShare}
+                className="shrink-0"
+              >
+                <Share2 className="w-3.5 h-3.5 mr-1" />
+                공유
+              </Button>
+            )}
           </div>
           <div className="flex items-center justify-between mt-2">
             <p className="text-xs text-muted-foreground">
@@ -294,6 +332,39 @@ export default function MembersPage() {
           );
         })}
       </div>
+
+      {/* Activity Dashboard */}
+      <Tabs defaultValue="contribution">
+        <TabsList variant="line" className="w-full justify-start">
+          <TabsTrigger value="contribution">기여도</TabsTrigger>
+          <TabsTrigger value="activity">활동</TabsTrigger>
+          <TabsTrigger value="checklist">체크리스트</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="contribution" className="mt-4">
+          <Card>
+            <CardContent className="pt-4 pb-4">
+              <MemberContribution tripId={tripId} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="activity" className="mt-4">
+          <Card>
+            <CardContent className="pt-4 pb-4">
+              <ActivityTimeline tripId={tripId} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="checklist" className="mt-4">
+          <Card>
+            <CardContent className="pt-4 pb-4">
+              <ChecklistProgress tripId={tripId} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
