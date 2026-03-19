@@ -384,13 +384,23 @@ export default function SchedulePage() {
     }
   };
 
-  const activePlaceObj = activePlaceId
-    ? places.find((p) => `place-${p.id}` === activePlaceId) ?? null
-    : null;
+  const activePlaceObj = useMemo(
+    () =>
+      activePlaceId
+        ? places.find((p) => `place-${p.id}` === activePlaceId) ?? null
+        : null,
+    [activePlaceId, places]
+  );
 
-  const activeItemObj = activeItemId
-    ? schedules.flatMap((s) => s.items ?? []).find((i) => i.id === activeItemId) ?? null
-    : null;
+  const activeItemObj = useMemo(
+    () =>
+      activeItemId
+        ? schedules
+            .flatMap((s) => s.items ?? [])
+            .find((i) => i.id === activeItemId) ?? null
+        : null,
+    [activeItemId, schedules]
+  );
 
   // --- Loading ---
   if (loading) {
@@ -583,6 +593,16 @@ function RouteView({
   routeDateIndex: number;
   onDateChange: (idx: number) => void;
 }) {
+  const currentItems = useMemo(
+    () => schedules[routeDateIndex]?.items ?? [],
+    [schedules, routeDateIndex]
+  );
+
+  const geoItems = useMemo(
+    () => currentItems.filter((item) => item.place?.latitude && item.place?.longitude),
+    [currentItems]
+  );
+
   return (
     <div className="space-y-3">
       {schedules.length > 1 && (
@@ -609,17 +629,13 @@ function RouteView({
       )}
 
       <RouteMap
-        scheduleItems={schedules[routeDateIndex]?.items ?? []}
+        scheduleItems={currentItems}
         className="h-[520px]"
       />
 
-      {(schedules[routeDateIndex]?.items ?? []).filter(
-        (item) => item.place?.latitude && item.place?.longitude
-      ).length > 0 && (
+      {geoItems.length > 0 && (
         <ol className="space-y-1 text-sm text-muted-foreground pl-1">
-          {(schedules[routeDateIndex]?.items ?? [])
-            .filter((item) => item.place?.latitude && item.place?.longitude)
-            .map((item, idx) => (
+          {geoItems.map((item, idx) => (
               <li key={item.id} className="flex items-center gap-2">
                 <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
                   {idx + 1}

@@ -28,8 +28,10 @@ export function useScheduleActions({
 }: UseScheduleActionsParams) {
   const queryClient = useQueryClient();
 
-  const invalidateSchedules = () =>
+  const invalidateSchedules = () => {
     queryClient.invalidateQueries({ queryKey: ["schedules", tripId] });
+    queryClient.invalidateQueries({ queryKey: ["schedule-data", tripId] });
+  };
 
   const handleFormSubmit = async (data: ScheduleItemFormData) => {
     if (!targetScheduleId) return;

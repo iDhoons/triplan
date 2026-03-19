@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, Pencil, Trash2, History, MoreVertical } from "lucide-react";
@@ -27,7 +28,7 @@ interface ChecklistItemProps {
   onShowHistory: () => void;
 }
 
-export function ChecklistItem({
+export const ChecklistItem = memo(function ChecklistItem({
   item,
   sortMode,
   userRole,
@@ -165,4 +166,4 @@ export function ChecklistItem({
       </DropdownMenu>
     </div>
   );
-}
+});

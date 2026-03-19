@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { memo, useState, useEffect, useRef, useCallback } from "react";
 import {
   Footprints,
   Bus,
@@ -521,7 +521,7 @@ interface TravelInfoCardProps {
   loading?: boolean;
 }
 
-export function TravelInfoCard({
+export const TravelInfoCard = memo(function TravelInfoCard({
   currentItem,
   nextItem,
   loading,
@@ -839,4 +839,4 @@ export function TravelInfoCard({
         )}
     </div>
   );
-}
+});

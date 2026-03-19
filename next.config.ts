@@ -41,6 +41,22 @@ const nextConfig: NextConfig = {
   // Turbopack과 webpack 플러그인 충돌 억제
   // serwist는 webpack 기반이므로 turbopack 설정을 빈 객체로 명시
   turbopack: {},
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+      },
+      {
+        protocol: "https",
+        hostname: "maps.googleapis.com",
+      },
+      {
+        protocol: "https",
+        hostname: "places.googleapis.com",
+      },
+    ],
+  },
   async headers() {
     return [
       {

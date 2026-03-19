@@ -1,10 +1,48 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useEffect, useRef, useCallback } from "react";
+import { useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/auth-store";
 import type { RealtimeChannel } from "@supabase/supabase-js";
+import type {
+  Place,
+  Trip,
+  Schedule,
+  ScheduleItem,
+  ChecklistItem,
+} from "@/types/database";
+
+// schedule-data combined query의 캐시 구조
+interface ScheduleDataCache {
+  trip: Trip;
+  schedules: Schedule[];
+  places: Place[];
+}
+
+/**
+ * ["schedules", tripId] 와 ["schedule-data", tripId] 양쪽 캐시를
+ * 동일한 updater로 패치하는 헬퍼.
+ * schedule-data는 { trip, schedules, places } 구조이므로 내부 schedules만 패치.
+ */
+function patchSchedulesCache(
+  queryClient: QueryClient,
+  tripId: string,
+  updater: (schedules: Schedule[]) => Schedule[],
+) {
+  // 1) legacy key (optimistic update용)
+  queryClient.setQueryData<Schedule[]>(["schedules", tripId], (old) =>
+    old ? updater(old) : old,
+  );
+  // 2) combined key (schedule 페이지가 읽는 실제 데이터)
+  queryClient.setQueryData<ScheduleDataCache>(
+    ["schedule-data", tripId],
+    (old) => {
+      if (!old) return old;
+      return { ...old, schedules: updater(old.schedules) };
+    },
+  );
+}
 
 interface RealtimeProviderProps {
   tripId: string;
@@ -21,12 +59,262 @@ export interface PresenceMember {
 // 전역 presence 상태를 공유하기 위한 이벤트 채널
 export const presenceEventTarget = new EventTarget();
 
+// ---------------------------------------------------------------------------
+// Payload type for Supabase Realtime postgres_changes
+// ---------------------------------------------------------------------------
+interface PostgresChangePayload<T extends Record<string, unknown>> {
+  eventType: "INSERT" | "UPDATE" | "DELETE";
+  new: T | Record<string, never>;
+  old: Partial<T> | Record<string, never>;
+  schema: string;
+  table: string;
+  commit_timestamp: string;
+  errors: string[];
+}
+
+// ---------------------------------------------------------------------------
+// Selective handler -- places
+// ---------------------------------------------------------------------------
+function handlePlacesChange(
+  payload: PostgresChangePayload<Place & Record<string, unknown>>,
+  queryClient: QueryClient,
+  tripId: string,
+  userId: string | undefined,
+) {
+  const placesKey = ["places", tripId];
+  const scheduleDataKey = ["schedule-data", tripId];
+
+  switch (payload.eventType) {
+    case "INSERT": {
+      // INSERT always needs server refetch (joined fields, defaults)
+      queryClient.invalidateQueries({ queryKey: placesKey });
+      queryClient.invalidateQueries({ queryKey: scheduleDataKey });
+      break;
+    }
+    case "UPDATE": {
+      const updated = payload.new as Place;
+      // Skip if self-triggered -- mutation's onSettled already invalidated
+      if (userId && updated.added_by === userId) return;
+
+      queryClient.setQueryData<Place[]>(placesKey, (old) => {
+        if (!old) return old;
+        return old.map((p) => (p.id === updated.id ? { ...p, ...updated } : p));
+      });
+      // schedule-data 내 places도 패치
+      queryClient.setQueryData<ScheduleDataCache>(scheduleDataKey, (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          places: old.places.map((p) =>
+            p.id === updated.id ? { ...p, ...updated } : p,
+          ),
+        };
+      });
+      // Also patch places nested inside schedule items
+      patchSchedulesCache(queryClient, tripId, (schedules) =>
+        schedules.map((schedule) => ({
+          ...schedule,
+          items: schedule.items?.map((item) =>
+            item.place?.id === updated.id
+              ? { ...item, place: { ...item.place, ...updated } }
+              : item,
+          ),
+        })),
+      );
+      break;
+    }
+    case "DELETE": {
+      const deleted = payload.old as Partial<Place>;
+      if (!deleted.id) {
+        queryClient.invalidateQueries({ queryKey: placesKey });
+        queryClient.invalidateQueries({ queryKey: scheduleDataKey });
+        return;
+      }
+      queryClient.setQueryData<Place[]>(placesKey, (old) =>
+        old?.filter((p) => p.id !== deleted.id),
+      );
+      // schedule-data 내 places도 패치
+      queryClient.setQueryData<ScheduleDataCache>(scheduleDataKey, (old) => {
+        if (!old) return old;
+        return { ...old, places: old.places.filter((p) => p.id !== deleted.id) };
+      });
+      // Schedule items referencing this place will show stale data;
+      // invalidate schedules to let them refetch cleanly
+      queryClient.invalidateQueries({ queryKey: ["schedules", tripId] });
+      queryClient.invalidateQueries({ queryKey: scheduleDataKey });
+      break;
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Selective handler -- place_votes
+// Only invalidate ["place_votes", tripId]. Never touch ["places", tripId].
+// VoteButton manages its own local state via direct Supabase fetch.
+// ---------------------------------------------------------------------------
+function handlePlaceVotesChange(
+  queryClient: QueryClient,
+  tripId: string,
+) {
+  queryClient.invalidateQueries({ queryKey: ["place_votes", tripId] });
+}
+
+// ---------------------------------------------------------------------------
+// Selective handler -- schedule_items (nested inside schedules query)
+// ---------------------------------------------------------------------------
+function handleScheduleItemsChange(
+  payload: PostgresChangePayload<ScheduleItem & Record<string, unknown>>,
+  queryClient: QueryClient,
+  tripId: string,
+) {
+  const schedulesKey = ["schedules", tripId];
+  const scheduleDataKey = ["schedule-data", tripId];
+
+  switch (payload.eventType) {
+    case "INSERT": {
+      // INSERT needs full refetch to include nested place join
+      queryClient.invalidateQueries({ queryKey: schedulesKey });
+      queryClient.invalidateQueries({ queryKey: scheduleDataKey });
+      break;
+    }
+    case "UPDATE": {
+      const updated = payload.new as ScheduleItem;
+      if (!updated.schedule_id) {
+        queryClient.invalidateQueries({ queryKey: schedulesKey });
+        queryClient.invalidateQueries({ queryKey: scheduleDataKey });
+        return;
+      }
+
+      const oldRecord = payload.old as Partial<ScheduleItem>;
+      const scheduleChanged =
+        oldRecord.schedule_id && oldRecord.schedule_id !== updated.schedule_id;
+
+      const updater = (schedules: Schedule[]): Schedule[] => {
+        if (scheduleChanged) {
+          // Cross-day move: remove from old schedule, add to new one
+          return schedules.map((schedule) => {
+            if (schedule.id === oldRecord.schedule_id) {
+              return {
+                ...schedule,
+                items: schedule.items?.filter((i) => i.id !== updated.id),
+              };
+            }
+            if (schedule.id === updated.schedule_id) {
+              const existingItem = schedules
+                .flatMap((s) => s.items ?? [])
+                .find((i) => i.id === updated.id);
+              const movedItem = existingItem
+                ? { ...existingItem, ...updated, place: existingItem.place }
+                : null;
+              if (!movedItem) return schedule;
+              const items = [...(schedule.items ?? []), movedItem].sort(
+                (a, b) => a.sort_order - b.sort_order,
+              );
+              return { ...schedule, items };
+            }
+            return schedule;
+          });
+        }
+
+        // Same schedule: patch in place
+        return schedules.map((schedule) => {
+          if (!schedule.items) return schedule;
+          const idx = schedule.items.findIndex((i) => i.id === updated.id);
+          if (idx === -1) return schedule;
+          const updatedItems = [...schedule.items];
+          updatedItems[idx] = {
+            ...updatedItems[idx],
+            ...updated,
+            place: updatedItems[idx].place,
+          };
+          return {
+            ...schedule,
+            items: updatedItems.sort((a, b) => a.sort_order - b.sort_order),
+          };
+        });
+      };
+
+      patchSchedulesCache(queryClient, tripId, updater);
+      break;
+    }
+    case "DELETE": {
+      const deleted = payload.old as Partial<ScheduleItem>;
+      if (!deleted.id) {
+        queryClient.invalidateQueries({ queryKey: schedulesKey });
+        queryClient.invalidateQueries({ queryKey: scheduleDataKey });
+        return;
+      }
+      patchSchedulesCache(queryClient, tripId, (schedules) =>
+        schedules.map((schedule) => ({
+          ...schedule,
+          items: schedule.items?.filter((i) => i.id !== deleted.id),
+        })),
+      );
+      break;
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Selective handler -- checklist_items
+// ---------------------------------------------------------------------------
+function handleChecklistItemsChange(
+  payload: PostgresChangePayload<ChecklistItem & Record<string, unknown>>,
+  queryClient: QueryClient,
+  tripId: string,
+  userId: string | undefined,
+) {
+  const queryKey = ["checklist", tripId];
+
+  switch (payload.eventType) {
+    case "INSERT": {
+      const inserted = payload.new as ChecklistItem;
+      // Skip if self-triggered (optimistic update already added it)
+      if (userId && inserted.created_by === userId) return;
+      // INSERT needs refetch for joined fields (assignee profile)
+      queryClient.invalidateQueries({ queryKey });
+      break;
+    }
+    case "UPDATE": {
+      const updated = payload.new as ChecklistItem;
+
+      queryClient.setQueryData<ChecklistItem[]>(queryKey, (old) => {
+        if (!old) return old;
+        return old.map((item) =>
+          item.id === updated.id
+            ? { ...item, ...updated, assignee: item.assignee }
+            : item,
+        );
+      });
+      break;
+    }
+    case "DELETE": {
+      const deleted = payload.old as Partial<ChecklistItem>;
+      if (!deleted.id) {
+        queryClient.invalidateQueries({ queryKey });
+        return;
+      }
+      queryClient.setQueryData<ChecklistItem[]>(queryKey, (old) =>
+        old?.filter((item) => item.id !== deleted.id),
+      );
+      break;
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Main component
+// ---------------------------------------------------------------------------
 export function RealtimeProvider({ tripId, children }: RealtimeProviderProps) {
   const queryClient = useQueryClient();
   const user = useAuthStore((s) => s.user);
   const channelRef = useRef<RealtimeChannel | null>(null);
 
-  useEffect(() => {
+  // Stable ref so callback closures always have the latest userId
+  const userIdRef = useRef(user?.id);
+  userIdRef.current = user?.id;
+
+  const setupChannel = useCallback(() => {
     if (!tripId) return;
 
     const supabase = createClient();
@@ -34,7 +322,9 @@ export function RealtimeProvider({ tripId, children }: RealtimeProviderProps) {
 
     const channel = supabase
       .channel(channelName)
-      // places 테이블 변경 구독
+      // ---------------------------------------------------------------
+      // places -- eventType별 선택적 처리
+      // ---------------------------------------------------------------
       .on(
         "postgres_changes",
         {
@@ -43,11 +333,18 @@ export function RealtimeProvider({ tripId, children }: RealtimeProviderProps) {
           table: "places",
           filter: `trip_id=eq.${tripId}`,
         },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ["places", tripId] });
-        }
+        (payload) => {
+          handlePlacesChange(
+            payload as PostgresChangePayload<Place & Record<string, unknown>>,
+            queryClient,
+            tripId,
+            userIdRef.current,
+          );
+        },
       )
-      // place_votes 테이블 변경 구독
+      // ---------------------------------------------------------------
+      // place_votes -- place_votes만 invalidate, places는 건드리지 않음
+      // ---------------------------------------------------------------
       .on(
         "postgres_changes",
         {
@@ -56,11 +353,12 @@ export function RealtimeProvider({ tripId, children }: RealtimeProviderProps) {
           table: "place_votes",
         },
         () => {
-          queryClient.invalidateQueries({ queryKey: ["places", tripId] });
-          queryClient.invalidateQueries({ queryKey: ["place_votes", tripId] });
-        }
+          handlePlaceVotesChange(queryClient, tripId);
+        },
       )
-      // trip_members 테이블 변경 구독
+      // ---------------------------------------------------------------
+      // trip_members -- 기존 동작 유지
+      // ---------------------------------------------------------------
       .on(
         "postgres_changes",
         {
@@ -71,9 +369,11 @@ export function RealtimeProvider({ tripId, children }: RealtimeProviderProps) {
         },
         () => {
           queryClient.invalidateQueries({ queryKey: ["members", tripId] });
-        }
+        },
       )
-      // schedule_items 테이블 변경 구독
+      // ---------------------------------------------------------------
+      // schedule_items -- eventType별 선택적 처리
+      // ---------------------------------------------------------------
       .on(
         "postgres_changes",
         {
@@ -81,11 +381,17 @@ export function RealtimeProvider({ tripId, children }: RealtimeProviderProps) {
           schema: "public",
           table: "schedule_items",
         },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ["schedules", tripId] });
-        }
+        (payload) => {
+          handleScheduleItemsChange(
+            payload as PostgresChangePayload<ScheduleItem & Record<string, unknown>>,
+            queryClient,
+            tripId,
+          );
+        },
       )
-      // checklist_items 테이블 변경 구독
+      // ---------------------------------------------------------------
+      // checklist_items -- eventType별 선택적 처리
+      // ---------------------------------------------------------------
       .on(
         "postgres_changes",
         {
@@ -94,11 +400,18 @@ export function RealtimeProvider({ tripId, children }: RealtimeProviderProps) {
           table: "checklist_items",
           filter: `trip_id=eq.${tripId}`,
         },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ["checklist", tripId] });
-        }
+        (payload) => {
+          handleChecklistItemsChange(
+            payload as PostgresChangePayload<ChecklistItem & Record<string, unknown>>,
+            queryClient,
+            tripId,
+            userIdRef.current,
+          );
+        },
       )
-      // checklist_logs 변경 구독
+      // ---------------------------------------------------------------
+      // checklist_logs -- 기존 동작 유지 (INSERT only)
+      // ---------------------------------------------------------------
       .on(
         "postgres_changes",
         {
@@ -108,9 +421,11 @@ export function RealtimeProvider({ tripId, children }: RealtimeProviderProps) {
         },
         () => {
           queryClient.invalidateQueries({ queryKey: ["checklist_logs"] });
-        }
+        },
       )
-      // activity_logs 테이블 변경 구독
+      // ---------------------------------------------------------------
+      // activity_logs -- 기존 동작 유지 (INSERT only)
+      // ---------------------------------------------------------------
       .on(
         "postgres_changes",
         {
@@ -125,11 +440,13 @@ export function RealtimeProvider({ tripId, children }: RealtimeProviderProps) {
           });
           // ActivityToast가 수신할 수 있도록 이벤트 발행
           presenceEventTarget.dispatchEvent(
-            new CustomEvent("activity", { detail: payload.new })
+            new CustomEvent("activity", { detail: payload.new }),
           );
-        }
+        },
       )
-      // Presence: 현재 접속 멤버 동기화
+      // ---------------------------------------------------------------
+      // Presence -- 기존 동작 유지
+      // ---------------------------------------------------------------
       .on("presence", { event: "sync" }, () => {
         const state = channel.presenceState<{
           userId: string;
@@ -148,17 +465,17 @@ export function RealtimeProvider({ tripId, children }: RealtimeProviderProps) {
           }));
 
         presenceEventTarget.dispatchEvent(
-          new CustomEvent("presence_sync", { detail: members })
+          new CustomEvent("presence_sync", { detail: members }),
         );
       })
       .on("presence", { event: "join" }, ({ newPresences }) => {
         presenceEventTarget.dispatchEvent(
-          new CustomEvent("presence_join", { detail: newPresences })
+          new CustomEvent("presence_join", { detail: newPresences }),
         );
       })
       .on("presence", { event: "leave" }, ({ leftPresences }) => {
         presenceEventTarget.dispatchEvent(
-          new CustomEvent("presence_leave", { detail: leftPresences })
+          new CustomEvent("presence_leave", { detail: leftPresences }),
         );
       })
       .subscribe(async (status) => {
@@ -179,6 +496,10 @@ export function RealtimeProvider({ tripId, children }: RealtimeProviderProps) {
       channelRef.current = null;
     };
   }, [tripId, user, queryClient]);
+
+  useEffect(() => {
+    return setupChannel();
+  }, [setupChannel]);
 
   return <>{children}</>;
 }

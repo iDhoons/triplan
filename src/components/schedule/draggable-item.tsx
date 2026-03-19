@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import type { DraggableAttributes, DraggableSyntheticListeners } from "@dnd-kit/core";
 import { GripVertical, FileText, Pencil, Trash2, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,7 +20,7 @@ interface DraggableItemProps {
   };
 }
 
-export function DraggableItem({
+export const DraggableItem = memo(function DraggableItem({
   item,
   orderNumber,
   onEdit,
@@ -113,4 +114,4 @@ export function DraggableItem({
       </div>
     </div>
   );
-}
+});

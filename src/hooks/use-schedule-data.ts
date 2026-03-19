@@ -7,59 +7,50 @@ import type { Schedule, Place, Trip } from "@/types/database";
 
 /**
  * Schedule 페이지의 데이터 페칭 훅 (React Query 기반).
- * - RealtimeProvider의 ["schedules", tripId] invalidation과 자동 연결
+ * - Trip, Schedules, Places를 Promise.all로 병렬 fetch
+ * - RealtimeProvider의 ["schedule-data", tripId] invalidation과 자동 연결
  * - 날씨 동기화는 초기 로드 후 논블로킹으로 실행
  */
 export function useScheduleData(tripId: string) {
   const supabase = createClient();
   const queryClient = useQueryClient();
 
-  // --- Trip ---
-  const tripQuery = useQuery({
-    queryKey: ["trip", tripId],
+  // --- Trip + Schedules + Places (병렬 fetch) ---
+  const combinedQuery = useQuery({
+    queryKey: ["schedule-data", tripId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("trips")
-        .select("*")
-        .eq("id", tripId)
-        .single();
-      if (error) throw error;
-      return data as Trip;
-    },
-    enabled: !!tripId,
-  });
+      const [tripResult, schedulesResult, placesResult] = await Promise.all([
+        supabase.from("trips").select("*").eq("id", tripId).single(),
+        supabase
+          .from("schedules")
+          .select(`*, items:schedule_items(*, place:places(*))`)
+          .eq("trip_id", tripId)
+          .order("date", { ascending: true }),
+        supabase
+          .from("places")
+          .select("*")
+          .eq("trip_id", tripId)
+          .order("created_at", { ascending: true }),
+      ]);
 
-  // --- Schedules (with items + places) ---
-  const schedulesQuery = useQuery({
-    queryKey: ["schedules", tripId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("schedules")
-        .select(`*, items:schedule_items(*, place:places(*))`)
-        .eq("trip_id", tripId)
-        .order("date", { ascending: true });
-      if (error) throw error;
-      return ((data as Schedule[]) ?? []).map((s) => ({
-        ...s,
-        items: (s.items ?? [])
-          .slice()
-          .sort((a, b) => a.sort_order - b.sort_order),
-      }));
-    },
-    enabled: !!tripId,
-  });
+      if (tripResult.error) throw tripResult.error;
+      if (schedulesResult.error) throw schedulesResult.error;
+      if (placesResult.error) throw placesResult.error;
 
-  // --- Places (for sidebar) ---
-  const placesQuery = useQuery({
-    queryKey: ["places", tripId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("places")
-        .select("*")
-        .eq("trip_id", tripId)
-        .order("created_at", { ascending: true });
-      if (error) throw error;
-      return (data as Place[]) ?? [];
+      const schedules = ((schedulesResult.data as Schedule[]) ?? []).map(
+        (s) => ({
+          ...s,
+          items: (s.items ?? [])
+            .slice()
+            .sort((a, b) => a.sort_order - b.sort_order),
+        })
+      );
+
+      return {
+        trip: tripResult.data as Trip,
+        schedules,
+        places: (placesResult.data as Place[]) ?? [],
+      };
     },
     enabled: !!tripId,
   });
@@ -71,7 +62,7 @@ export function useScheduleData(tripId: string) {
       if (!res.ok) return;
       const data = await res.json();
       if (data.status === "updated") {
-        queryClient.invalidateQueries({ queryKey: ["schedules", tripId] });
+        queryClient.invalidateQueries({ queryKey: ["schedule-data", tripId] });
       }
     } catch {
       // 날씨 실패는 무시
@@ -79,25 +70,23 @@ export function useScheduleData(tripId: string) {
   }, [tripId, queryClient]);
 
   useEffect(() => {
-    if (schedulesQuery.data && !schedulesQuery.isStale) {
+    if (combinedQuery.data && !combinedQuery.isStale) {
       syncWeather();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [schedulesQuery.data != null]);
-
-  const loading = tripQuery.isLoading || schedulesQuery.isLoading || placesQuery.isLoading;
-  const error = tripQuery.error || schedulesQuery.error || placesQuery.error;
+  }, [combinedQuery.data != null]);
 
   return {
-    trip: tripQuery.data ?? null,
-    schedules: schedulesQuery.data ?? [],
-    places: placesQuery.data ?? [],
-    loading,
-    error,
+    trip: combinedQuery.data?.trip ?? null,
+    schedules: combinedQuery.data?.schedules ?? [],
+    places: combinedQuery.data?.places ?? [],
+    loading: combinedQuery.isLoading,
+    error: combinedQuery.error,
     supabase,
     refetch: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["schedules", tripId] });
-      await queryClient.invalidateQueries({ queryKey: ["places", tripId] });
+      await queryClient.invalidateQueries({
+        queryKey: ["schedule-data", tripId],
+      });
     },
   };
 }

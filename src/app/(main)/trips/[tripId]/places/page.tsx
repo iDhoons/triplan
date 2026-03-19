@@ -101,7 +101,6 @@ const PlaceCard = memo(function PlaceCard({
           alt={place.name}
           fill
           sizes="(min-width: 1024px) 33vw, 50vw"
-          unoptimized
           className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           onError={() => setImageLoadFailed(true)}
         />

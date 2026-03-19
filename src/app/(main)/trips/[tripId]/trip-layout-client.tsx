@@ -2,15 +2,20 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import dynamic from "next/dynamic";
 import { createClient } from "@/lib/supabase/client";
 import type { Trip } from "@/types/database";
 import { RealtimeProvider } from "@/components/realtime/realtime-provider";
 import { ActivityToast } from "@/components/realtime/activity-toast";
-import { AiChatFab } from "@/components/ai/ai-chat-fab";
 import { TripHeader } from "@/components/trip/trip-header";
 import { TripTabNav } from "@/components/trip/trip-tab-nav";
 import { TripProgressBanner } from "@/components/trip/trip-progress-banner";
 import { TripEditDialog } from "@/components/trip/trip-edit-dialog";
+
+const AiChatFab = dynamic(
+  () => import("@/components/ai/ai-chat-fab").then((mod) => mod.AiChatFab),
+  { ssr: false }
+);
 
 export default function TripLayoutClient({
   children,
