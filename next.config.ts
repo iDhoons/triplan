@@ -29,8 +29,8 @@ const securityHeaders = [
       "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net",
       // http: 제거 — 추적 픽셀 방지, 모든 이미지는 HTTPS
       "img-src 'self' data: blob: https:",
-      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://maps.googleapis.com https://places.googleapis.com https://generativelanguage.googleapis.com https://api.open-meteo.com https://geocoding-api.open-meteo.com",
-      "frame-src 'self' https://maps.googleapis.com",
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://maps.googleapis.com https://places.googleapis.com https://generativelanguage.googleapis.com https://api.open-meteo.com https://geocoding-api.open-meteo.com https://vercel.live wss://vercel.live",
+      "frame-src 'self' https://maps.googleapis.com https://vercel.live",
       "worker-src 'self' blob:",
     ].join("; "),
   },
