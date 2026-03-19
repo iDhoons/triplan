@@ -101,6 +101,7 @@ export function Sidebar() {
               return (
                 <Collapsible key={trip.id} open={isOpen}>
                   <CollapsibleTrigger
+                    nativeButton={false}
                     render={
                       <Link
                         href={getTripTabHref(trip.id, "places")}
