@@ -234,7 +234,7 @@ export function PlaceDetailDrawer({
               {/* Google Maps 링크 */}
               {place.latitude && place.longitude && (
                 <a
-                  href={`https://www.google.com/maps/search/?api=1&query=${place.latitude},${place.longitude}`}
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name)}${place.google_place_id ? `&query_place_id=${place.google_place_id}` : `&query=${place.latitude},${place.longitude}`}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 rounded-lg border p-3 text-sm hover:bg-muted/50 transition-colors"

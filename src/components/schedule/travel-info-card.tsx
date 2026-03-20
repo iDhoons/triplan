@@ -88,14 +88,20 @@ function getModeLabel(mode: TravelMode | null): string {
 
 /** Google Maps 딥링크 URL 생성 */
 function buildGoogleMapsUrl(
-  originLat: number,
-  originLng: number,
-  destLat: number,
-  destLng: number,
+  origin: { name: string; lat: number; lng: number; placeId?: string | null },
+  dest: { name: string; lat: number; lng: number; placeId?: string | null },
   mode: TravelMode | null
 ): string {
   const travelMode = mode || "transit";
-  return `https://www.google.com/maps/dir/?api=1&origin=${originLat},${originLng}&destination=${destLat},${destLng}&travelmode=${travelMode}`;
+  const params = new URLSearchParams({
+    api: "1",
+    origin: origin.name,
+    destination: dest.name,
+    travelmode: travelMode,
+  });
+  if (origin.placeId) params.set("origin_place_id", origin.placeId);
+  if (dest.placeId) params.set("destination_place_id", dest.placeId);
+  return `https://www.google.com/maps/dir/?${params.toString()}`;
 }
 
 /** Google Encoded Polyline 디코딩 */
@@ -708,10 +714,8 @@ export const TravelInfoCard = memo(function TravelInfoCard({
         {hasCoords && (
           <a
             href={buildGoogleMapsUrl(
-              currentItem.place!.latitude!,
-              currentItem.place!.longitude!,
-              nextItem.place!.latitude!,
-              nextItem.place!.longitude!,
+              { name: currentItem.title, lat: currentItem.place!.latitude!, lng: currentItem.place!.longitude!, placeId: currentItem.place!.google_place_id },
+              { name: nextItem.title, lat: nextItem.place!.latitude!, lng: nextItem.place!.longitude!, placeId: nextItem.place!.google_place_id },
               displayMode
             )}
             target="_blank"
