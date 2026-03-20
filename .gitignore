@@ -46,3 +46,7 @@ screenshots/
 screen_*.png
 *-check.png
 *-final.png
+
+# Agent skills (npx skills로 설치, 로컬 전용)
+.agents/
+skills-lock.json

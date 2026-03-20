@@ -20,7 +20,7 @@ export function useScheduleData(tripId: string) {
     queryKey: ["schedule-data", tripId],
     queryFn: async () => {
       const [tripResult, schedulesResult, placesResult] = await Promise.all([
-        supabase.from("trips").select("*").eq("id", tripId).single(),
+        supabase.from("trips").select("id, title, destination, start_date, end_date, style, cover_image_url, invite_code, created_by, created_at, updated_at").eq("id", tripId).single(),
         supabase
           .from("schedules")
           .select(`*, items:schedule_items(*, place:places(*))`)
@@ -28,7 +28,7 @@ export function useScheduleData(tripId: string) {
           .order("date", { ascending: true }),
         supabase
           .from("places")
-          .select("*")
+          .select("id, trip_id, category, name, address, latitude, longitude, rating, image_urls, url, memo, added_by, created_at, google_place_id")
           .eq("trip_id", tripId)
           .order("created_at", { ascending: true }),
       ]);
@@ -46,8 +46,12 @@ export function useScheduleData(tripId: string) {
         })
       );
 
+      const tripData = tripResult.data as Trip;
+      // trip 캐시를 useTrip과 공유
+      queryClient.setQueryData(["trip", tripId], tripData);
+
       return {
-        trip: tripResult.data as Trip,
+        trip: tripData,
         schedules,
         places: (placesResult.data as Place[]) ?? [],
       };

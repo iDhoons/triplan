@@ -123,8 +123,8 @@ function ComparePage() {
     setLoading(true);
 
     const [placesRes, votesRes] = await Promise.all([
-      supabase.from("places").select("*").in("id", ids),
-      supabase.from("place_votes").select("*").in("place_id", ids),
+      supabase.from("places").select("id, name, category, address, latitude, longitude, rating, price_per_night, estimated_duration, image_urls, memo, google_place_id").in("id", ids),
+      supabase.from("place_votes").select("place_id, vote_type, user_id").in("place_id", ids),
     ]);
 
     if (placesRes.data) {

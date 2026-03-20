@@ -51,7 +51,7 @@ export default function JoinPage() {
     // Fetch trip by invite code
     const { data: tripData } = await supabase
       .from("trips")
-      .select("*")
+      .select("id, title, destination, start_date, end_date")
       .eq("invite_code", inviteCode)
       .maybeSingle();
 

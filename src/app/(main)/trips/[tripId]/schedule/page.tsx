@@ -22,6 +22,7 @@ import { ListOrdered, RouteIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import dynamic from "next/dynamic";
 import { PlannerView } from "@/components/schedule/planner-view";
 import { PlaceSidebar } from "@/components/schedule/place-sidebar";
 import {
@@ -29,7 +30,18 @@ import {
 } from "@/components/schedule/schedule-item-form";
 import { DayPickerSheet } from "@/components/schedule/day-picker-sheet";
 import { UnscheduledFAB } from "@/components/schedule/unscheduled-fab";
-import { RouteMap } from "@/components/maps/route-map";
+
+const RouteMap = dynamic(
+  () => import("@/components/maps/route-map").then((mod) => mod.RouteMap),
+  {
+    loading: () => (
+      <div className="h-[520px] w-full rounded-lg bg-muted animate-pulse flex items-center justify-center">
+        <RouteIcon className="size-8 text-muted-foreground/40" />
+      </div>
+    ),
+    ssr: false,
+  }
+);
 import { useScheduleData } from "@/hooks/use-schedule-data";
 import { useScheduleActions } from "@/hooks/use-schedule-actions";
 import type { Schedule, ScheduleItem, Place } from "@/types/database";

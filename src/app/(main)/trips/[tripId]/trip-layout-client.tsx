@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams } from "next/navigation";
 import dynamic from "next/dynamic";
-import { createClient } from "@/lib/supabase/client";
-import type { Trip } from "@/types/database";
+import { useTrip, useInvalidateTrip } from "@/hooks/use-trip";
 import { RealtimeProvider } from "@/components/realtime/realtime-provider";
 import { ActivityToast } from "@/components/realtime/activity-toast";
 import { TripHeader } from "@/components/trip/trip-header";
@@ -24,21 +23,9 @@ export default function TripLayoutClient({
 }) {
   const params = useParams();
   const tripId = params.tripId as string;
-  const [trip, setTrip] = useState<Trip | null>(null);
+  const { data: trip = null } = useTrip(tripId);
+  const { setData } = useInvalidateTrip();
   const [editOpen, setEditOpen] = useState(false);
-  const supabase = createClient();
-
-  useEffect(() => {
-    async function fetchTrip() {
-      const { data } = await supabase
-        .from("trips")
-        .select("*")
-        .eq("id", tripId)
-        .single();
-      if (data) setTrip(data as Trip);
-    }
-    fetchTrip();
-  }, [tripId]);
 
   return (
     <RealtimeProvider tripId={tripId}>
@@ -54,7 +41,7 @@ export default function TripLayoutClient({
         trip={trip}
         open={editOpen}
         onOpenChange={setEditOpen}
-        onSaved={setTrip}
+        onSaved={(updated) => setData(tripId, updated)}
       />
     </RealtimeProvider>
   );

@@ -95,7 +95,7 @@ export default function PlaceDetailPage() {
         .order("created_at", { ascending: false }),
       supabase
         .from("schedules")
-        .select("*")
+        .select("id, trip_id, date")
         .eq("trip_id", tripId)
         .order("date"),
     ]);

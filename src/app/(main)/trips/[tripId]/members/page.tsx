@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/auth-store";
+import { useTrip, useInvalidateTrip } from "@/hooks/use-trip";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -44,8 +45,9 @@ export default function MembersPage() {
   const tripId = params.tripId as string;
   const { user } = useAuthStore();
   const supabase = createClient();
+  const { data: trip = null } = useTrip(tripId);
+  const { setData: setTripData } = useInvalidateTrip();
 
-  const [trip, setTrip] = useState<Trip | null>(null);
   const [members, setMembers] = useState<TripMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
@@ -58,27 +60,23 @@ export default function MembersPage() {
     (m) => m.user_id === user?.id && m.role === "admin"
   );
 
-  const fetchAll = useCallback(async () => {
+  const fetchMembers = useCallback(async () => {
     setLoading(true);
-    const [tripRes, membersRes] = await Promise.all([
-      supabase.from("trips").select("*").eq("id", tripId).single(),
-      supabase
-        .from("trip_members")
-        .select(
-          "*, profile:profiles(id, display_name, avatar_url, created_at)"
-        )
-        .eq("trip_id", tripId),
-    ]);
+    const { data } = await supabase
+      .from("trip_members")
+      .select(
+        "*, profile:profiles(id, display_name, avatar_url, created_at)"
+      )
+      .eq("trip_id", tripId);
 
-    if (tripRes.data) setTrip(tripRes.data as Trip);
-    if (membersRes.data) setMembers(membersRes.data as TripMember[]);
+    if (data) setMembers(data as TripMember[]);
     setLoading(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tripId]);
 
   useEffect(() => {
-    fetchAll();
-  }, [fetchAll]);
+    fetchMembers();
+  }, [fetchMembers]);
 
   function getInviteUrl() {
     if (!trip) return "";
@@ -123,7 +121,7 @@ export default function MembersPage() {
       toast.error("초대 코드 재생성에 실패했습니다.");
       return;
     }
-    setTrip({ ...trip, invite_code: newCode });
+    setTripData(tripId, { ...trip, invite_code: newCode });
     toast.success("초대 코드가 재생성되었습니다. 이전 링크는 더 이상 사용할 수 없어요.");
   }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useState } from "react";
+import { memo, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { useQueryClient } from "@tanstack/react-query";
@@ -259,7 +259,7 @@ export default function PlacesPage() {
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
   const [youtubePickerOpen, setYoutubePickerOpen] = useState(false);
 
-  async function handleDelete(place: Place) {
+  const handleDelete = useCallback(async (place: Place) => {
     const { error } = await supabase.from("places").delete().eq("id", place.id);
     if (error) {
       toast.error("삭제에 실패했습니다.");
@@ -293,15 +293,17 @@ export default function PlacesPage() {
       },
       duration: 5000,
     });
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tripId]);
 
-  function handleFormSuccess() {
+  const handleFormSuccess = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ["places", tripId] });
     setDialogOpen(false);
     setEditingPlace(null);
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tripId]);
 
-  function toggleSelect(id: string) {
+  const toggleSelect = useCallback((id: string) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) {
@@ -311,7 +313,16 @@ export default function PlacesPage() {
       }
       return next;
     });
-  }
+  }, []);
+
+  const handleEdit = useCallback((p: Place) => {
+    setEditingPlace(p);
+    setDialogOpen(true);
+  }, []);
+
+  const handleOpenDetail = useCallback((p: Place) => {
+    setSelectedPlace(p);
+  }, []);
 
   function goCompare() {
     if (selectedIds.size < 2) return;
@@ -507,12 +518,9 @@ export default function PlacesPage() {
                     selected={selectedIds.has(place.id)}
                     compareMode={compareMode}
                     onToggleSelect={toggleSelect}
-                    onEdit={(p) => {
-                      setEditingPlace(p);
-                      setDialogOpen(true);
-                    }}
+                    onEdit={handleEdit}
                     onDelete={handleDelete}
-                    onOpenDetail={(p) => setSelectedPlace(p)}
+                    onOpenDetail={handleOpenDetail}
                   />
                 ))}
               </div>

@@ -27,41 +27,41 @@ export const POST = withAuth(async (request, { supabase, user }) => {
 
   const { trip_id, message, type, history } = parsed.data;
 
-  // 권한 확인: 해당 여행의 멤버인지 체크
-  const { data: membership } = await supabase
-    .from("trip_members")
-    .select("role")
-    .eq("trip_id", trip_id)
-    .eq("user_id", user.id)
-    .single();
+  // 권한 확인 + 여행/일정/장소 데이터를 병렬 조회
+  const [membershipRes, tripRes, schedulesRes, placesRes] = await Promise.all([
+    supabase
+      .from("trip_members")
+      .select("role")
+      .eq("trip_id", trip_id)
+      .eq("user_id", user.id)
+      .single(),
+    supabase
+      .from("trips")
+      .select("id, title, destination, start_date, end_date, style")
+      .eq("id", trip_id)
+      .single(),
+    supabase
+      .from("schedules")
+      .select("*, schedule_items(*, place:places(*))")
+      .eq("trip_id", trip_id)
+      .order("date"),
+    supabase
+      .from("places")
+      .select("id, name, category, address, latitude, longitude, rating, memo")
+      .eq("trip_id", trip_id),
+  ]);
 
-  if (!membership) {
+  if (!membershipRes.data) {
     return NextResponse.json({ error: "해당 여행에 접근할 수 없습니다" }, { status: 403 });
   }
 
-  // 여행 정보 조회
-  const { data: trip } = await supabase
-    .from("trips")
-    .select("*")
-    .eq("id", trip_id)
-    .single();
-
+  const trip = tripRes.data;
   if (!trip) {
     return NextResponse.json({ error: "Trip not found" }, { status: 404 });
   }
 
-  // 일정 정보 조회 (장소 정보 포함)
-  const { data: schedules } = await supabase
-    .from("schedules")
-    .select("*, schedule_items(*, place:places(*))")
-    .eq("trip_id", trip_id)
-    .order("date");
-
-  // 장소 정보 조회
-  const { data: places } = await supabase
-    .from("places")
-    .select("*")
-    .eq("trip_id", trip_id);
+  const schedules = schedulesRes.data;
+  const places = placesRes.data;
 
   // 컨텍스트 & 프롬프트 생성
   const context = buildTripContext(trip, places, schedules);

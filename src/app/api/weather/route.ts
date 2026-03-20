@@ -29,14 +29,29 @@ export const GET = withAuth(async (request, { supabase }) => {
     );
   }
 
-  // 3. 여행 정보 조회
-  const { data: trip, error: tripError } = await supabase
-    .from("trips")
-    .select("id, start_date, end_date, destination")
-    .eq("id", tripId)
-    .single();
+  // 3. 여행 정보 + 일정 + 대표 좌표를 병렬 조회
+  const [tripRes, schedulesRes, placesRes] = await Promise.all([
+    supabase
+      .from("trips")
+      .select("id, start_date, end_date, destination")
+      .eq("id", tripId)
+      .single(),
+    supabase
+      .from("schedules")
+      .select("id, date, weather_summary, weather_fetched_at")
+      .eq("trip_id", tripId)
+      .order("date", { ascending: true }),
+    supabase
+      .from("places")
+      .select("latitude, longitude")
+      .eq("trip_id", tripId)
+      .not("latitude", "is", null)
+      .not("longitude", "is", null)
+      .limit(1),
+  ]);
 
-  if (tripError || !trip) {
+  const trip = tripRes.data;
+  if (tripRes.error || !trip) {
     return NextResponse.json(
       { error: "여행을 찾을 수 없습니다" },
       { status: 404 }
@@ -60,12 +75,7 @@ export const GET = withAuth(async (request, { supabase }) => {
   }
 
   // 5. 캐시 확인 — schedules의 weather_fetched_at
-  const { data: schedules } = await supabase
-    .from("schedules")
-    .select("id, date, weather_summary, weather_fetched_at")
-    .eq("trip_id", tripId)
-    .order("date", { ascending: true });
-
+  const schedules = schedulesRes.data;
   if (!schedules || schedules.length === 0) {
     return NextResponse.json({
       status: "no_schedules",
@@ -74,13 +84,11 @@ export const GET = withAuth(async (request, { supabase }) => {
     });
   }
 
-  // 캐시 유효한지 확인 (첫 번째 schedule 기준)
   const firstSchedule = schedules[0];
   if (firstSchedule.weather_fetched_at) {
     const fetchedAt = new Date(firstSchedule.weather_fetched_at).getTime();
     const ttl = getTTLMs(daysUntilStart);
     if (Date.now() - fetchedAt < ttl) {
-      // 캐시 유효 → 기존 데이터 반환
       return NextResponse.json({
         status: "cached",
         forecasts: schedules.map((s) => ({
@@ -91,14 +99,8 @@ export const GET = withAuth(async (request, { supabase }) => {
     }
   }
 
-  // 6. 대표 좌표 추출 (등록된 장소 중 좌표 있는 첫 번째)
-  const { data: places } = await supabase
-    .from("places")
-    .select("latitude, longitude")
-    .eq("trip_id", tripId)
-    .not("latitude", "is", null)
-    .not("longitude", "is", null)
-    .limit(1);
+  // 6. 대표 좌표 추출 (병렬 조회 결과 사용)
+  const places = placesRes.data;
 
   let lat: number | null = null;
   let lng: number | null = null;

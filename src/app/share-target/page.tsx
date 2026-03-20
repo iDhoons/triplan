@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/auth-store";
-import type { Trip } from "@/types/database";
+type TripSummary = { id: string; title: string; destination: string; start_date: string; end_date: string; updated_at: string };
 
 const STICKY_CONTEXT_KEY = "share-target-last-trip";
 const STICKY_TIMEOUT_MS = 30 * 60 * 1000; // 30분
@@ -64,7 +64,7 @@ function ShareTargetContent() {
     searchParams.get("title") ||
     "";
 
-  const [trips, setTrips] = useState<Trip[]>([]);
+  const [trips, setTrips] = useState<TripSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savedPlaceName, setSavedPlaceName] = useState<string | null>(null);
@@ -95,7 +95,7 @@ function ShareTargetContent() {
       const tripIds = memberships.map((m) => m.trip_id);
       const { data: tripsData } = await supabase
         .from("trips")
-        .select("*")
+        .select("id, title, destination, start_date, end_date, updated_at")
         .in("id", tripIds)
         .order("updated_at", { ascending: false });
 
@@ -127,7 +127,7 @@ function ShareTargetContent() {
   }, [loading, trips, sharedInput]);
 
   const handleSave = useCallback(
-    async (trip: Trip) => {
+    async (trip: TripSummary) => {
       if (!sharedInput || saving) return;
       setSaving(true);
       setError(null);
