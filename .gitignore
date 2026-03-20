@@ -49,4 +49,6 @@ screen_*.png
 
 # Agent skills (npx skills로 설치, 로컬 전용)
 .agents/
+.agent/
+.kiro/
 skills-lock.json
