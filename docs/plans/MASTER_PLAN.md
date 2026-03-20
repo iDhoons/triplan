@@ -3,7 +3,7 @@ title: Travel Planner 마스터 플랜
 version: v1.0
 status: active
 created: 2026-03-11
-updated: 2026-03-18
+updated: 2026-03-20
 owner: daehoonkim
 ---
 
@@ -108,8 +108,8 @@ owner: daehoonkim
 > 빠진 기능 채우기. "모든 기본 동작이 가능한 상태" 달성.
 
 - [ ] **N-01** 여행 삭제 (2~3시간)
-- [ ] **N-02** 장소 수정 (2~3시간)
-- [ ] **N-03** 멤버 역할 변경/제거 (3~4시간)
+- [x] **N-02** 장소 수정 (완료 2026-03-19)
+- [x] **N-03** 멤버 역할 변경/제거 (완료 2026-03-19)
 - [ ] **N-05** 장소 카테고리 필터 (1~2시간)
 - [ ] **N-06** AI 결과 → 일정 반영 (1~2일)
 
@@ -178,6 +178,13 @@ owner: daehoonkim
 
 | 완료일 | 기능 | 비고 |
 | ------ | ---- | ---- |
+| 03-20 | AppShell 성능 최적화 | getUser→getSession, loading gate 제거 |
+| 03-20 | fn_log_activity 타입 버그 수정 | target_id::text → uuid 타입 불일치 해결 |
+| 03-19 | 활동 자동 기록 (activity_logs) | DB 트리거로 CUD 자동 로깅 |
+| 03-19 | 알림 시스템 (notifications) | activity → 멤버별 알림 자동 생성 |
+| 03-19 | 게스트 모드 (초대 미리보기) | 비회원 초대 링크 → 미리보기 |
+| 03-19 | 장소 수정 (N-02) | place-form 재활용 |
+| 03-19 | 멤버 역할 변경/제거 (N-03) | admin 전용 UI |
 | 03-18 | PlaceCard Next/Image 전환 | Card plain variant 추가 |
 | 03-18 | 체크리스트 인라인 빠른 추가 | 카테고리별 '+' 버튼 |
 | 03-17 | 글로벌 체크리스트 페이지 | BottomNav 탭 추가 |
