@@ -67,7 +67,6 @@ export function useScheduleActions({
         toast.success("일정이 추가되었습니다.");
       }
 
-      await invalidateSchedules();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await computeTravelInfoForSchedule(supabase as any, targetScheduleId);
       await invalidateSchedules();
@@ -192,7 +191,6 @@ export function useScheduleActions({
       });
       if (error) throw error;
       toast.success(`"${place.name}" 을(를) 일정에 추가했습니다.`);
-      await invalidateSchedules();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await computeTravelInfoForSchedule(supabase as any, scheduleId);
       await invalidateSchedules();
@@ -259,7 +257,6 @@ export function useScheduleActions({
       }
 
       toast.success("일정을 이동했습니다.");
-      await invalidateSchedules();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await Promise.all([
         computeTravelInfoForSchedule(supabase as any, fromScheduleId),

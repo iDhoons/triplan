@@ -151,7 +151,7 @@ BEGIN
   -- 액션이 결정된 경우에만 로그 삽입
   IF v_action IS NOT NULL AND v_trip_id IS NOT NULL THEN
     INSERT INTO activity_logs (trip_id, user_id, action, target_type, target_id, metadata)
-    VALUES (v_trip_id, v_user_id, v_action, v_target_type, v_target_id::text, v_metadata);
+    VALUES (v_trip_id, v_user_id, v_action, v_target_type, v_target_id, v_metadata);
   END IF;
 
   RETURN COALESCE(NEW, OLD);
