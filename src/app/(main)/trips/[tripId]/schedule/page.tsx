@@ -276,10 +276,19 @@ export default function SchedulePage() {
       if (overId.startsWith("schedule-")) {
         const scheduleId = overId.replace("schedule-", "");
         const schedule = schedules.find((s) => s.id === scheduleId);
-        newIndicator = {
-          scheduleId,
-          insertIndex: schedule?.items?.length ?? 0,
-        };
+        const itemCount = schedule?.items?.length ?? 0;
+
+        if (itemCount === 0) {
+          newIndicator = { scheduleId, insertIndex: 0 };
+        } else {
+          const pointerY =
+            (activatorEvent as PointerEvent).clientY + delta.y;
+          const midpoint = over.rect.top + over.rect.height / 2;
+          newIndicator = {
+            scheduleId,
+            insertIndex: pointerY < midpoint ? 0 : itemCount,
+          };
+        }
       } else {
         for (const s of schedules) {
           const itemIdx = (s.items ?? []).findIndex((i) => i.id === overId);
