@@ -37,7 +37,7 @@ export const POST = withAuth(async (request, { supabase, user }) => {
       .single(),
     supabase
       .from("trips")
-      .select("id, title, destination, start_date, end_date, style")
+      .select("id, title, destination, start_date, end_date")
       .eq("id", trip_id)
       .single(),
     supabase

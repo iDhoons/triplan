@@ -20,7 +20,7 @@ export function useScheduleData(tripId: string) {
     queryKey: ["schedule-data", tripId],
     queryFn: async () => {
       const [tripResult, schedulesResult, placesResult] = await Promise.all([
-        supabase.from("trips").select("id, title, destination, start_date, end_date, style, cover_image_url, invite_code, created_by, created_at, updated_at").eq("id", tripId).single(),
+        supabase.from("trips").select("id, title, destination, start_date, end_date, cover_image_url, invite_code, created_by, created_at, updated_at").eq("id", tripId).single(),
         supabase
           .from("schedules")
           .select(`*, items:schedule_items(*, place:places(*))`)

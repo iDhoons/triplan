@@ -15,7 +15,7 @@ export function useTrip(tripId: string) {
       const supabase = createClient();
       const { data, error } = await supabase
         .from("trips")
-        .select("id, title, destination, start_date, end_date, style, cover_image_url, invite_code, created_by, created_at, updated_at")
+        .select("id, title, destination, start_date, end_date, cover_image_url, invite_code, created_by, created_at, updated_at")
         .eq("id", tripId)
         .single();
       if (error) throw error;
