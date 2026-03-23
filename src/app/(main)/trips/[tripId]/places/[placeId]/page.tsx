@@ -41,8 +41,8 @@ import {
 } from "@/components/ui/select";
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/auth-store";
+import dynamic from "next/dynamic";
 import { VoteButton } from "@/components/places/vote-button";
-import { PlaceMap } from "@/components/maps/place-map";
 import type {
   Place,
   PlaceCategory,
@@ -50,6 +50,14 @@ import type {
   Schedule,
   Profile,
 } from "@/types/database";
+
+const PlaceMap = dynamic(
+  () => import("@/components/maps/place-map").then((mod) => mod.PlaceMap),
+  {
+    ssr: false,
+    loading: () => <Skeleton className="h-64 w-full rounded-lg" />,
+  }
+);
 
 const CATEGORY_LABELS: Record<PlaceCategory, string> = {
   accommodation: "숙소",

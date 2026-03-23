@@ -39,8 +39,10 @@ const nextConfig: NextConfig = {
   // Turbopack과 webpack 플러그인 충돌 억제
   // serwist는 webpack 기반이므로 turbopack 설정을 빈 객체로 명시
   turbopack: {},
+  reactCompiler: true,
   experimental: {
     optimizePackageImports: ["lucide-react", "date-fns"],
+    viewTransition: true,
   },
   images: {
     remotePatterns: [
