@@ -52,3 +52,6 @@ screen_*.png
 .agent/
 .kiro/
 skills-lock.json
+
+# Sentry Config File
+.env.sentry-build-plugin
