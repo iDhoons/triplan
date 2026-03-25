@@ -1,12 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import type { Trip } from "@/types/database";
+import { queryKeys } from "./query-keys";
 
-export const tripsQueryKey = ["trips"] as const;
+// Backward compatibility: dashboard/page.tsx 등에서 직접 사용
+export { tripsQueryKey } from "./query-keys";
 
 export function useTrips() {
-  return useQuery({
-    queryKey: tripsQueryKey,
+  return useQuery<Trip[]>({
+    queryKey: queryKeys.trips.all,
     queryFn: async () => {
       const supabase = createClient();
       const { data, error } = await supabase

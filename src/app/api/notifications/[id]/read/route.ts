@@ -1,11 +1,12 @@
 import { withAuth } from "@/lib/api/guards";
 import { NextResponse } from "next/server";
+import { errorResponse } from "@/lib/api/error-response";
 
 // PATCH /api/notifications/[id]/read — 단건 읽음 처리
 export const PATCH = withAuth(async (request, { supabase, user }) => {
   const id = request.url.match(/\/notifications\/([^/]+)\/read/)?.[1];
   if (!id) {
-    return NextResponse.json({ error: "Missing id" }, { status: 400 });
+    return errorResponse("BAD_REQUEST", "Missing id");
   }
 
   const { data, error } = await supabase
@@ -17,7 +18,7 @@ export const PATCH = withAuth(async (request, { supabase, user }) => {
     .single();
 
   if (error || !data) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return errorResponse("NOT_FOUND", "Notification not found");
   }
 
   return NextResponse.json(data);

@@ -55,3 +55,10 @@ skills-lock.json
 
 # Sentry Config File
 .env.sentry-build-plugin
+
+# Tool-generated directories
+.serena/
+.worktrees/
+
+# Generated docs at root
+travel-planner-*.md

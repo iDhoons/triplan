@@ -3,14 +3,15 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import type { Trip } from "@/types/database";
+import { queryKeys } from "./query-keys";
 
 /**
  * Trip 데이터를 React Query로 캐싱하는 공유 훅.
  * trip-layout-client, members, schedule 등 여러 곳에서 같은 캐시를 공유한다.
  */
 export function useTrip(tripId: string) {
-  return useQuery({
-    queryKey: ["trip", tripId],
+  return useQuery<Trip>({
+    queryKey: queryKeys.trips.byId(tripId),
     queryFn: async () => {
       const supabase = createClient();
       const { data, error } = await supabase
@@ -19,7 +20,7 @@ export function useTrip(tripId: string) {
         .eq("id", tripId)
         .single();
       if (error) throw error;
-      return data as Trip;
+      return data;
     },
     enabled: !!tripId,
   });
@@ -30,8 +31,8 @@ export function useInvalidateTrip() {
   const queryClient = useQueryClient();
   return {
     invalidate: (tripId: string) =>
-      queryClient.invalidateQueries({ queryKey: ["trip", tripId] }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.trips.byId(tripId) }),
     setData: (tripId: string, trip: Trip) =>
-      queryClient.setQueryData(["trip", tripId], trip),
+      queryClient.setQueryData(queryKeys.trips.byId(tripId), trip),
   };
 }

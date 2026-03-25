@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import type { User } from "@supabase/supabase-js";
+import { errorResponse } from "@/lib/api/error-response";
 
 // ─── Types ──────────────────────────────────────────────
 
@@ -66,7 +67,7 @@ export function withAuth(handler: AuthenticatedHandler) {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return errorResponse("UNAUTHORIZED", "Unauthorized");
     }
 
     return handler(request, { supabase, user });
@@ -89,19 +90,13 @@ export function withTripMember(
       try {
         body = await request.clone().json();
       } catch {
-        return NextResponse.json(
-          { error: "Invalid JSON body" },
-          { status: 400 }
-        );
+        return errorResponse("BAD_REQUEST", "Invalid JSON body");
       }
     }
 
     const tripId = getTripId(request, body);
     if (!tripId) {
-      return NextResponse.json(
-        { error: "trip_id가 필요합니다" },
-        { status: 400 }
-      );
+      return errorResponse("BAD_REQUEST", "trip_id is required");
     }
 
     const { data: membership } = await supabase
@@ -112,10 +107,7 @@ export function withTripMember(
       .single();
 
     if (!membership) {
-      return NextResponse.json(
-        { error: "해당 여행에 접근할 수 없습니다" },
-        { status: 403 }
-      );
+      return errorResponse("FORBIDDEN", "Access denied");
     }
 
     return handler(request, {

@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import { checkRateLimit } from "@/lib/api/guards";
+import { errorResponse } from "@/lib/api/error-response";
 
 const INVITE_CODE_PATTERN = /^[a-zA-Z0-9_-]{5,64}$/;
 
@@ -12,14 +13,14 @@ export async function GET(
   const { inviteCode } = await params;
 
   if (!inviteCode || !INVITE_CODE_PATTERN.test(inviteCode)) {
-    return NextResponse.json({ error: "Invalid invite code" }, { status: 400 });
+    return errorResponse("BAD_REQUEST", "Invalid invite code");
   }
 
   // IP 기반 rate limiting (열거 공격 방어)
   const forwarded = _request.headers.get("x-forwarded-for");
   const ip = forwarded?.split(",")[0]?.trim() ?? "unknown";
   if (!checkRateLimit("guest-invite", ip, { windowMs: 60_000, maxRequests: 15 })) {
-    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    return errorResponse("RATE_LIMITED", "Too many requests");
   }
 
   // Service role 클라이언트 (RLS 우회 — 반환 필드 제한 필수)
@@ -36,7 +37,7 @@ export async function GET(
     .single();
 
   if (tripError || !trip) {
-    return NextResponse.json({ error: "Trip not found" }, { status: 404 });
+    return errorResponse("NOT_FOUND", "Trip not found");
   }
 
   // 장소 목록 (제한된 필드만)

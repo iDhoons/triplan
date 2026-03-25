@@ -1,8 +1,8 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { withAuth } from "@/lib/api/guards";
-import { checkRateLimit } from "@/lib/api/guards";
+import { withAuth, checkRateLimit } from "@/lib/api/guards";
+import { errorResponse } from "@/lib/api/error-response";
 import { classifyByKeyword } from "@/lib/checklist/classify";
 
 const schema = z.object({
@@ -23,22 +23,19 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
 export const POST = withAuth(async (request, { user }) => {
   if (!checkRateLimit("checklist-classify", user.id, { maxRequests: 30 })) {
-    return NextResponse.json(
-      { error: "Too many requests" },
-      { status: 429 }
-    );
+    return errorResponse("RATE_LIMITED", "Too many requests");
   }
 
   let rawBody: unknown;
   try {
     rawBody = await request.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    return errorResponse("BAD_REQUEST", "Invalid JSON");
   }
 
   const parsed = schema.safeParse(rawBody);
   if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+    return errorResponse("BAD_REQUEST", "Invalid input");
   }
 
   const { title } = parsed.data;

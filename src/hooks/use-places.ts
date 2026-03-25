@@ -1,10 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import type { Place } from "@/types/database";
+import { queryKeys } from "./query-keys";
 
 export function usePlaces(tripId: string) {
-  return useQuery({
-    queryKey: ["places", tripId],
+  return useQuery<Place[]>({
+    queryKey: queryKeys.places.byTrip(tripId),
     queryFn: async () => {
       const supabase = createClient();
       const { data, error } = await supabase

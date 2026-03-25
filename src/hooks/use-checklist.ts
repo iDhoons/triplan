@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/auth-store";
+import { queryKeys } from "./query-keys";
 import type {
   ChecklistItem,
   ChecklistLog,
@@ -10,8 +11,8 @@ import type {
 } from "@/types/database";
 
 export function useChecklistItems(tripId: string) {
-  return useQuery({
-    queryKey: ["checklist", tripId],
+  return useQuery<ChecklistItem[]>({
+    queryKey: queryKeys.checklist.byTrip(tripId),
     queryFn: async () => {
       const supabase = createClient();
       const { data, error } = await supabase
@@ -23,7 +24,7 @@ export function useChecklistItems(tripId: string) {
         .order("category")
         .order("position");
       if (error) throw error;
-      return (data as ChecklistItem[]) ?? [];
+      return data ?? [];
     },
     enabled: !!tripId,
   });
@@ -69,7 +70,7 @@ interface UpdateItemPayload {
 export function useChecklistMutations(tripId: string) {
   const queryClient = useQueryClient();
   const user = useAuthStore((s) => s.user);
-  const queryKey = ["checklist", tripId];
+  const queryKey = queryKeys.checklist.byTrip(tripId);
 
   const addItem = useMutation({
     mutationFn: async (payload: AddItemPayload) => {
@@ -148,7 +149,7 @@ export function useChecklistMutations(tripId: string) {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey });
-      queryClient.invalidateQueries({ queryKey: ["checklist_global"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.checklist.global });
     },
   });
 
