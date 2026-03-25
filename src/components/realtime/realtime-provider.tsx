@@ -153,9 +153,19 @@ function handlePlacesChange(
 // VoteButton manages its own local state via direct Supabase fetch.
 // ---------------------------------------------------------------------------
 function handlePlaceVotesChange(
+  payload: PostgresChangePayload<{ place_id: string } & Record<string, unknown>>,
   queryClient: QueryClient,
   tripId: string,
 ) {
+  // 현재 trip의 place인지 확인 — 다른 trip 이벤트는 무시
+  const record = (payload.new ?? payload.old) as { place_id?: string };
+  if (record.place_id) {
+    type PlaceData = { id: string }[];
+    const places = queryClient.getQueryData<PlaceData>(["places", tripId]);
+    if (places && !places.some((p) => p.id === record.place_id)) {
+      return; // 다른 trip의 vote 이벤트 → skip
+    }
+  }
   queryClient.invalidateQueries({ queryKey: ["place_votes", tripId] });
 }
 
@@ -169,6 +179,15 @@ function handleScheduleItemsChange(
 ) {
   const schedulesKey = ["schedules", tripId];
   const scheduleDataKey = ["schedule-data", tripId];
+
+  // 현재 trip의 schedule인지 확인 — 다른 trip 이벤트는 무시
+  const record = (payload.new ?? payload.old) as Partial<ScheduleItem>;
+  if (record.schedule_id) {
+    const schedules = queryClient.getQueryData<Schedule[]>(schedulesKey);
+    if (schedules && !schedules.some((s) => s.id === record.schedule_id)) {
+      return; // 다른 trip의 schedule_item 이벤트 → skip
+    }
+  }
 
   switch (payload.eventType) {
     case "INSERT": {
@@ -310,9 +329,13 @@ export function RealtimeProvider({ tripId, children }: RealtimeProviderProps) {
   const user = useAuthStore((s) => s.user);
   const channelRef = useRef<RealtimeChannel | null>(null);
 
-  // Stable ref so callback closures always have the latest userId
+  // Stable refs so callback closures always have the latest user data
   const userIdRef = useRef(user?.id);
-  userIdRef.current = user?.id;
+  const userRef = useRef(user);
+  useEffect(() => {
+    userIdRef.current = user?.id;
+    userRef.current = user;
+  }, [user]);
 
   const setupChannel = useCallback(() => {
     if (!tripId) return;
@@ -352,8 +375,12 @@ export function RealtimeProvider({ tripId, children }: RealtimeProviderProps) {
           schema: "public",
           table: "place_votes",
         },
-        () => {
-          handlePlaceVotesChange(queryClient, tripId);
+        (payload) => {
+          handlePlaceVotesChange(
+            payload as PostgresChangePayload<{ place_id: string } & Record<string, unknown>>,
+            queryClient,
+            tripId,
+          );
         },
       )
       // ---------------------------------------------------------------
@@ -479,11 +506,12 @@ export function RealtimeProvider({ tripId, children }: RealtimeProviderProps) {
         );
       })
       .subscribe(async (status) => {
-        if (status === "SUBSCRIBED" && user) {
+        const currentUser = userRef.current;
+        if (status === "SUBSCRIBED" && currentUser) {
           await channel.track({
-            userId: user.id,
-            displayName: user.display_name,
-            avatarUrl: user.avatar_url,
+            userId: currentUser.id,
+            displayName: currentUser.display_name,
+            avatarUrl: currentUser.avatar_url,
             onlineAt: new Date().toISOString(),
           });
         }
@@ -495,7 +523,7 @@ export function RealtimeProvider({ tripId, children }: RealtimeProviderProps) {
       channel.unsubscribe();
       channelRef.current = null;
     };
-  }, [tripId, user, queryClient]);
+  }, [tripId, queryClient]);
 
   useEffect(() => {
     return setupChannel();

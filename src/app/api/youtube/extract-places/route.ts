@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { checkRateLimit, withAuth } from "@/lib/api/guards";
+import { errorResponse } from "@/lib/api/error-response";
 import {
   isYouTubeUrl,
   isShortsUrl,
@@ -16,16 +17,13 @@ import {
 export const POST = withAuth(async (request, { supabase, user }) => {
   // 1. 버스트 방지 (in-memory)
   if (!checkRateLimit("youtube-burst", user.id, { windowMs: 60_000, maxRequests: 3 })) {
-    return NextResponse.json(
-      { error: "분석 요청이 너무 많습니다. 잠시 후 다시 시도해주세요." },
-      { status: 429 }
-    );
+    return errorResponse("RATE_LIMITED", "분석 요청이 너무 많습니다. 잠시 후 다시 시도해주세요.");
   }
 
   // 2. DB 기반 Rate Limit (분/시/일 — 병렬 조회)
   const rateLimitError = await checkDbRateLimit(supabase, user.id);
   if (rateLimitError) {
-    return NextResponse.json({ error: rateLimitError }, { status: 429 });
+    return errorResponse("RATE_LIMITED", rateLimitError);
   }
 
   // 3. 입력 파싱
@@ -33,28 +31,22 @@ export const POST = withAuth(async (request, { supabase, user }) => {
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    return errorResponse("BAD_REQUEST", "Invalid JSON body");
   }
 
   const url = body.url;
   if (typeof url !== "string" || !url.trim()) {
-    return NextResponse.json({ error: "url이 필요합니다" }, { status: 400 });
+    return errorResponse("BAD_REQUEST", "url이 필요합니다");
   }
 
   // 4. URL 검증
   if (!isYouTubeUrl(url)) {
-    return NextResponse.json(
-      { error: "YouTube URL만 지원합니다 (youtube.com, youtu.be)" },
-      { status: 400 }
-    );
+    return errorResponse("BAD_REQUEST", "YouTube URL만 지원합니다 (youtube.com, youtu.be)");
   }
 
   const videoId = extractVideoId(url);
   if (!videoId) {
-    return NextResponse.json(
-      { error: "유효한 YouTube 영상 URL이 아닙니다" },
-      { status: 400 }
-    );
+    return errorResponse("BAD_REQUEST", "유효한 YouTube 영상 URL이 아닙니다");
   }
 
   const isShorts = isShortsUrl(url);
@@ -111,10 +103,7 @@ export const POST = withAuth(async (request, { supabase, user }) => {
     });
   } catch (err) {
     console.error("[youtube/extract-places] Error:", err);
-    return NextResponse.json(
-      { error: "분석 중 오류가 발생했습니다. 다시 시도해주세요." },
-      { status: 500 }
-    );
+    return errorResponse("INTERNAL_ERROR", "분석 중 오류가 발생했습니다. 다시 시도해주세요.");
   }
 });
 

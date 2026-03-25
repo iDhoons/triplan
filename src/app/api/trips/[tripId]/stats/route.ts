@@ -1,11 +1,11 @@
 import { withTripMember } from "@/lib/api/guards";
 import { NextResponse } from "next/server";
+import { errorResponse } from "@/lib/api/error-response";
 
 // GET /api/trips/[tripId]/stats — 멤버별 기여도 집계
 export const GET = withTripMember(
   (request) => request.url.match(/\/trips\/([^/]+)\/stats/)?.[1] ?? null,
-  async (_request, { supabase }) => {
-    const tripId = _request.url.match(/\/trips\/([^/]+)\/stats/)?.[1] ?? "";
+  async (_request, { supabase, tripId }) => {
 
     // activity_logs에서 멤버별 액션 카운트 집계
     const { data: logs, error } = await supabase
@@ -14,7 +14,7 @@ export const GET = withTripMember(
       .eq("trip_id", tripId);
 
     if (error) {
-      return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+      return errorResponse("INTERNAL_ERROR", "Internal server error");
     }
 
     // 멤버 프로필 조회

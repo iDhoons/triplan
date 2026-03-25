@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { fetchWeatherForDateRange } from "@/lib/weather/client";
-import { withAuth } from "@/lib/api/guards";
+import { withTripMember } from "@/lib/api/guards";
+import { errorResponse } from "@/lib/api/error-response";
 
 /**
  * GET /api/weather?tripId=xxx
@@ -18,16 +19,10 @@ function getTTLMs(daysUntil: number): number {
   return 7 * 24 * 60 * 60 * 1000; // 7일
 }
 
-export const GET = withAuth(async (request, { supabase }) => {
-  // 1. 입력 파싱
-  const { searchParams } = new URL(request.url);
-  const tripId = searchParams.get("tripId");
-  if (!tripId) {
-    return NextResponse.json(
-      { error: "tripId 파라미터가 필요합니다" },
-      { status: 400 }
-    );
-  }
+export const GET = withTripMember(
+  (request) => new URL(request.url).searchParams.get("tripId"),
+  async (request, { supabase }) => {
+  const tripId = new URL(request.url).searchParams.get("tripId")!;
 
   // 3. 여행 정보 + 일정 + 대표 좌표를 병렬 조회
   const [tripRes, schedulesRes, placesRes] = await Promise.all([
@@ -52,10 +47,7 @@ export const GET = withAuth(async (request, { supabase }) => {
 
   const trip = tripRes.data;
   if (tripRes.error || !trip) {
-    return NextResponse.json(
-      { error: "여행을 찾을 수 없습니다" },
-      { status: 404 }
-    );
+    return errorResponse("NOT_FOUND", "여행을 찾을 수 없습니다");
   }
 
   // 4. 예보 범위 확인 (16일 초과면 skip)
@@ -204,9 +196,7 @@ export const GET = withAuth(async (request, { supabase }) => {
     });
   } catch (err) {
     console.error("[weather]", err);
-    return NextResponse.json(
-      { error: "날씨 정보를 가져오는데 실패했습니다" },
-      { status: 500 }
-    );
+    return errorResponse("INTERNAL_ERROR", "날씨 정보를 가져오는데 실패했습니다");
   }
-});
+},
+);

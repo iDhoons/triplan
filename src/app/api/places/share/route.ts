@@ -3,6 +3,7 @@ import { enrichFromUrl, enrichFromText, resolveInput } from "@/lib/google-places
 import { NextResponse } from "next/server";
 import { after } from "next/server";
 import { withAuth, checkRateLimit } from "@/lib/api/guards";
+import { errorResponse } from "@/lib/api/error-response";
 
 /**
  * POST /api/places/share
@@ -12,27 +13,21 @@ import { withAuth, checkRateLimit } from "@/lib/api/guards";
 export const POST = withAuth(async (request, { supabase, user }) => {
   // Rate limiting (guards.ts 공통 모듈 사용)
   if (!checkRateLimit("places-share", user.id)) {
-    return NextResponse.json(
-      { error: "요청이 너무 많습니다. 잠시 후 다시 시도해주세요." },
-      { status: 429 }
-    );
+    return errorResponse("RATE_LIMITED", "요청이 너무 많습니다. 잠시 후 다시 시도해주세요.");
   }
 
   let body: { url?: unknown; input?: unknown; trip_id?: unknown };
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    return errorResponse("BAD_REQUEST", "Invalid JSON body");
   }
 
   // 하위 호환: body.url ?? body.input
   const rawInput = body.url ?? body.input;
 
   if (typeof rawInput !== "string" || typeof body.trip_id !== "string") {
-    return NextResponse.json(
-      { error: "url(또는 input)과 trip_id가 필요합니다" },
-      { status: 400 }
-    );
+    return errorResponse("BAD_REQUEST", "url(또는 input)과 trip_id가 필요합니다");
   }
 
   const tripId = body.trip_id.trim();
@@ -41,10 +36,7 @@ export const POST = withAuth(async (request, { supabase, user }) => {
   const resolved = resolveInput(rawInput);
 
   if (resolved.type === "error") {
-    return NextResponse.json(
-      { error: resolved.reason, rawInput: resolved.rawInput },
-      { status: 400 }
-    );
+    return errorResponse("BAD_REQUEST", resolved.reason);
   }
 
   // trip 멤버 확인 (Authorization)
@@ -56,7 +48,7 @@ export const POST = withAuth(async (request, { supabase, user }) => {
     .single();
 
   if (!membership) {
-    return NextResponse.json({ error: "해당 여행에 접근할 수 없습니다" }, { status: 403 });
+    return errorResponse("FORBIDDEN", "해당 여행에 접근할 수 없습니다");
   }
 
   // 중복 체크: URL이면 source_url 기준
@@ -98,10 +90,7 @@ export const POST = withAuth(async (request, { supabase, user }) => {
 
   if (insertErr || !place) {
     console.error("[share] Insert error:", insertErr);
-    return NextResponse.json(
-      { error: "저장에 실패했습니다", rawInput: resolved.rawInput },
-      { status: 500 }
-    );
+    return errorResponse("INTERNAL_ERROR", "저장에 실패했습니다");
   }
 
   // 비동기 풍부화: after()로 응답 반환 후에도 실행을 보장

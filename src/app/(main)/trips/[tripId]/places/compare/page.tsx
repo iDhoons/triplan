@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeftIcon, StarIcon, TrophyIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -109,17 +109,13 @@ function ComparePage() {
   const supabase = createClient();
 
   const ids = (searchParams.get("ids") ?? "").split(",").filter(Boolean);
+  const idsKey = ids.join(",");
 
   const [places, setPlaces] = useState<Place[]>([]);
   const [voteStatuses, setVoteStatuses] = useState<VoteStatus[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (ids.length < 2) return;
-    fetchData();
-  }, [ids.join(",")]);
-
-  async function fetchData() {
+  const fetchData = useCallback(async () => {
     setLoading(true);
 
     const [placesRes, votesRes] = await Promise.all([
@@ -146,11 +142,13 @@ function ComparePage() {
     }
 
     setLoading(false);
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [idsKey, supabase]);
 
-  function refreshVotes() {
+  useEffect(() => {
+    if (ids.length < 2) return;
     fetchData();
-  }
+  }, [fetchData, ids.length]);
 
   if (ids.length < 2) {
     return (
@@ -245,7 +243,7 @@ function ComparePage() {
           label="평점"
           values={places.map((p) =>
             p.rating !== null ? (
-              <span className="flex items-center gap-1">
+              <span key={p.id} className="flex items-center gap-1">
                 <StarIcon className="size-3.5 fill-yellow-400 text-yellow-400" />
                 {p.rating}
               </span>
@@ -260,7 +258,7 @@ function ComparePage() {
         <CompareRow
           label="주소"
           values={places.map((p) => (
-            <span className="line-clamp-2 text-xs">{p.address ?? "-"}</span>
+            <span key={p.id} className="line-clamp-2 text-xs">{p.address ?? "-"}</span>
           ))}
         />
 
@@ -276,7 +274,7 @@ function ComparePage() {
             <CompareRow
               label="취소 정책"
               values={places.map((p) => (
-                <span className="text-xs">{p.cancel_policy ?? "-"}</span>
+                <span key={p.id} className="text-xs">{p.cancel_policy ?? "-"}</span>
               ))}
             />
             <CompareRow
@@ -290,7 +288,7 @@ function ComparePage() {
             <CompareRow
               label="부대시설"
               values={places.map((p) => (
-                <div className="flex flex-wrap justify-center gap-1">
+                <div key={p.id} className="flex flex-wrap justify-center gap-1">
                   {p.amenities?.length > 0
                     ? p.amenities.map((a) => (
                         <Badge key={a} variant="secondary" className="text-xs">
@@ -325,7 +323,7 @@ function ComparePage() {
                 if (!p.opening_hours) return "-";
                 const entries = Object.entries(p.opening_hours);
                 return (
-                  <div className="flex flex-col gap-0.5 text-xs">
+                  <div key={p.id} className="flex flex-col gap-0.5 text-xs">
                     {entries.slice(0, 3).map(([day, hours]) => (
                       <span key={day}>
                         <span className="font-medium">{day}</span> {hours}
@@ -347,7 +345,7 @@ function ComparePage() {
         <CompareRow
           label="메모"
           values={places.map((p) => (
-            <span className="line-clamp-3 text-xs text-muted-foreground">
+            <span key={p.id} className="line-clamp-3 text-xs text-muted-foreground">
               {p.memo ?? "-"}
             </span>
           ))}

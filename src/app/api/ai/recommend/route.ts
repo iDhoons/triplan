@@ -2,12 +2,19 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
 import { buildTripContext, getSystemPrompt } from "@/lib/services/ai-context";
 import { aiRecommendSchema } from "@/lib/api/schemas";
-import { withAuth } from "@/lib/api/guards";
+import { withAuth, checkRateLimit } from "@/lib/api/guards";
+import { errorResponse } from "@/lib/api/error-response";
 import { sanitizeUserMessage, detectInjectionAttempt } from "@/lib/services/ai-sanitize";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+if (!process.env.GEMINI_API_KEY) {
+  throw new Error("GEMINI_API_KEY 환경변수가 설정되지 않았습니다");
+}
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 export const POST = withAuth(async (request, { supabase, user }) => {
+  if (!checkRateLimit("ai-recommend", user.id, { maxRequests: 20 })) {
+    return errorResponse("RATE_LIMITED", "너무 많은 요청입니다. 잠시 후 다시 시도해주세요.");
+  }
 
   let rawBody: unknown;
   try {
@@ -82,9 +89,10 @@ export const POST = withAuth(async (request, { supabase, user }) => {
         parts: [{ text: m.content }],
       }));
 
-    // 프롬프트 인젝션 감지 (로깅용)
+    // 프롬프트 인젝션 감지 — 감지 시 차단
     if (detectInjectionAttempt(message)) {
-      console.warn("[ai] Prompt injection attempt detected:", user.id);
+      console.warn("[ai] Prompt injection attempt blocked:", user.id);
+      return errorResponse("BAD_REQUEST", "허용되지 않는 입력입니다.");
     }
 
     // 사용자 메시지 새니타이징

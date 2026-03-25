@@ -22,31 +22,37 @@ export function VoteButton({ placeId, className }: VoteButtonProps) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetchVotes();
-  }, [placeId]);
+    let cancelled = false;
 
-  async function fetchVotes() {
-    const { data } = await supabase
-      .from("place_votes")
-      .select("vote_type, user_id")
-      .eq("place_id", placeId);
+    async function loadVotes() {
+      const { data } = await supabase
+        .from("place_votes")
+        .select("vote_type, user_id")
+        .eq("place_id", placeId);
 
-    if (!data) return;
+      if (cancelled || !data) return;
 
-    setTotalVotes(data.length);
+      setTotalVotes(data.length);
 
-    if (data.length > 0) {
-      const sum = data.reduce((acc, v) => acc + v.vote_type, 0);
-      setAverage(Math.round((sum / data.length) * 10) / 10);
-    } else {
-      setAverage(null);
+      if (data.length > 0) {
+        const sum = data.reduce((acc, v) => acc + v.vote_type, 0);
+        setAverage(Math.round((sum / data.length) * 10) / 10);
+      } else {
+        setAverage(null);
+      }
+
+      if (user) {
+        const mine = data.find((v) => v.user_id === user.id);
+        setMyVote(mine ? mine.vote_type : 0);
+      }
     }
 
-    if (user) {
-      const mine = data.find((v) => v.user_id === user.id);
-      setMyVote(mine ? mine.vote_type : 0);
-    }
-  }
+    loadVotes();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [placeId, supabase, user]);
 
   async function handleVote(star: number) {
     if (!user || loading) return;
@@ -62,7 +68,23 @@ export function VoteButton({ placeId, className }: VoteButtonProps) {
     );
 
     setMyVote(star);
-    await fetchVotes();
+
+    // Refetch votes after upsert
+    const { data } = await supabase
+      .from("place_votes")
+      .select("vote_type, user_id")
+      .eq("place_id", placeId);
+
+    if (data) {
+      setTotalVotes(data.length);
+      if (data.length > 0) {
+        const sum = data.reduce((acc, v) => acc + v.vote_type, 0);
+        setAverage(Math.round((sum / data.length) * 10) / 10);
+      } else {
+        setAverage(null);
+      }
+    }
+
     setLoading(false);
   }
 

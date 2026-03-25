@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { withTripMember } from "@/lib/api/guards";
+import { errorResponse } from "@/lib/api/error-response";
 import { enrichSelectedPlaces, checkDuplicates } from "@/lib/youtube";
 import { PLACE_CATEGORIES } from "@/config/categories";
 import type { ExtractedPlace } from "@/types/youtube";
@@ -16,7 +17,7 @@ export const POST = withTripMember(
   async (_request, { supabase, user, role }) => {
     // viewer 권한 차단
     if (role === "viewer") {
-      return NextResponse.json({ error: "장소를 추가할 권한이 없습니다" }, { status: 403 });
+      return errorResponse("FORBIDDEN", "장소를 추가할 권한이 없습니다");
     }
 
     // body는 withTripMember가 이미 파싱했으므로 request.clone() 사용
@@ -24,24 +25,18 @@ export const POST = withTripMember(
     try {
       body = await _request.clone().json();
     } catch {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+      return errorResponse("BAD_REQUEST", "Invalid JSON body");
     }
 
     const tripId = body.trip_id;
     const rawPlaces = body.places;
 
     if (typeof tripId !== "string" || !Array.isArray(rawPlaces) || rawPlaces.length === 0) {
-      return NextResponse.json(
-        { error: "trip_id와 places 배열이 필요합니다" },
-        { status: 400 }
-      );
+      return errorResponse("BAD_REQUEST", "trip_id와 places 배열이 필요합니다");
     }
 
     if (rawPlaces.length > 20) {
-      return NextResponse.json(
-        { error: "한 번에 최대 20개까지 추가할 수 있습니다" },
-        { status: 400 }
-      );
+      return errorResponse("BAD_REQUEST", "한 번에 최대 20개까지 추가할 수 있습니다");
     }
 
     // 입력 검증
@@ -63,7 +58,7 @@ export const POST = withTripMember(
       }));
 
     if (places.length === 0) {
-      return NextResponse.json({ error: "유효한 장소가 없습니다" }, { status: 400 });
+      return errorResponse("BAD_REQUEST", "유효한 장소가 없습니다");
     }
 
     try {
@@ -111,10 +106,7 @@ export const POST = withTripMember(
 
         if (insertErr) {
           console.error("[youtube/add-places] Insert error:", insertErr);
-          return NextResponse.json(
-            { error: "장소 추가 중 오류가 발생했습니다" },
-            { status: 500 }
-          );
+          return errorResponse("INTERNAL_ERROR", "장소 추가 중 오류가 발생했습니다");
         }
 
         if (insertedRows) {
@@ -131,10 +123,7 @@ export const POST = withTripMember(
       });
     } catch (err) {
       console.error("[youtube/add-places] Error:", err);
-      return NextResponse.json(
-        { error: "장소 추가 중 오류가 발생했습니다. 다시 시도해주세요." },
-        { status: 500 }
-      );
+      return errorResponse("INTERNAL_ERROR", "장소 추가 중 오류가 발생했습니다. 다시 시도해주세요.");
     }
   }
 );

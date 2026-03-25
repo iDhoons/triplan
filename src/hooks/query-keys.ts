@@ -6,26 +6,37 @@ export const queryKeys = {
   places: {
     byTrip: (tripId: string) => ["places", tripId] as const,
   },
+  placeVotes: {
+    byTrip: (tripId: string) => ["place_votes", tripId] as const,
+  },
   schedules: {
+    byTrip: (tripId: string) => ["schedules", tripId] as const,
     data: (tripId: string) => ["schedule-data", tripId] as const,
   },
   checklist: {
     byTrip: (tripId: string) => ["checklist", tripId] as const,
     global: ["checklist_global"] as const,
+    logs: (itemId: string) => ["checklist_logs", itemId] as const,
   },
   notifications: {
     all: ["notifications"] as const,
-    count: ["notification-count"] as const,
+    count: ["notifications", "count"] as const,
   },
   stats: {
     trip: (tripId: string) => ["trip-stats", tripId] as const,
     checklist: (tripId: string) => ["checklist-stats", tripId] as const,
   },
   activity: {
-    byTrip: (tripId: string) => ["trip-activity", tripId] as const,
+    byTrip: (tripId: string) => ["activity_logs", tripId] as const,
   },
   members: {
-    byTrip: (tripId: string) => ["trip-members", tripId] as const,
+    byTrip: (tripId: string) => ["members", tripId] as const,
+  },
+  myRole: {
+    byTrip: (tripId: string) => ["my_role", tripId] as const,
+  },
+  tripProgress: {
+    byTrip: (tripId: string) => ["trip-progress", tripId] as const,
   },
 } as const;
 

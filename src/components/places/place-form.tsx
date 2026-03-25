@@ -241,7 +241,6 @@ export function PlaceForm({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    console.log("[PlaceForm] handleSubmit called, user:", user?.id ?? "NULL");
     if (!user) {
       console.error("[PlaceForm] ⛔ user is NULL — submit 중단됨");
       return;
@@ -313,7 +312,6 @@ export function PlaceForm({
         ...(googlePlaceId && !place ? { google_place_id: googlePlaceId } : {}),
       };
 
-      console.log("[PlaceForm] payload:", JSON.stringify(payload, null, 2));
 
       if (place) {
         const { data, error: updateErr } = await supabase
@@ -322,7 +320,6 @@ export function PlaceForm({
           .eq("id", place.id)
           .select()
           .single();
-        console.log("[PlaceForm] UPDATE result:", { data: !!data, error: updateErr });
         if (updateErr) throw updateErr;
         onSuccess(data as Place);
       } else {
@@ -331,7 +328,6 @@ export function PlaceForm({
           .insert(payload)
           .select()
           .single();
-        console.log("[PlaceForm] INSERT result:", { data: !!data, error: insertErr });
         if (insertErr) throw insertErr;
         onSuccess(data as Place);
       }

@@ -1,14 +1,12 @@
 import { withTripMember } from "@/lib/api/guards";
 import { NextResponse } from "next/server";
+import { errorResponse } from "@/lib/api/error-response";
 
 // GET /api/trips/[tripId]/checklist-stats — 멤버별 체크리스트 현황
 export const GET = withTripMember(
   (request) =>
     request.url.match(/\/trips\/([^/]+)\/checklist-stats/)?.[1] ?? null,
-  async (_request, { supabase }) => {
-    const tripId = _request.url.match(
-      /\/trips\/([^/]+)\/checklist-stats/,
-    )?.[1] ?? "";
+  async (_request, { supabase, tripId }) => {
 
     const { data: items, error } = await supabase
       .from("checklist_items")
@@ -16,7 +14,7 @@ export const GET = withTripMember(
       .eq("trip_id", tripId);
 
     if (error) {
-      return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+      return errorResponse("INTERNAL_ERROR", "Internal server error");
     }
 
     // 멤버 프로필 조회

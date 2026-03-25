@@ -6,7 +6,7 @@ import { computeTravelInfoForSchedule } from "@/lib/services/travel-info";
 import type { Schedule, ScheduleItem, Place } from "@/types/database";
 import type { ScheduleItemFormData } from "@/components/schedule/schedule-item-form";
 
-type SupabaseClient = ReturnType<typeof import("@/lib/supabase/client").createClient>;
+import type { SupabaseClient } from "@/lib/api/guards";
 
 interface UseScheduleActionsParams {
   tripId: string;

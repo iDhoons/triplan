@@ -5,7 +5,7 @@ import { errorResponse } from "@/lib/api/error-response";
 
 // ─── Types ──────────────────────────────────────────────
 
-type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
+export type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
 
 interface AuthContext {
   supabase: SupabaseClient;
@@ -14,6 +14,7 @@ interface AuthContext {
 
 interface MemberContext extends AuthContext {
   role: "admin" | "editor" | "viewer";
+  tripId: string;
 }
 
 type AuthenticatedHandler = (
@@ -114,6 +115,23 @@ export function withTripMember(
       supabase,
       user,
       role: membership.role as "admin" | "editor" | "viewer",
+      tripId,
     });
+  });
+}
+
+/**
+ * 인증 + 여행 멤버십 + 편집 권한 확인 래퍼.
+ * viewer 역할은 403을 반환한다.
+ */
+export function withTripEditor(
+  getTripId: (request: Request, body: unknown) => string | null,
+  handler: MemberHandler
+) {
+  return withTripMember(getTripId, async (request, ctx) => {
+    if (ctx.role === "viewer") {
+      return errorResponse("FORBIDDEN", "Viewer는 이 작업을 수행할 수 없습니다");
+    }
+    return handler(request, ctx);
   });
 }

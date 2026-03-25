@@ -1,5 +1,6 @@
 import { withAuth } from "@/lib/api/guards";
 import { NextResponse } from "next/server";
+import { errorResponse } from "@/lib/api/error-response";
 
 // GET /api/notifications — 알림 목록 (커서 페이지네이션)
 export const GET = withAuth(async (request, { supabase, user }) => {
@@ -26,7 +27,7 @@ export const GET = withAuth(async (request, { supabase, user }) => {
   const { data, error } = await query;
 
   if (error) {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return errorResponse("INTERNAL_ERROR", "Internal server error");
   }
 
   const hasMore = (data?.length ?? 0) > limit;

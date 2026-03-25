@@ -13,6 +13,7 @@ const API_DIR = join(process.cwd(), "src/app/api");
 // 인증이 불필요한 예외 경로
 const EXEMPT_PATHS = [
   "auth/callback", // OAuth callback — Supabase가 직접 호출
+  "guest",         // 게스트 미리보기 — 공개 엔드포인트 (자체 rate limiting 적용)
 ];
 
 function findRouteFiles(dir: string, base = ""): string[] {
@@ -48,13 +49,16 @@ describe("API Guard Coverage", () => {
       continue;
     }
 
-    it(`${routeName} — withAuth 또는 withTripMember를 사용한다`, () => {
+    it(`${routeName} — withAuth/withTripMember/withTripEditor를 호출한다`, () => {
       const content = readFileSync(join(API_DIR, relPath), "utf-8");
+      // 실제 호출 패턴 검사 (import만으로는 부족 — 함수 호출 `(` 포함)
       const usesGuard =
-        content.includes("withAuth") || content.includes("withTripMember");
+        content.includes("withAuth(") ||
+        content.includes("withTripMember(") ||
+        content.includes("withTripEditor(");
       expect(
         usesGuard,
-        `${routeName}에 withAuth/withTripMember가 없습니다! guards.ts를 사용하세요.`
+        `${routeName}에 withAuth/withTripMember/withTripEditor 호출이 없습니다! guards.ts를 사용하세요.`
       ).toBe(true);
     });
   }

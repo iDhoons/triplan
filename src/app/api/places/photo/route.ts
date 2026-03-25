@@ -1,6 +1,7 @@
 import { getPhotoUrlDirect } from "@/lib/google-places/client";
 import { NextResponse } from "next/server";
-import { withAuth } from "@/lib/api/guards";
+import { withAuth, checkRateLimit } from "@/lib/api/guards";
+import { errorResponse } from "@/lib/api/error-response";
 
 /**
  * GET /api/places/photo?name=...&maxWidth=...
@@ -8,7 +9,11 @@ import { withAuth } from "@/lib/api/guards";
  * 인증 필수 — 미인증 사용자의 API 할당량 소진 방지.
  * 응답에 캐시 헤더를 설정하여 반복 호출을 줄인다.
  */
-export const GET = withAuth(async (request) => {
+export const GET = withAuth(async (request, { user }) => {
+  if (!checkRateLimit("places-photo", user.id, { maxRequests: 60 })) {
+    return errorResponse("RATE_LIMITED", "너무 많은 요청입니다. 잠시 후 다시 시도해주세요.");
+  }
+
   const { searchParams } = new URL(request.url);
   const photoName = searchParams.get("name");
   const maxWidth = Math.min(
@@ -17,10 +22,7 @@ export const GET = withAuth(async (request) => {
   );
 
   if (!photoName || !photoName.startsWith("places/")) {
-    return NextResponse.json(
-      { error: "유효한 photo name이 필요합니다" },
-      { status: 400 }
-    );
+    return errorResponse("BAD_REQUEST", "유효한 photo name이 필요합니다");
   }
 
   try {
@@ -49,9 +51,6 @@ export const GET = withAuth(async (request) => {
     });
   } catch (error) {
     console.error("[photo proxy] Error:", error);
-    return NextResponse.json(
-      { error: "이미지 프록시 실패" },
-      { status: 500 }
-    );
+    return errorResponse("INTERNAL_ERROR", "이미지 프록시 실패");
   }
 });

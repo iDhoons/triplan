@@ -3,7 +3,6 @@ import "server-only";
 import pLimit from "p-limit";
 import { enrichFromText } from "@/lib/google-places/enricher";
 import type { ExtractedPlace } from "@/types/youtube";
-import type { createClient } from "@/lib/supabase/server";
 
 // ── 타입 ──
 
@@ -25,7 +24,7 @@ export interface EnrichedExtractedPlace extends ExtractedPlace {
   memo: string | null;
 }
 
-type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
+import type { SupabaseClient } from "@/lib/api/guards";
 
 // ── 헬퍼 ──
 

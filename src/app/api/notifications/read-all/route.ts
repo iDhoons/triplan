@@ -1,5 +1,6 @@
 import { withAuth } from "@/lib/api/guards";
 import { NextResponse } from "next/server";
+import { errorResponse } from "@/lib/api/error-response";
 
 // PATCH /api/notifications/read-all — 전체 읽음 처리
 export const PATCH = withAuth(async (_request, { supabase, user }) => {
@@ -11,7 +12,7 @@ export const PATCH = withAuth(async (_request, { supabase, user }) => {
     .select("id");
 
   if (error) {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return errorResponse("INTERNAL_ERROR", "Internal server error");
   }
 
   return NextResponse.json({ updated_count: data?.length ?? 0 });

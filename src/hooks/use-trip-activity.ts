@@ -8,7 +8,7 @@ interface ActivityPage {
 
 export function useTripActivity(tripId: string) {
   return useInfiniteQuery({
-    queryKey: ["trip-activity", tripId],
+    queryKey: ["activity_logs", tripId],
     queryFn: async ({ pageParam }): Promise<ActivityPage> => {
       const params = new URLSearchParams({ limit: "20" });
       if (pageParam) params.set("cursor", pageParam);

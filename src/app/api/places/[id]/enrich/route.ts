@@ -1,6 +1,7 @@
 import { enrichFromUrl } from "@/lib/google-places";
 import { NextResponse } from "next/server";
-import { withAuth } from "@/lib/api/guards";
+import { withAuth, checkRateLimit } from "@/lib/api/guards";
+import { errorResponse } from "@/lib/api/error-response";
 
 const MAX_ATTEMPTS = 3;
 
@@ -12,11 +13,16 @@ export const POST = withAuth(async (
   _request,
   { supabase, user }
 ) => {
+  // Rate limiting — Google Places API 호출 보호
+  if (!checkRateLimit("places-enrich", user.id, { maxRequests: 10 })) {
+    return errorResponse("RATE_LIMITED", "너무 많은 요청입니다. 잠시 후 다시 시도해주세요.");
+  }
+
   // Next.js dynamic route params — withAuth 밖에서 접근 불가하므로 URL에서 추출
   const url = new URL(_request.url);
   const placeId = url.pathname.split("/places/")[1]?.split("/")[0];
   if (!placeId) {
-    return NextResponse.json({ error: "place ID가 필요합니다" }, { status: 400 });
+    return errorResponse("BAD_REQUEST", "place ID가 필요합니다");
   }
 
   // place 조회 + 권한 확인
@@ -27,7 +33,7 @@ export const POST = withAuth(async (
     .single();
 
   if (!place) {
-    return NextResponse.json({ error: "장소를 찾을 수 없습니다" }, { status: 404 });
+    return errorResponse("NOT_FOUND", "장소를 찾을 수 없습니다");
   }
 
   // trip 멤버 확인
@@ -39,7 +45,7 @@ export const POST = withAuth(async (
     .single();
 
   if (!membership) {
-    return NextResponse.json({ error: "접근 권한이 없습니다" }, { status: 403 });
+    return errorResponse("FORBIDDEN", "접근 권한이 없습니다");
   }
 
   // 이미 풍부화됨 → 기존 데이터 반환
@@ -131,9 +137,6 @@ export const POST = withAuth(async (
       // 에러 기록 실패 무시
     }
 
-    return NextResponse.json(
-      { enriched: false, error: "정보를 가져오는 데 실패했습니다" },
-      { status: 500 }
-    );
+    return errorResponse("INTERNAL_ERROR", "정보를 가져오는 데 실패했습니다");
   }
 });
