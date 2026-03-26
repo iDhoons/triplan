@@ -25,7 +25,7 @@ const securityHeaders = [
     key: "Content-Security-Policy",
     value: [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' https://maps.googleapis.com https://vercel.live",
+      `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""} https://maps.googleapis.com https://vercel.live`,
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net",
       "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net",
       "img-src 'self' data: blob: https://lh3.googleusercontent.com https://maps.googleapis.com https://places.googleapis.com https://maps.gstatic.com",
@@ -46,6 +46,15 @@ const nextConfig: NextConfig = {
     viewTransition: true,
   },
   images: {
+    localPatterns: [
+      {
+        pathname: "/**",
+        search: "",
+      },
+      {
+        pathname: "/api/places/photo",
+      },
+    ],
     remotePatterns: [
       {
         protocol: "https",

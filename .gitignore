@@ -65,3 +65,6 @@ skills-lock.json
 
 # Generated docs at root
 travel-planner-*.md
+
+# MCP server config (personal)
+.mcp.json
