@@ -142,3 +142,18 @@ profiles, trips, trip_members, places, place_votes, schedules, schedule_items, c
 1. `docs/plans/[feature]/plan-[feature]-[date].md` 작성 (템플릿: `docs/templates/plan.md`)
 2. `docs/TASKS.md` 백로그에 추가
 3. 구현 후 위 "작업 완료 시" 절차 수행
+
+## Operations
+
+| 항목 | 내용 |
+|------|------|
+| 배포 | Vercel |
+| DB | Supabase |
+| API | Google Gemini, Google Maps, Naver Maps |
+| 모니터링 | Sentry |
+| 패키지 | npm (Next.js 16, PWA via Serwist) |
+| 환경변수 | Supabase URL/Key, Gemini/Maps API Keys, Sentry DSN |
+
+### 알려진 이슈
+
+- 장소 목록 카드 사진 미표시 버그 (최근 수정됨)
