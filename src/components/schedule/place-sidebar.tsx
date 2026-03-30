@@ -4,6 +4,7 @@ import { useDraggable } from "@dnd-kit/core";
 import { MapPin, Hotel, UtensilsCrossed, Star, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { PlaceImage } from "@/components/ui/place-image";
 import { cn } from "@/lib/utils";
 import type { Place, PlaceCategory } from "@/types/database";
 
@@ -54,27 +55,13 @@ function PlaceCard({ place, isScheduled, onAddClick }: PlaceCardProps) {
       )}
     >
       {/* Place image thumbnail */}
-      {place.image_urls?.[0] ? (
-        <div className="w-full h-16 rounded mb-2 overflow-hidden bg-muted relative">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={place.image_urls[0]}
-            alt={place.name}
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              e.currentTarget.style.display = "none";
-              e.currentTarget.parentElement?.querySelector("[data-fallback]")?.classList.remove("hidden");
-            }}
-          />
-          <div data-fallback className="hidden absolute inset-0 flex items-center justify-center">
-            <MapPin className="w-5 h-5 text-muted-foreground/40" />
-          </div>
-        </div>
-      ) : (
-        <div className="w-full h-16 rounded mb-2 bg-muted flex items-center justify-center">
-          <MapPin className="w-5 h-5 text-muted-foreground/40" />
-        </div>
-      )}
+      <PlaceImage
+        src={place.image_urls?.[0]}
+        alt={place.name}
+        width={200}
+        className="w-full h-16 rounded mb-2 object-cover"
+        fallbackIcon={<MapPin className="w-5 h-5 text-muted-foreground/40" />}
+      />
 
       {/* Name */}
       <p className="text-xs font-medium leading-snug line-clamp-2 mb-1">

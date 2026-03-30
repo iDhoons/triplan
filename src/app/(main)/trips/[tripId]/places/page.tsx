@@ -1,8 +1,7 @@
 "use client";
 
-import { memo, useState, useCallback } from "react";
+import { memo, useState, useCallback, useRef, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Image from "next/image";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -33,6 +32,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { createClient } from "@/lib/supabase/client";
+import { PlaceImage } from "@/components/ui/place-image";
 import { PlaceForm } from "@/components/places/place-form";
 import { PlaceDetailDrawer } from "@/components/places/place-detail-drawer";
 import { YouTubePlacePicker } from "@/components/places/youtube-place-picker";
@@ -50,6 +50,7 @@ const PlaceMap = dynamic(
   }
 );
 import { usePlaces } from "@/hooks/use-places";
+import { queryKeys } from "@/hooks/query-keys";
 import { PlaceCardSkeleton } from "@/components/layout/loading-skeleton";
 import { cn, formatShortAddress } from "@/lib/utils";
 import { PLACE_CATEGORY_LABEL, PLACE_CATEGORY_BADGE_CLASS } from "@/config/categories";
@@ -81,8 +82,6 @@ const PlaceCard = memo(function PlaceCard({
 }: PlaceCardProps) {
   const shortAddress = formatShortAddress(place.address_components, place.address);
   const hasImage = place.image_urls?.length > 0;
-  const [imageLoadFailed, setImageLoadFailed] = useState(false);
-  const hasVisibleImage = hasImage && !imageLoadFailed;
 
   return (
     <Card
@@ -95,33 +94,24 @@ const PlaceCard = memo(function PlaceCard({
       onClick={() => onOpenDetail(place)}
     >
       {/* 배경 이미지 (전체 카드) */}
-      {hasVisibleImage ? (
-        <Image
-          src={place.image_urls[0]}
-          alt={place.name}
-          fill
-          unoptimized
-          sizes="(min-width: 1024px) 33vw, 50vw"
-          className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-          onError={() => setImageLoadFailed(true)}
-        />
-      ) : null}
-      <div
-        data-placeholder
+      <PlaceImage
+        src={hasImage ? place.image_urls[0] : undefined}
+        alt={place.name}
+        width={400}
         className={cn(
-          "absolute inset-0 flex items-center justify-center",
-          hasVisibleImage && "hidden",
-          place.category === "accommodation" && "bg-cat-accommodation/20",
-          place.category === "attraction" && "bg-cat-attraction/20",
-          place.category === "restaurant" && "bg-cat-restaurant/20",
-          place.category === "other" && "bg-muted",
+          hasImage
+            ? "absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            : "absolute inset-0 h-full w-full",
+          !hasImage && place.category === "accommodation" && "bg-cat-accommodation/20",
+          !hasImage && place.category === "attraction" && "bg-cat-attraction/20",
+          !hasImage && place.category === "restaurant" && "bg-cat-restaurant/20",
+          !hasImage && place.category === "other" && "bg-muted",
         )}
-      >
-        <MapPinIcon className="size-8 text-muted-foreground/30" />
-      </div>
+        fallbackIcon={<MapPinIcon className="size-8 text-muted-foreground/30" />}
+      />
 
       {/* 그라디언트 오버레이 — ease-in 곡선 다중 stop으로 검정 띠 방지 */}
-      {hasVisibleImage && (
+      {hasImage && (
         <div
           className="absolute inset-0 z-[1]"
           style={{
@@ -136,7 +126,7 @@ const PlaceCard = memo(function PlaceCard({
         <Badge
           className={cn(
             "shrink-0 text-[10px] px-1.5 py-0",
-            hasVisibleImage
+            hasImage
               ? "bg-black/40 text-white border-white/20 backdrop-blur-sm"
               : cn("border", PLACE_CATEGORY_BADGE_CLASS[place.category])
           )}
@@ -153,7 +143,7 @@ const PlaceCard = memo(function PlaceCard({
                   size="xs"
                   className={cn(
                     "size-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity",
-                    hasVisibleImage
+                    hasImage
                       ? "text-white/80 hover:text-white hover:bg-white/20"
                       : "text-muted-foreground hover:text-foreground"
                   )}
@@ -180,7 +170,7 @@ const PlaceCard = memo(function PlaceCard({
       {/* 하단 — 장소 정보 오버레이 */}
       <div className={cn(
         "absolute inset-x-0 bottom-0 p-3 flex flex-col gap-0.5 z-10",
-        hasVisibleImage ? "text-white" : "text-foreground"
+        hasImage ? "text-white" : "text-foreground"
       )}>
         <h3 className="text-sm font-semibold line-clamp-1 drop-shadow-sm">
           {place.name}
@@ -189,7 +179,7 @@ const PlaceCard = memo(function PlaceCard({
         {shortAddress && (
           <p className={cn(
             "flex items-center gap-1 text-xs",
-            hasVisibleImage ? "text-white/70" : "text-muted-foreground"
+            hasImage ? "text-white/70" : "text-muted-foreground"
           )}>
             <MapPinIcon className="size-3 shrink-0" />
             <span className="truncate">{shortAddress}</span>
@@ -201,7 +191,7 @@ const PlaceCard = memo(function PlaceCard({
             <StarIcon className="size-3 fill-yellow-400 text-yellow-400" />
             <span className={cn(
               "text-xs font-medium",
-              hasVisibleImage ? "text-white" : "text-foreground"
+              hasImage ? "text-white" : "text-foreground"
             )}>
               {place.rating}
             </span>
@@ -218,7 +208,7 @@ const PlaceCard = memo(function PlaceCard({
                 "flex h-5 w-5 items-center justify-center rounded border-2 transition-colors",
                 selected
                   ? "border-primary bg-primary text-primary-foreground"
-                  : hasVisibleImage
+                  : hasImage
                     ? "border-white/60"
                     : "border-muted-foreground"
               )}
@@ -250,6 +240,45 @@ export default function PlacesPage() {
   const queryClient = useQueryClient();
 
   const { data: places = [], isLoading: loading, isError, error: queryError } = usePlaces(tripId);
+
+  // 사진 없는 장소 자동 보충 — google_place_id가 있지만 image_urls가 비어있으면 resolve
+  const photoFixAttempted = useRef(false);
+  useEffect(() => {
+    if (!places.length || photoFixAttempted.current) return;
+
+    const needPhotos = places.filter(
+      (p) => p.google_place_id && (!p.image_urls || p.image_urls.length === 0)
+    );
+    if (needPhotos.length === 0) return;
+
+    photoFixAttempted.current = true;
+
+    (async () => {
+      let updated = false;
+      for (const place of needPhotos) {
+        try {
+          const res = await fetch(
+            `/api/places/resolve-photos?googlePlaceId=${encodeURIComponent(place.google_place_id!)}`
+          );
+          if (!res.ok) continue;
+          const { urls } = await res.json();
+          if (urls?.length > 0) {
+            await supabase
+              .from("places")
+              .update({ image_urls: urls })
+              .eq("id", place.id);
+            updated = true;
+          }
+        } catch {
+          // 개별 장소 실패 무시
+        }
+      }
+      if (updated) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.places.byTrip(tripId) });
+      }
+    })();
+  }, [places, supabase, queryClient, tripId]);
+
   const [activeTab, setActiveTab] = useState<TabValue>("all");
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -265,7 +294,7 @@ export default function PlacesPage() {
       toast.error("삭제에 실패했습니다.");
       return;
     }
-    queryClient.invalidateQueries({ queryKey: ["places", tripId] });
+    queryClient.invalidateQueries({ queryKey: queryKeys.places.byTrip(tripId) });
     toast("장소가 삭제되었어요", {
       action: {
         label: "되돌리기",
@@ -287,7 +316,7 @@ export default function PlacesPage() {
             enriched: place.enriched,
             google_place_id: place.google_place_id,
           });
-          queryClient.invalidateQueries({ queryKey: ["places", tripId] });
+          queryClient.invalidateQueries({ queryKey: queryKeys.places.byTrip(tripId) });
           toast.success("장소가 복원되었어요");
         },
       },
@@ -297,7 +326,7 @@ export default function PlacesPage() {
   }, [tripId]);
 
   const handleFormSuccess = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: ["places", tripId] });
+    queryClient.invalidateQueries({ queryKey: queryKeys.places.byTrip(tripId) });
     setDialogOpen(false);
     setEditingPlace(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps

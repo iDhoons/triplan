@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { PlaceImage } from "@/components/ui/place-image";
 import { cn } from "@/lib/utils";
 import type { Place, PlaceCategory } from "@/types/database";
 
@@ -95,20 +96,13 @@ export function UnscheduledFAB({
                   )}
                 >
                   {/* 썸네일 */}
-                  {place.image_urls?.[0] ? (
-                    <div className="w-10 h-10 rounded-lg overflow-hidden bg-muted shrink-0">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={place.image_urls[0]}
-                        alt=""
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  ) : (
-                    <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                      <MapPin className="w-4 h-4 text-muted-foreground/40" />
-                    </div>
-                  )}
+                  <PlaceImage
+                    src={place.image_urls?.[0]}
+                    alt={place.name}
+                    width={200}
+                    className="w-10 h-10 rounded-lg object-cover shrink-0"
+                    fallbackIcon={<MapPin className="w-4 h-4 text-muted-foreground/40" />}
+                  />
 
                   {/* 장소 정보 */}
                   <div className="flex-1 min-w-0">

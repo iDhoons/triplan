@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { PlaceImage } from "@/components/ui/place-image";
 import { cn, formatFullAddress, formatPriceLevel } from "@/lib/utils";
 import { PLACE_CATEGORY_LABEL, PLACE_CATEGORY_BADGE_CLASS } from "@/config/categories";
 import type { Place } from "@/types/database";
@@ -66,12 +67,12 @@ export function PlaceDetailDrawer({
             {place.image_urls?.length > 0 && (
               <div className="flex gap-2 overflow-x-auto pb-3 -mx-4 px-4 snap-x">
                 {place.image_urls.map((url, i) => (
-                  <img
+                  <PlaceImage
                     key={i}
                     src={url}
                     alt={`${place.name} ${i + 1}`}
+                    width={800}
                     className="h-48 min-w-[280px] rounded-lg object-cover snap-start"
-                    onError={(e) => { e.currentTarget.style.display = "none"; }}
                   />
                 ))}
               </div>

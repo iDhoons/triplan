@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/client";
 import { VoteButton } from "@/components/places/vote-button";
+import { PlaceImage } from "@/components/ui/place-image";
 import { cn } from "@/lib/utils";
 import type { Place, PlaceVote } from "@/types/database";
 
@@ -212,11 +213,11 @@ function ComparePage() {
               className="flex flex-col items-center gap-2 border-r px-3 py-4 last:border-r-0"
             >
               {place.image_urls?.length > 0 && (
-                <img
+                <PlaceImage
                   src={place.image_urls[0]}
                   alt={place.name}
+                  width={400}
                   className="h-24 w-full rounded-lg object-cover"
-                  onError={(e) => { e.currentTarget.style.display = "none"; }}
                 />
               )}
               <p className="text-center text-sm font-semibold leading-snug">

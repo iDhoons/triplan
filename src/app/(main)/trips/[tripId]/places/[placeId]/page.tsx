@@ -26,6 +26,7 @@ import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PlaceImage } from "@/components/ui/place-image";
 import {
   Dialog,
   DialogContent,
@@ -275,9 +276,10 @@ export default function PlaceDetailPage() {
       {/* 사진 갤러리 */}
       {photos.length > 0 && (
         <div className="relative rounded-xl overflow-hidden bg-muted">
-          <img
+          <PlaceImage
             src={photos[photoIndex]}
             alt={`${place.name} ${photoIndex + 1}`}
+            width={1200}
             className="w-full h-64 sm:h-80 object-cover"
           />
           {photos.length > 1 && (

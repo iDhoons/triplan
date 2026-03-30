@@ -102,6 +102,19 @@ export function isInAppBrowser(): boolean {
 }
 
 /**
+ * 장소 이미지 프록시 URL의 maxWidth를 context에 맞게 교체.
+ * proxy URL이 아니면(Supabase storage 등) 원본 그대로 반환.
+ */
+const PHOTO_PROXY_PREFIX = "/api/places/photo";
+
+export function placeImageUrl(url: string, width: number): string {
+  if (!url.startsWith(PHOTO_PROXY_PREFIX)) return url;
+  const parsed = new URL(url, "http://localhost");
+  parsed.searchParams.set("maxWidth", String(width));
+  return `${parsed.pathname}?${parsed.searchParams.toString()}`;
+}
+
+/**
  * 현재 URL을 외부 브라우저에서 여는 Intent URL 생성 (Android)
  */
 export function getExternalBrowserUrl(url: string): string {

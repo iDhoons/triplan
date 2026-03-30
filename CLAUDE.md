@@ -119,9 +119,9 @@ src/
 ## 명령어
 
 ```bash
-npm run dev     # 개발 서버
-npm run build   # 프로덕션 빌드
-npm run lint    # ESLint
+pnpm dev        # 개발 서버
+pnpm build      # 프로덕션 빌드
+pnpm lint       # ESLint
 ```
 
 ## DB 테이블 (Supabase PostgreSQL)
@@ -151,7 +151,7 @@ profiles, trips, trip_members, places, place_votes, schedules, schedule_items, c
 | DB | Supabase |
 | API | Google Gemini, Google Maps, Naver Maps |
 | 모니터링 | Sentry |
-| 패키지 | npm (Next.js 16, PWA via Serwist) |
+| 패키지 | pnpm (Next.js 16, PWA via Serwist) |
 | 환경변수 | Supabase URL/Key, Gemini/Maps API Keys, Sentry DSN |
 
 ### 알려진 이슈
