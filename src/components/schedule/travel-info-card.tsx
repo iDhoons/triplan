@@ -86,15 +86,26 @@ interface TransitLine {
   departure_stop: string;
   arrival_stop: string;
   num_stops: number;
+  start_location?: { lat: number; lng: number };
+  end_location?: { lat: number; lng: number };
 }
 
 function extractTransitLines(
-  steps?: { travel_mode: string; transit_details?: TransitLine }[]
+  steps?: {
+    travel_mode: string;
+    transit_details?: Omit<TransitLine, "start_location" | "end_location">;
+    start_location?: { lat: number; lng: number };
+    end_location?: { lat: number; lng: number };
+  }[]
 ): TransitLine[] {
   if (!steps) return [];
   return steps
     .filter((s) => s.travel_mode === "TRANSIT" && s.transit_details)
-    .map((s) => s.transit_details!);
+    .map((s) => ({
+      ...s.transit_details!,
+      start_location: s.start_location,
+      end_location: s.end_location,
+    }));
 }
 
 // -----------------------------------------------------------------------
@@ -104,25 +115,91 @@ function TransitSummary({ lines }: { lines: TransitLine[] }) {
   if (lines.length === 0) return null;
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
+    <div className="flex flex-col gap-2">
       {lines.map((line, i) => (
-        <div key={i} className="flex items-center gap-1">
-          {i > 0 && (
-            <span className="text-[10px] text-muted-foreground/50">→</span>
-          )}
-          {getVehicleIcon(line.vehicle_type, "w-3 h-3 shrink-0")}
-          <span
-            className="text-[11px] font-medium px-1.5 py-0.5 rounded-full text-white"
+        <div key={i} className="flex items-center gap-2">
+          {/* 노선 색상 바 */}
+          <div
+            className="w-1 self-stretch rounded-full shrink-0"
             style={{ backgroundColor: line.color || "#6b7280" }}
-          >
-            {line.short_name || line.name}
+          />
+          <div className="flex items-center gap-1.5 min-w-0">
+            {getVehicleIcon(line.vehicle_type, "w-4 h-4 shrink-0")}
+            <span className="text-xs font-semibold truncate">
+              {line.short_name || line.name}
+            </span>
+          </div>
+          <span className="text-[11px] text-muted-foreground whitespace-nowrap ml-auto">
+            {line.departure_stop} → {line.arrival_stop}
           </span>
-          <span className="text-[10px] text-muted-foreground">
+          <span className="text-[11px] text-muted-foreground/70 whitespace-nowrap">
             {line.num_stops}정거장
           </span>
         </div>
       ))}
     </div>
+  );
+}
+
+// -----------------------------------------------------------------------
+// Static Map Image (Google Static Maps API — JS 0줄, img 1개)
+// -----------------------------------------------------------------------
+function StaticMapImage({
+  origin,
+  destination,
+  polyline,
+  transitLines,
+  googleMapsUrl,
+}: {
+  origin: { lat: number; lng: number };
+  destination: { lat: number; lng: number };
+  polyline?: string;
+  transitLines?: TransitLine[];
+  googleMapsUrl: string;
+}) {
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+  if (!apiKey) return null;
+
+  const params = new URLSearchParams({
+    size: "600x200",
+    scale: "2",
+    maptype: "roadmap",
+    key: apiKey,
+  });
+
+  // 출발/도착 마커
+  params.append("markers", `color:0x3b82f6|label:A|${origin.lat},${origin.lng}`);
+  params.append("markers", `color:0xef4444|label:B|${destination.lat},${destination.lng}`);
+
+  // 환승 지점 마커 (노선 색상 적용)
+  if (transitLines?.length) {
+    for (const line of transitLines) {
+      if (line.start_location) {
+        const color = (line.color || "#6b7280").replace("#", "0x");
+        params.append(
+          "markers",
+          `color:${color}|size:small|${line.start_location.lat},${line.start_location.lng}`
+        );
+      }
+    }
+  }
+
+  if (polyline && polyline.length < 7000) {
+    params.set("path", `enc:${polyline}|weight:4|color:0x4285F4FF`);
+  }
+
+  const src = `https://maps.googleapis.com/maps/api/staticmap?${params.toString()}`;
+
+  return (
+    <a href={googleMapsUrl} target="_blank" rel="noopener noreferrer" className="block">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={src}
+        alt="경로 지도"
+        className="w-full h-32 sm:h-40 rounded-lg object-cover"
+        loading="lazy"
+      />
+    </a>
   );
 }
 
@@ -147,12 +224,14 @@ export const TravelInfoCard = memo(function TravelInfoCard({
     distance: number;
     mode: TravelMode;
     transitLines: TransitLine[];
+    polyline?: string;
   } | null>(null);
 
   // 캐시된 이동 정보 (DB)
   const [cachedTransitLines, setCachedTransitLines] = useState<
     TransitLine[] | null
   >(null);
+  const [cachedPolyline, setCachedPolyline] = useState<string | undefined>();
   const [fetchingLines, setFetchingLines] = useState(false);
 
   const duration = nextItem.travel_duration_seconds;
@@ -197,6 +276,7 @@ export const TravelInfoCard = memo(function TravelInfoCard({
       if (res.ok) {
         const data = await res.json();
         setCachedTransitLines(extractTransitLines(data.steps));
+        setCachedPolyline(data.overview_polyline);
       }
     } catch {
       // 실패 시 무시
@@ -220,6 +300,7 @@ export const TravelInfoCard = memo(function TravelInfoCard({
           distance: data.distance_meters,
           mode: data.used_mode || "transit",
           transitLines: extractTransitLines(data.steps),
+          polyline: data.overview_polyline,
         });
         setExpanded(true);
       }
@@ -260,21 +341,39 @@ export const TravelInfoCard = memo(function TravelInfoCard({
     );
   }
 
-  // 확장 영역: 환승 요약 + Google Maps 링크
-  function renderExpanded(transitLines: TransitLine[]) {
+  // 확장 영역: 환승 요약 + 지도 + Google Maps 링크
+  function renderExpanded(transitLines: TransitLine[], polyline?: string) {
     return (
       <div className="mx-4 mb-2 space-y-2 animate-in slide-in-from-top-1 duration-200">
-        {/* 환승 노선 요약 */}
-        {fetchingLines ? (
-          <div className="flex items-center gap-1.5 py-2">
-            <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />
-            <span className="text-xs text-muted-foreground">노선 조회 중...</span>
+        {/* 노선 + 지도: 모바일 상하, 데스크톱 좌우 */}
+        <div className="flex flex-col md:flex-row gap-2">
+          {/* 왼쪽: 환승 노선 요약 */}
+          <div className="flex-1 min-w-0">
+            {fetchingLines ? (
+              <div className="flex items-center gap-1.5 py-2">
+                <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">노선 조회 중...</span>
+              </div>
+            ) : transitLines.length > 0 ? (
+              <div className="px-3 py-2 rounded-lg bg-muted/50 h-full">
+                <TransitSummary lines={transitLines} />
+              </div>
+            ) : null}
           </div>
-        ) : transitLines.length > 0 ? (
-          <div className="px-3 py-2 rounded-lg bg-muted/50">
-            <TransitSummary lines={transitLines} />
-          </div>
-        ) : null}
+
+          {/* 오른쪽: Static Map */}
+          {hasCoords && googleMapsUrl && (
+            <div className="md:w-1/2 shrink-0">
+              <StaticMapImage
+                origin={{ lat: currentItem.place!.latitude!, lng: currentItem.place!.longitude! }}
+                destination={{ lat: nextItem.place!.latitude!, lng: nextItem.place!.longitude! }}
+                polyline={polyline}
+                transitLines={transitLines}
+                googleMapsUrl={googleMapsUrl}
+              />
+            </div>
+          )}
+        </div>
 
         {/* Google Maps 딥링크 */}
         {googleMapsUrl && (
@@ -337,7 +436,7 @@ export const TravelInfoCard = memo(function TravelInfoCard({
     return (
       <div className="space-y-0">
         {renderPill(mode, duration, distance, expanded, handleCachedExpand)}
-        {expanded && renderExpanded(cachedTransitLines ?? [])}
+        {expanded && renderExpanded(cachedTransitLines ?? [], cachedPolyline)}
       </div>
     );
   }
@@ -400,7 +499,7 @@ export const TravelInfoCard = memo(function TravelInfoCard({
         <div className="flex-1 border-t border-dashed border-muted-foreground/20" />
       </div>
 
-      {fetchedInfo && expanded && renderExpanded(fetchedInfo.transitLines)}
+      {fetchedInfo && expanded && renderExpanded(fetchedInfo.transitLines, fetchedInfo.polyline)}
     </div>
   );
 });
