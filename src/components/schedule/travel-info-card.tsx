@@ -86,6 +86,7 @@ interface TransitLine {
   departure_stop: string;
   arrival_stop: string;
   num_stops: number;
+  duration_seconds: number;
   start_location?: { lat: number; lng: number };
   end_location?: { lat: number; lng: number };
 }
@@ -93,7 +94,8 @@ interface TransitLine {
 function extractTransitLines(
   steps?: {
     travel_mode: string;
-    transit_details?: Omit<TransitLine, "start_location" | "end_location">;
+    duration_seconds: number;
+    transit_details?: Omit<TransitLine, "start_location" | "end_location" | "duration_seconds">;
     start_location?: { lat: number; lng: number };
     end_location?: { lat: number; lng: number };
   }[]
@@ -103,6 +105,7 @@ function extractTransitLines(
     .filter((s) => s.travel_mode === "TRANSIT" && s.transit_details)
     .map((s) => ({
       ...s.transit_details!,
+      duration_seconds: s.duration_seconds,
       start_location: s.start_location,
       end_location: s.end_location,
     }));
@@ -115,26 +118,30 @@ function TransitSummary({ lines }: { lines: TransitLine[] }) {
   if (lines.length === 0) return null;
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-3">
       {lines.map((line, i) => (
-        <div key={i} className="flex items-center gap-2">
+        <div key={i} className="flex items-start gap-2">
           {/* 노선 색상 바 */}
           <div
-            className="w-1 self-stretch rounded-full shrink-0"
+            className="w-1 self-stretch rounded-full shrink-0 mt-0.5"
             style={{ backgroundColor: line.color || "#6b7280" }}
           />
-          <div className="flex items-center gap-1.5 min-w-0">
-            {getVehicleIcon(line.vehicle_type, "w-4 h-4 shrink-0")}
-            <span className="text-xs font-semibold truncate">
-              {line.short_name || line.name}
-            </span>
+          <div className="flex flex-col gap-0.5 min-w-0">
+            {/* 노선 이름 + 소요 시간 */}
+            <div className="flex items-center gap-1.5">
+              {getVehicleIcon(line.vehicle_type, "w-4 h-4 shrink-0")}
+              <span className="text-sm font-semibold">
+                {line.short_name || line.name}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {formatDuration(line.duration_seconds)}
+              </span>
+            </div>
+            {/* 구간 + 정거장 */}
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              {line.departure_stop} → {line.arrival_stop} · {line.num_stops}정거장
+            </p>
           </div>
-          <span className="text-[11px] text-muted-foreground whitespace-nowrap ml-auto">
-            {line.departure_stop} → {line.arrival_stop}
-          </span>
-          <span className="text-[11px] text-muted-foreground/70 whitespace-nowrap">
-            {line.num_stops}정거장
-          </span>
         </div>
       ))}
     </div>
@@ -171,24 +178,28 @@ function StaticMapImage({
   params.append("markers", `color:0x3b82f6|label:A|${origin.lat},${origin.lng}`);
   params.append("markers", `color:0xef4444|label:B|${destination.lat},${destination.lng}`);
 
-  // 환승 지점 마커 (노선 색상 적용)
+  // 환승 지점 마커 (Static Maps는 이름 색상만 지원)
+  const MARKER_COLORS = ["purple", "green", "orange", "yellow", "brown"];
   if (transitLines?.length) {
-    for (const line of transitLines) {
+    for (let i = 0; i < transitLines.length; i++) {
+      const line = transitLines[i];
       if (line.start_location) {
-        const color = (line.color || "#6b7280").replace("#", "0x");
+        const color = MARKER_COLORS[i % MARKER_COLORS.length];
         params.append(
           "markers",
-          `color:${color}|size:small|${line.start_location.lat},${line.start_location.lng}`
+          `color:${color}|size:small|label:${i + 1}|${line.start_location.lat},${line.start_location.lng}`
         );
       }
     }
   }
 
-  if (polyline && polyline.length < 7000) {
-    params.set("path", `enc:${polyline}|weight:4|color:0x4285F4FF`);
-  }
+  // Static Maps API URL을 직접 구성 (URLSearchParams가 | 를 인코딩할 수 있으므로)
+  let src = `https://maps.googleapis.com/maps/api/staticmap?${params.toString()}`;
 
-  const src = `https://maps.googleapis.com/maps/api/staticmap?${params.toString()}`;
+  // 경로선: style 파라미터 → enc:POLYLINE 순서 (enc는 반드시 마지막)
+  if (polyline && polyline.length < 7000) {
+    src += `&path=weight:4|color:0x4285F4FF|enc:${polyline}`;
+  }
 
   return (
     <a href={googleMapsUrl} target="_blank" rel="noopener noreferrer" className="block">
