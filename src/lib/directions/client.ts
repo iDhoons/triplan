@@ -1,7 +1,7 @@
 /**
- * Google Directions API Gateway (Anti-Corruption Layer)
+ * Google Routes API Gateway (Anti-Corruption Layer)
  *
- * weather/client.ts와 동일한 패턴:
+ * Directions API → Routes API 마이그레이션 완료 (비용 절반, 더 강력한 응답).
  * - 외부 API 응답을 도메인 타입으로 변환
  * - Fallback 체인: 요청 mode → transit → Haversine 추정
  * - 순수 함수(haversineDistance, estimateDuration)는 export하여 테스트 가능
@@ -78,62 +78,104 @@ export interface DirectionsResult {
 }
 
 // -----------------------------------------------------------------------
-// Google Directions API 호출
+// Google Routes API 호출
 // -----------------------------------------------------------------------
 
-interface GoogleDirectionsResponse {
-  status: string;
-  routes: {
-    legs: {
-      duration: { value: number; text: string };
-      distance: { value: number; text: string };
-      steps?: {
-        travel_mode: string;
-        duration: { value: number; text: string };
-        distance: { value: number; text: string };
-        html_instructions: string;
-        start_location?: { lat: number; lng: number };
-        end_location?: { lat: number; lng: number };
-        polyline?: { points: string };
-        transit_details?: {
-          departure_stop: { name: string };
-          arrival_stop: { name: string };
-          line: {
-            name: string;
-            short_name?: string;
-            color?: string;
-            vehicle: { type: string };
-          };
-          num_stops: number;
+const ROUTES_API_URL = "https://routes.googleapis.com/directions/v2:computeRoutes";
+
+const MODE_MAP: Record<string, string> = {
+  walking: "WALK",
+  transit: "TRANSIT",
+  driving: "DRIVE",
+};
+
+const FIELD_MASK = [
+  "routes.duration",
+  "routes.distanceMeters",
+  "routes.polyline",
+  "routes.description",
+  "routes.legs.duration",
+  "routes.legs.distanceMeters",
+  "routes.legs.steps.travelMode",
+  "routes.legs.steps.staticDuration",
+  "routes.legs.steps.distanceMeters",
+  "routes.legs.steps.polyline",
+  "routes.legs.steps.startLocation",
+  "routes.legs.steps.endLocation",
+  "routes.legs.steps.navigationInstruction",
+  "routes.legs.steps.transitDetails",
+].join(",");
+
+interface RoutesApiRoute {
+  duration: string;           // "1234s"
+  distanceMeters: number;
+  polyline?: { encodedPolyline: string };
+  description?: string;
+  legs: {
+    duration: string;
+    distanceMeters: number;
+    steps?: {
+      travelMode: string;
+      staticDuration: string;
+      distanceMeters?: number;
+      polyline?: { encodedPolyline: string };
+      startLocation?: { latLng: { latitude: number; longitude: number } };
+      endLocation?: { latLng: { latitude: number; longitude: number } };
+      navigationInstruction?: { instructions: string };
+      transitDetails?: {
+        stopDetails?: {
+          departureStop?: { name: string };
+          arrivalStop?: { name: string };
         };
-      }[];
+        transitLine?: {
+          name: string;
+          nameShort?: string;
+          color?: string;
+          vehicle?: { type: string };
+        };
+        stopCount?: number;
+      };
     }[];
-    summary?: string;
-    overview_polyline?: { points: string };
   }[];
 }
 
-async function fetchGoogleDirections(
+/** "1234s" → 1234 */
+function parseDuration(d: string | undefined): number {
+  if (!d) return 0;
+  return parseInt(d, 10) || 0;
+}
+
+async function fetchRoutesApi(
   origin: string,
   destination: string,
   mode: string,
   apiKey: string
-): Promise<GoogleDirectionsResponse | null> {
-  const url = new URL("https://maps.googleapis.com/maps/api/directions/json");
-  url.searchParams.set("origin", origin);
-  url.searchParams.set("destination", destination);
-  url.searchParams.set("mode", mode);
-  url.searchParams.set("language", "ko");
-  url.searchParams.set("key", apiKey);
+): Promise<RoutesApiRoute | null> {
+  const [lat1, lng1] = origin.split(",").map(Number);
+  const [lat2, lng2] = destination.split(",").map(Number);
 
-  const res = await fetch(url.toString(), {
+  const body = {
+    origin: { location: { latLng: { latitude: lat1, longitude: lng1 } } },
+    destination: { location: { latLng: { latitude: lat2, longitude: lng2 } } },
+    travelMode: MODE_MAP[mode] ?? "TRANSIT",
+    languageCode: "ko",
+    computeAlternativeRoutes: false,
+  };
+
+  const res = await fetch(ROUTES_API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Goog-Api-Key": apiKey,
+      "X-Goog-FieldMask": FIELD_MASK,
+    },
+    body: JSON.stringify(body),
     signal: AbortSignal.timeout(10000),
   });
 
   if (!res.ok) return null;
   const data = await res.json();
-  if (data.status === "OK" && data.routes?.length) return data;
-  return null;
+  return data.routes?.[0] ?? null;
 }
 
 // -----------------------------------------------------------------------
@@ -158,11 +200,12 @@ function formatDistanceText(meters: number): string {
 
 /**
  * 이동 정보를 조회한다 (mode → transit fallback → Haversine 추정).
+ * Google Routes API 사용 (Directions API 대비 비용 절반).
  *
  * @param origin "lat,lng" 형식
  * @param destination "lat,lng" 형식
  * @param mode "walking" | "transit" | "driving"
- * @param apiKey Google Directions API 키
+ * @param apiKey Google API 키 (Routes API 활성화 필요)
  */
 export async function getDirections(
   origin: string,
@@ -171,17 +214,17 @@ export async function getDirections(
   apiKey: string
 ): Promise<DirectionsResult> {
   // 1. 요청된 mode로 시도
-  let data = await fetchGoogleDirections(origin, destination, mode, apiKey);
+  let route = await fetchRoutesApi(origin, destination, mode, apiKey);
   let usedMode = mode;
 
   // 2. 실패 시 transit fallback
-  if (!data && mode !== "transit") {
-    data = await fetchGoogleDirections(origin, destination, "transit", apiKey);
+  if (!route && mode !== "transit") {
+    route = await fetchRoutesApi(origin, destination, "transit", apiKey);
     usedMode = "transit";
   }
 
   // 3. transit도 실패 → Haversine 추정
-  if (!data) {
+  if (!route) {
     const [lat1, lng1] = origin.split(",").map(Number);
     const [lat2, lng2] = destination.split(",").map(Number);
     const dist = Math.round(haversineDistance(lat1, lng1, lat2, lng2));
@@ -198,42 +241,51 @@ export async function getDirections(
     };
   }
 
-  const leg = data.routes[0].legs[0];
+  const leg = route.legs[0];
+  const durationSeconds = parseDuration(leg.duration);
 
-  const steps: DirectionStep[] | undefined = leg.steps?.map((s) => ({
-    travel_mode: s.travel_mode,
-    duration_seconds: s.duration.value,
-    duration_text: s.duration.text,
-    distance_meters: s.distance.value,
-    distance_text: s.distance.text,
-    instruction: s.html_instructions.replace(/<[^>]*>/g, ""),
-    ...(s.transit_details
-      ? {
-          transit_details: {
-            line_name: s.transit_details.line.name,
-            line_short_name: s.transit_details.line.short_name ?? null,
-            line_color: s.transit_details.line.color ?? null,
-            vehicle_type: s.transit_details.line.vehicle.type,
-            departure_stop: s.transit_details.departure_stop.name,
-            arrival_stop: s.transit_details.arrival_stop.name,
-            num_stops: s.transit_details.num_stops,
-          },
-        }
-      : {}),
-    start_location: s.start_location,
-    end_location: s.end_location,
-    polyline: s.polyline?.points,
-  }));
+  const steps: DirectionStep[] | undefined = leg.steps?.map((s) => {
+    const stepDuration = parseDuration(s.staticDuration);
+    const stepDistance = s.distanceMeters ?? 0;
+    return {
+      travel_mode: s.travelMode,
+      duration_seconds: stepDuration,
+      duration_text: formatDurationText(stepDuration),
+      distance_meters: stepDistance,
+      distance_text: formatDistanceText(stepDistance),
+      instruction: s.navigationInstruction?.instructions ?? "",
+      ...(s.transitDetails?.transitLine
+        ? {
+            transit_details: {
+              line_name: s.transitDetails.transitLine.name ?? "",
+              line_short_name: s.transitDetails.transitLine.nameShort ?? null,
+              line_color: s.transitDetails.transitLine.color ?? null,
+              vehicle_type: s.transitDetails.transitLine.vehicle?.type ?? "",
+              departure_stop: s.transitDetails.stopDetails?.departureStop?.name ?? "",
+              arrival_stop: s.transitDetails.stopDetails?.arrivalStop?.name ?? "",
+              num_stops: s.transitDetails.stopCount ?? 0,
+            },
+          }
+        : {}),
+      start_location: s.startLocation?.latLng
+        ? { lat: s.startLocation.latLng.latitude, lng: s.startLocation.latLng.longitude }
+        : undefined,
+      end_location: s.endLocation?.latLng
+        ? { lat: s.endLocation.latLng.latitude, lng: s.endLocation.latLng.longitude }
+        : undefined,
+      polyline: s.polyline?.encodedPolyline,
+    };
+  });
 
   return {
-    duration_seconds: leg.duration.value,
-    distance_meters: leg.distance.value,
-    duration_text: leg.duration.text,
-    distance_text: leg.distance.text,
-    summary: data.routes[0].summary || null,
+    duration_seconds: durationSeconds,
+    distance_meters: leg.distanceMeters ?? 0,
+    duration_text: formatDurationText(durationSeconds),
+    distance_text: formatDistanceText(leg.distanceMeters ?? 0),
+    summary: route.description ?? null,
     estimated: false,
     used_mode: usedMode,
     steps,
-    overview_polyline: data.routes[0].overview_polyline?.points,
+    overview_polyline: route.polyline?.encodedPolyline,
   };
 }
