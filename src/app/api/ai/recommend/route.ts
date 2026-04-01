@@ -6,7 +6,8 @@ import { withAuth, checkRateLimit } from "@/lib/api/guards";
 import { errorResponse } from "@/lib/api/error-response";
 import { sanitizeUserMessage, detectInjectionAttempt } from "@/lib/services/ai-sanitize";
 
-if (!process.env.GEMINI_API_KEY) {
+// @TASK T7.12 - 빈 문자열도 거부 (falsy 체크)
+if (!process.env.GEMINI_API_KEY?.trim()) {
   throw new Error("GEMINI_API_KEY 환경변수가 설정되지 않았습니다");
 }
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -20,16 +21,13 @@ export const POST = withAuth(async (request, { supabase, user }) => {
   try {
     rawBody = await request.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    return errorResponse("BAD_REQUEST", "Invalid JSON body");
   }
 
   const parsed = aiRecommendSchema.safeParse(rawBody);
   if (!parsed.success) {
     const firstError = parsed.error.issues[0];
-    return NextResponse.json(
-      { error: firstError?.message ?? "입력이 올바르지 않습니다" },
-      { status: 400 }
-    );
+    return errorResponse("BAD_REQUEST", firstError?.message ?? "입력이 올바르지 않습니다");
   }
 
   const { trip_id, message, type, history } = parsed.data;
@@ -59,12 +57,12 @@ export const POST = withAuth(async (request, { supabase, user }) => {
   ]);
 
   if (!membershipRes.data) {
-    return NextResponse.json({ error: "해당 여행에 접근할 수 없습니다" }, { status: 403 });
+    return errorResponse("FORBIDDEN", "해당 여행에 접근할 수 없습니다");
   }
 
   const trip = tripRes.data;
   if (!trip) {
-    return NextResponse.json({ error: "Trip not found" }, { status: 404 });
+    return errorResponse("NOT_FOUND", "Trip not found");
   }
 
   const schedules = schedulesRes.data;
@@ -105,9 +103,6 @@ export const POST = withAuth(async (request, { supabase, user }) => {
     return NextResponse.json({ message: response });
   } catch (error) {
     console.error("Gemini API error:", error);
-    return NextResponse.json(
-      { error: "AI 응답 생성에 실패했습니다." },
-      { status: 500 }
-    );
+    return errorResponse("INTERNAL_ERROR", "AI 응답 생성에 실패했습니다.");
   }
 });

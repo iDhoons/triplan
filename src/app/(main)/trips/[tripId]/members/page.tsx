@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useState } from "react";
 import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "@/stores/auth-store";
 import { useTrip, useInvalidateTrip } from "@/hooks/use-trip";
+import { useTripMembers } from "@/hooks/use-trip-members";
+import { queryKeys } from "@/hooks/query-keys";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -20,7 +23,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { MemberContribution } from "@/components/members/member-contribution";
 import { ActivityTimeline } from "@/components/members/activity-timeline";
 import { ChecklistProgress } from "@/components/members/checklist-progress";
-import type { Trip, TripMember, MemberRole } from "@/types/database";
+import type { TripMember, MemberRole } from "@/types/database";
 import { Copy, Check, UserMinus, RefreshCw, Share2 } from "lucide-react";
 import { nanoid } from "nanoid";
 import { toast } from "sonner";
@@ -45,11 +48,11 @@ export default function MembersPage() {
   const tripId = params.tripId as string;
   const { user } = useAuthStore();
   const supabase = createClient();
+  const queryClient = useQueryClient();
   const { data: trip = null } = useTrip(tripId);
   const { setData: setTripData } = useInvalidateTrip();
+  const { data: members = [], isLoading: loading } = useTripMembers(tripId);
 
-  const [members, setMembers] = useState<TripMember[]>([]);
-  const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [updatingRole, setUpdatingRole] = useState<string | null>(null);
   const [canShare] = useState(
@@ -60,23 +63,8 @@ export default function MembersPage() {
     (m) => m.user_id === user?.id && m.role === "admin"
   );
 
-  const fetchMembers = useCallback(async () => {
-    setLoading(true);
-    const { data } = await supabase
-      .from("trip_members")
-      .select(
-        "*, profile:profiles(id, display_name, avatar_url, created_at)"
-      )
-      .eq("trip_id", tripId);
-
-    if (data) setMembers(data as TripMember[]);
-    setLoading(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tripId]);
-
-  useEffect(() => {
-    fetchMembers();
-  }, [fetchMembers]);
+  const invalidateMembers = () =>
+    queryClient.invalidateQueries({ queryKey: queryKeys.members.byTrip(tripId) });
 
   function getInviteUrl() {
     if (!trip) return "";
@@ -127,14 +115,16 @@ export default function MembersPage() {
 
   async function handleRoleChange(memberId: string, newRole: MemberRole) {
     setUpdatingRole(memberId);
+    // Optimistic update via query cache
+    queryClient.setQueryData<TripMember[]>(queryKeys.members.byTrip(tripId), (old) =>
+      old?.map((m) => (m.id === memberId ? { ...m, role: newRole } : m))
+    );
     await supabase
       .from("trip_members")
       .update({ role: newRole })
       .eq("id", memberId);
-    setMembers((prev) =>
-      prev.map((m) => (m.id === memberId ? { ...m, role: newRole } : m))
-    );
     setUpdatingRole(null);
+    await invalidateMembers();
   }
 
   async function handleRemoveMember(memberId: string, userId: string) {
@@ -148,7 +138,10 @@ export default function MembersPage() {
 
     const removedMember = target;
     await supabase.from("trip_members").delete().eq("id", memberId);
-    setMembers((prev) => prev.filter((m) => m.id !== memberId));
+    // Optimistic removal via query cache
+    queryClient.setQueryData<TripMember[]>(queryKeys.members.byTrip(tripId), (old) =>
+      old?.filter((m) => m.id !== memberId)
+    );
     toast("멤버를 내보냈어요", {
       action: {
         label: "되돌리기",
@@ -160,7 +153,7 @@ export default function MembersPage() {
             user_id: userId,
             role: removedMember.role,
           });
-          setMembers((prev) => [...prev, removedMember]);
+          await invalidateMembers();
           toast.success("멤버가 복원되었어요");
         },
       },

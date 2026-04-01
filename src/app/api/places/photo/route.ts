@@ -39,10 +39,9 @@ export const GET = withAuth(async (request, { user }) => {
     });
 
     if (!res.ok) {
-      return NextResponse.json(
-        { error: "이미지를 불러올 수 없습니다" },
-        { status: res.status }
-      );
+      // @TASK T7.9 - 에러 응답 형식 통일
+      const code = res.status === 404 ? "NOT_FOUND" as const : "INTERNAL_ERROR" as const;
+      return errorResponse(code, "이미지를 불러올 수 없습니다");
     }
 
     const imageBuffer = await res.arrayBuffer();

@@ -19,7 +19,8 @@ const VALID_CATEGORIES = [
   "shopping",
 ] as const;
 
-if (!process.env.GEMINI_API_KEY) {
+// @TASK T7.12 - 빈 문자열도 거부 (falsy 체크)
+if (!process.env.GEMINI_API_KEY?.trim()) {
   throw new Error("GEMINI_API_KEY 환경변수가 설정되지 않았습니다");
 }
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);

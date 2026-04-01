@@ -21,6 +21,11 @@ export const GET = withAuth(async (request, { user }) => {
     return errorResponse("BAD_REQUEST", "googlePlaceId가 필요합니다");
   }
 
+  // @TASK T7.5 - Place ID 형식 검증 (영숫자, _, - / 20~200자)
+  if (!/^[a-zA-Z0-9_-]{20,200}$/.test(googlePlaceId)) {
+    return errorResponse("BAD_REQUEST", "유효하지 않은 googlePlaceId 형식입니다");
+  }
+
   try {
     const details = await getPlaceDetails(googlePlaceId);
     if (!details?.photos?.length) {

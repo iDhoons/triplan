@@ -20,6 +20,7 @@ export const queryKeys = {
   },
   notifications: {
     all: ["notifications"] as const,
+    feed: ["notifications", "feed"] as const,
     count: ["notifications", "count"] as const,
   },
   stats: {

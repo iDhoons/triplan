@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
+import { queryKeys } from "@/hooks/query-keys";
 import { MapPin, CalendarCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -23,7 +24,7 @@ export function TripProgressBanner({ tripId }: TripProgressBannerProps) {
   const supabase = createClient();
 
   const { data } = useQuery<ProgressData>({
-    queryKey: ["trip-progress", tripId],
+    queryKey: queryKeys.tripProgress.byTrip(tripId),
     queryFn: async () => {
       const [placesRes] = await Promise.all([
         supabase

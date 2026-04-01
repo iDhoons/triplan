@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/hooks/query-keys";
 import {
   YoutubeIcon,
   SearchIcon,
@@ -238,7 +239,7 @@ export function YouTubePlacePicker({
         toast.success(`${addedCount}개 장소가 추가되었습니다`);
       }
 
-      queryClient.invalidateQueries({ queryKey: ["places", tripId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.places.byTrip(tripId) });
       onOpenChange(false);
 
       setUrl("");

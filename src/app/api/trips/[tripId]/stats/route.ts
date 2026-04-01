@@ -7,42 +7,32 @@ export const GET = withTripMember(
   (request) => request.url.match(/\/trips\/([^/]+)\/stats/)?.[1] ?? null,
   async (_request, { supabase, tripId }) => {
 
-    // activity_logs에서 멤버별 액션 카운트 집계
-    const { data: logs, error } = await supabase
-      .from("activity_logs")
-      .select("user_id, action")
-      .eq("trip_id", tripId);
+    // SQL GROUP BY로 집계 (JS 루프 대신 DB에서 처리)
+    const [logsResult, membersResult] = await Promise.all([
+      supabase.rpc("get_contribution_stats", { _trip_id: tripId }),
+      supabase
+        .from("trip_members")
+        .select("user_id, role, profile:profiles(id, display_name, avatar_url)")
+        .eq("trip_id", tripId),
+    ]);
 
-    if (error) {
+    if (logsResult.error) {
       return errorResponse("INTERNAL_ERROR", "Internal server error");
     }
 
-    // 멤버 프로필 조회
-    const { data: members } = await supabase
-      .from("trip_members")
-      .select("user_id, role, profile:profiles(id, display_name, avatar_url)")
-      .eq("trip_id", tripId);
-
-    // 멤버별 기여도 집계
-    const statsMap = new Map<
-      string,
-      { places: number; votes: number; checklist: number; schedule: number; total: number }
-    >();
-
-    for (const log of logs ?? []) {
-      if (!statsMap.has(log.user_id)) {
-        statsMap.set(log.user_id, { places: 0, votes: 0, checklist: 0, schedule: 0, total: 0 });
-      }
-      const s = statsMap.get(log.user_id)!;
-      s.total++;
-
-      if (log.action.startsWith("place_")) s.places++;
-      else if (log.action === "vote_added") s.votes++;
-      else if (log.action.startsWith("checklist_")) s.checklist++;
-      else if (log.action.startsWith("schedule_item_")) s.schedule++;
+    // RPC 결과를 Map으로 변환
+    const statsMap = new Map<string, { places: number; votes: number; checklist: number; schedule: number; total: number }>();
+    for (const row of logsResult.data ?? []) {
+      statsMap.set(row.user_id, {
+        places: row.places,
+        votes: row.votes,
+        checklist: row.checklist,
+        schedule: row.schedule,
+        total: row.total,
+      });
     }
 
-    const stats = (members ?? []).map((m) => ({
+    const stats = (membersResult.data ?? []).map((m) => ({
       user_id: m.user_id,
       role: m.role,
       profile: m.profile,
@@ -55,7 +45,6 @@ export const GET = withTripMember(
       },
     }));
 
-    // total 기준 내림차순 정렬
     stats.sort((a, b) => b.contributions.total - a.contributions.total);
 
     return NextResponse.json({ stats });

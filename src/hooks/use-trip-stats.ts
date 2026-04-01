@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "./query-keys";
 import type { Profile } from "@/types/database";
 
 interface MemberContribution {
@@ -18,7 +19,7 @@ export interface MemberStat {
 
 export function useTripStats(tripId: string) {
   return useQuery({
-    queryKey: ["trip-stats", tripId],
+    queryKey: queryKeys.stats.trip(tripId),
     queryFn: async (): Promise<MemberStat[]> => {
       const res = await fetch(`/api/trips/${tripId}/stats`);
       if (!res.ok) throw new Error("Failed to fetch stats");

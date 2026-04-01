@@ -1,4 +1,5 @@
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "./query-keys";
 import type { Notification } from "@/types/database";
 
 interface NotificationPage {
@@ -9,7 +10,7 @@ interface NotificationPage {
 
 export function useNotifications() {
   return useInfiniteQuery({
-    queryKey: ["notifications", "feed"],
+    queryKey: queryKeys.notifications.feed,
     queryFn: async ({ pageParam }): Promise<NotificationPage> => {
       const params = new URLSearchParams({ limit: "20" });
       if (pageParam) params.set("cursor", pageParam);
@@ -35,7 +36,7 @@ export function useMarkAsRead() {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all });
     },
   });
 }
@@ -52,7 +53,7 @@ export function useMarkAllAsRead() {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all });
     },
   });
 }

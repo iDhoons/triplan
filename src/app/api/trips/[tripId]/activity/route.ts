@@ -2,6 +2,9 @@ import { withTripMember } from "@/lib/api/guards";
 import { NextResponse } from "next/server";
 import { errorResponse } from "@/lib/api/error-response";
 
+// @TASK T7.8 - cursor ISO 8601 검증
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/;
+
 // GET /api/trips/[tripId]/activity — 최근 활동 타임라인
 export const GET = withTripMember(
   (request) => request.url.match(/\/trips\/([^/]+)\/activity/)?.[1] ?? null,
@@ -9,6 +12,10 @@ export const GET = withTripMember(
     const url = new URL(_request.url);
     const cursor = url.searchParams.get("cursor");
     const limit = Math.min(Number(url.searchParams.get("limit")) || 20, 50);
+
+    if (cursor && !ISO_DATE.test(cursor)) {
+      return errorResponse("BAD_REQUEST", "Invalid cursor format");
+    }
 
     let query = supabase
       .from("activity_logs")

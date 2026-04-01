@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "./query-keys";
 
 export function useNotificationCount() {
   return useQuery({
-    queryKey: ["notifications", "count"],
+    queryKey: queryKeys.notifications.count,
     queryFn: async (): Promise<number> => {
       const res = await fetch("/api/notifications/count");
       if (!res.ok) return 0;

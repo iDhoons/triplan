@@ -1,4 +1,5 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
+import { queryKeys } from "./query-keys";
 import type { ActivityLog } from "@/types/database";
 
 interface ActivityPage {
@@ -8,7 +9,7 @@ interface ActivityPage {
 
 export function useTripActivity(tripId: string) {
   return useInfiniteQuery({
-    queryKey: ["activity_logs", tripId],
+    queryKey: queryKeys.activity.byTrip(tripId),
     queryFn: async ({ pageParam }): Promise<ActivityPage> => {
       const params = new URLSearchParams({ limit: "20" });
       if (pageParam) params.set("cursor", pageParam);

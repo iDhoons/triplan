@@ -2,12 +2,19 @@ import { withAuth } from "@/lib/api/guards";
 import { NextResponse } from "next/server";
 import { errorResponse } from "@/lib/api/error-response";
 
+// @TASK T7.8 - cursor ISO 8601 검증
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/;
+
 // GET /api/notifications — 알림 목록 (커서 페이지네이션)
 export const GET = withAuth(async (request, { supabase, user }) => {
   const url = new URL(request.url);
   const cursor = url.searchParams.get("cursor");
   const limit = Math.min(Number(url.searchParams.get("limit")) || 20, 50);
   const unreadOnly = url.searchParams.get("unread_only") === "true";
+
+  if (cursor && !ISO_DATE.test(cursor)) {
+    return errorResponse("BAD_REQUEST", "Invalid cursor format");
+  }
 
   let query = supabase
     .from("notifications")

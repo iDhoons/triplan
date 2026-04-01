@@ -27,12 +27,7 @@ interface PlaceFormProps {
   onCancel: () => void;
 }
 
-const CATEGORY_LABELS: Record<PlaceCategory, string> = {
-  accommodation: "숙소",
-  attraction: "관광지",
-  restaurant: "맛집",
-  other: "기타",
-};
+import { PLACE_CATEGORY_LABELS as CATEGORY_LABELS } from "@/constants/categories";
 
 type FormData = {
   name: string;

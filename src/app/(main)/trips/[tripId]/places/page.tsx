@@ -254,25 +254,26 @@ export default function PlacesPage() {
     photoFixAttempted.current = true;
 
     (async () => {
-      let updated = false;
-      for (const place of needPhotos) {
-        try {
+      const results = await Promise.allSettled(
+        needPhotos.map(async (place) => {
           const res = await fetch(
             `/api/places/resolve-photos?googlePlaceId=${encodeURIComponent(place.google_place_id!)}`
           );
-          if (!res.ok) continue;
+          if (!res.ok) return false;
           const { urls } = await res.json();
           if (urls?.length > 0) {
             await supabase
               .from("places")
               .update({ image_urls: urls })
               .eq("id", place.id);
-            updated = true;
+            return true;
           }
-        } catch {
-          // 개별 장소 실패 무시
-        }
-      }
+          return false;
+        })
+      );
+      const updated = results.some(
+        (r) => r.status === "fulfilled" && r.value === true
+      );
       if (updated) {
         queryClient.invalidateQueries({ queryKey: queryKeys.places.byTrip(tripId) });
       }

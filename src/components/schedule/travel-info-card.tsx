@@ -133,9 +133,11 @@ function TransitSummary({ lines }: { lines: TransitLine[] }) {
               <span className="text-sm font-semibold">
                 {line.short_name || line.name}
               </span>
-              <span className="text-xs text-muted-foreground">
-                {formatDuration(line.duration_seconds)}
-              </span>
+              {line.duration_seconds ? (
+                <span className="text-xs text-muted-foreground">
+                  {formatDuration(line.duration_seconds)}
+                </span>
+              ) : null}
             </div>
             {/* 구간 + 정거장 */}
             <p className="text-xs text-muted-foreground leading-relaxed">
@@ -164,41 +166,48 @@ function StaticMapImage({
   transitLines?: TransitLine[];
   googleMapsUrl: string;
 }) {
+  const [mapError, setMapError] = useState(false);
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
   if (!apiKey) return null;
 
-  const params = new URLSearchParams({
-    size: "600x200",
-    scale: "2",
-    maptype: "roadmap",
-    key: apiKey,
-  });
+  // URLSearchParams는 | 를 %7C로 인코딩하므로 전체 URL을 직접 구성
+  const base = `https://maps.googleapis.com/maps/api/staticmap?size=600x200&scale=2&maptype=roadmap&key=${apiKey}`;
 
-  // 출발/도착 마커
-  params.append("markers", `color:0x3b82f6|label:A|${origin.lat},${origin.lng}`);
-  params.append("markers", `color:0xef4444|label:B|${destination.lat},${destination.lng}`);
+  const markerParts = [
+    `markers=color:0x3b82f6|label:A|${origin.lat},${origin.lng}`,
+    `markers=color:0xef4444|label:B|${destination.lat},${destination.lng}`,
+  ];
 
-  // 환승 지점 마커 (Static Maps는 이름 색상만 지원)
   const MARKER_COLORS = ["purple", "green", "orange", "yellow", "brown"];
   if (transitLines?.length) {
     for (let i = 0; i < transitLines.length; i++) {
       const line = transitLines[i];
       if (line.start_location) {
         const color = MARKER_COLORS[i % MARKER_COLORS.length];
-        params.append(
-          "markers",
-          `color:${color}|size:small|label:${i + 1}|${line.start_location.lat},${line.start_location.lng}`
+        markerParts.push(
+          `markers=color:${color}|size:small|label:${i + 1}|${line.start_location.lat},${line.start_location.lng}`
         );
       }
     }
   }
 
-  // Static Maps API URL을 직접 구성 (URLSearchParams가 | 를 인코딩할 수 있으므로)
-  let src = `https://maps.googleapis.com/maps/api/staticmap?${params.toString()}`;
+  let src = `${base}&${markerParts.join("&")}`;
 
-  // 경로선: style 파라미터 → enc:POLYLINE 순서 (enc는 반드시 마지막)
-  if (polyline && polyline.length < 7000) {
-    src += `&path=weight:4|color:0x4285F4FF|enc:${polyline}`;
+  // 경로선 추가 (전체 URL이 Static Maps 16384 제한 이내일 때만)
+  const MAX_URL_LENGTH = 16384;
+  if (polyline) {
+    const pathParam = `&path=weight:4|color:0x4285F4FF|enc:${polyline}`;
+    if (src.length + pathParam.length < MAX_URL_LENGTH) {
+      src += pathParam;
+    }
+  }
+
+  if (mapError) {
+    return (
+      <div className="w-full h-32 sm:h-40 rounded-lg bg-muted flex items-center justify-center">
+        <span className="text-xs text-muted-foreground">지도를 불러올 수 없습니다</span>
+      </div>
+    );
   }
 
   return (
@@ -209,6 +218,7 @@ function StaticMapImage({
         alt="경로 지도"
         className="w-full h-32 sm:h-40 rounded-lg object-cover"
         loading="lazy"
+        onError={() => setMapError(true)}
       />
     </a>
   );

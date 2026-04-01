@@ -2,6 +2,7 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { queryKeys } from "./query-keys";
 import { computeTravelInfoForSchedule } from "@/lib/services/travel-info";
 import type { Schedule, ScheduleItem, Place } from "@/types/database";
 import type { ScheduleItemFormData } from "@/components/schedule/schedule-item-form";
@@ -29,8 +30,8 @@ export function useScheduleActions({
   const queryClient = useQueryClient();
 
   const invalidateSchedules = () => {
-    queryClient.invalidateQueries({ queryKey: ["schedules", tripId] });
-    queryClient.invalidateQueries({ queryKey: ["schedule-data", tripId] });
+    queryClient.invalidateQueries({ queryKey: queryKeys.schedules.byTrip(tripId) });
+    queryClient.invalidateQueries({ queryKey: queryKeys.schedules.data(tripId) });
   };
 
   const handleFormSubmit = async (data: ScheduleItemFormData) => {
@@ -125,7 +126,7 @@ export function useScheduleActions({
   ) => {
     // Optimistic update via React Query cache
     queryClient.setQueryData<Schedule[]>(
-      ["schedules", tripId],
+      queryKeys.schedules.byTrip(tripId),
       (old) =>
         old?.map((s) =>
           s.id === scheduleId ? { ...s, items: orderedItems } : s
@@ -133,14 +134,11 @@ export function useScheduleActions({
     );
 
     try {
-      await Promise.all(
-        orderedItems.map((item) =>
-          supabase
-            .from("schedule_items")
-            .update({ sort_order: item.sort_order, updated_at: new Date().toISOString() })
-            .eq("id", item.id)
-        )
-      );
+      const { error } = await supabase.rpc("reorder_schedule_items", {
+        _schedule_id: scheduleId,
+        _ordered_ids: orderedItems.map((i) => i.id),
+      });
+      if (error) throw error;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await computeTravelInfoForSchedule(supabase as any, scheduleId);
       await invalidateSchedules();
@@ -257,11 +255,12 @@ export function useScheduleActions({
       }
 
       toast.success("일정을 이동했습니다.");
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      /* eslint-disable @typescript-eslint/no-explicit-any */
       await Promise.all([
         computeTravelInfoForSchedule(supabase as any, fromScheduleId),
         computeTravelInfoForSchedule(supabase as any, toScheduleId),
       ]);
+      /* eslint-enable @typescript-eslint/no-explicit-any */
       await invalidateSchedules();
     } catch (err) {
       console.error(err);

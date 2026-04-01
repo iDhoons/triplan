@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "./query-keys";
 import type { Profile } from "@/types/database";
 
 export interface ChecklistMemberStat {
@@ -16,7 +17,7 @@ interface ChecklistStatsResponse {
 
 export function useChecklistStats(tripId: string) {
   return useQuery({
-    queryKey: ["checklist-stats", tripId],
+    queryKey: queryKeys.stats.checklist(tripId),
     queryFn: async (): Promise<ChecklistStatsResponse> => {
       const res = await fetch(`/api/trips/${tripId}/checklist-stats`);
       if (!res.ok) throw new Error("Failed to fetch checklist stats");

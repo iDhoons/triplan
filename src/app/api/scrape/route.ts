@@ -63,15 +63,10 @@ export const POST = withAuth(async (request, { user }) => {
         business_status: enriched.business_status,
       });
     }
-    return NextResponse.json(
-      { error: "해당 URL에서 장소 정보를 찾을 수 없습니다" },
-      { status: 422 }
-    );
+    // @TASK T7.9 - 에러 응답 형식 통일 (422 → BAD_REQUEST 400)
+    return errorResponse("BAD_REQUEST", "해당 URL에서 장소 정보를 찾을 수 없습니다");
   } catch (err) {
     console.error("[scrape] Places API error:", err);
-    return NextResponse.json(
-      { error: "해당 URL에서 정보를 가져올 수 없습니다" },
-      { status: 422 }
-    );
+    return errorResponse("INTERNAL_ERROR", "해당 URL에서 정보를 가져올 수 없습니다");
   }
 });

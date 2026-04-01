@@ -1,10 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
+import { queryKeys } from "./query-keys";
 import type { TripMember } from "@/types/database";
 
 export function useTripMembers(tripId: string) {
   return useQuery({
-    queryKey: ["members", tripId],
+    queryKey: queryKeys.members.byTrip(tripId),
     queryFn: async () => {
       const supabase = createClient();
       const { data, error } = await supabase

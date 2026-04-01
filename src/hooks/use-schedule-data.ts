@@ -3,6 +3,7 @@
 import { useEffect, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
+import { queryKeys } from "./query-keys";
 import type { Schedule, Place, Trip } from "@/types/database";
 
 /**
@@ -17,7 +18,7 @@ export function useScheduleData(tripId: string) {
 
   // --- Trip + Schedules + Places (병렬 fetch) ---
   const combinedQuery = useQuery({
-    queryKey: ["schedule-data", tripId],
+    queryKey: queryKeys.schedules.data(tripId),
     queryFn: async () => {
       const [tripResult, schedulesResult, placesResult] = await Promise.all([
         supabase.from("trips").select("id, title, destination, start_date, end_date, cover_image_url, invite_code, created_by, created_at, updated_at").eq("id", tripId).single(),
@@ -66,7 +67,7 @@ export function useScheduleData(tripId: string) {
       if (!res.ok) return;
       const data = await res.json();
       if (data.status === "updated") {
-        queryClient.invalidateQueries({ queryKey: ["schedule-data", tripId] });
+        queryClient.invalidateQueries({ queryKey: queryKeys.schedules.data(tripId) });
       }
     } catch {
       // 날씨 실패는 무시
@@ -89,7 +90,7 @@ export function useScheduleData(tripId: string) {
     supabase,
     refetch: async () => {
       await queryClient.invalidateQueries({
-        queryKey: ["schedule-data", tripId],
+        queryKey: queryKeys.schedules.data(tripId),
       });
     },
   };

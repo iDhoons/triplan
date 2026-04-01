@@ -32,7 +32,7 @@ export function useChecklistItems(tripId: string) {
 
 export function useChecklistLogs(itemId: string | null) {
   return useQuery({
-    queryKey: ["checklist_logs", itemId],
+    queryKey: queryKeys.checklist.logs(itemId!),
     queryFn: async () => {
       const supabase = createClient();
       const { data, error } = await supabase

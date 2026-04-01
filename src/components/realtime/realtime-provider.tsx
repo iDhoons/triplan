@@ -4,6 +4,7 @@ import { useEffect, useRef, useCallback } from "react";
 import { useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/auth-store";
+import { queryKeys } from "@/hooks/query-keys";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import type {
   Place,
@@ -31,12 +32,12 @@ function patchSchedulesCache(
   updater: (schedules: Schedule[]) => Schedule[],
 ) {
   // 1) legacy key (optimistic update용)
-  queryClient.setQueryData<Schedule[]>(["schedules", tripId], (old) =>
+  queryClient.setQueryData<Schedule[]>(queryKeys.schedules.byTrip(tripId), (old) =>
     old ? updater(old) : old,
   );
   // 2) combined key (schedule 페이지가 읽는 실제 데이터)
   queryClient.setQueryData<ScheduleDataCache>(
-    ["schedule-data", tripId],
+    queryKeys.schedules.data(tripId),
     (old) => {
       if (!old) return old;
       return { ...old, schedules: updater(old.schedules) };
@@ -81,8 +82,8 @@ function handlePlacesChange(
   tripId: string,
   userId: string | undefined,
 ) {
-  const placesKey = ["places", tripId];
-  const scheduleDataKey = ["schedule-data", tripId];
+  const placesKey = queryKeys.places.byTrip(tripId);
+  const scheduleDataKey = queryKeys.schedules.data(tripId);
 
   switch (payload.eventType) {
     case "INSERT": {
@@ -140,7 +141,7 @@ function handlePlacesChange(
       });
       // Schedule items referencing this place will show stale data;
       // invalidate schedules to let them refetch cleanly
-      queryClient.invalidateQueries({ queryKey: ["schedules", tripId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.schedules.byTrip(tripId) });
       queryClient.invalidateQueries({ queryKey: scheduleDataKey });
       break;
     }
@@ -161,12 +162,12 @@ function handlePlaceVotesChange(
   const record = (payload.new ?? payload.old) as { place_id?: string };
   if (record.place_id) {
     type PlaceData = { id: string }[];
-    const places = queryClient.getQueryData<PlaceData>(["places", tripId]);
+    const places = queryClient.getQueryData<PlaceData>(queryKeys.places.byTrip(tripId));
     if (places && !places.some((p) => p.id === record.place_id)) {
       return; // 다른 trip의 vote 이벤트 → skip
     }
   }
-  queryClient.invalidateQueries({ queryKey: ["place_votes", tripId] });
+  queryClient.invalidateQueries({ queryKey: queryKeys.placeVotes.byTrip(tripId) });
 }
 
 // ---------------------------------------------------------------------------
@@ -177,8 +178,8 @@ function handleScheduleItemsChange(
   queryClient: QueryClient,
   tripId: string,
 ) {
-  const schedulesKey = ["schedules", tripId];
-  const scheduleDataKey = ["schedule-data", tripId];
+  const schedulesKey = queryKeys.schedules.byTrip(tripId);
+  const scheduleDataKey = queryKeys.schedules.data(tripId);
 
   // 현재 trip의 schedule인지 확인 — 다른 trip 이벤트는 무시
   const record = (payload.new ?? payload.old) as Partial<ScheduleItem>;
@@ -283,7 +284,7 @@ function handleChecklistItemsChange(
   tripId: string,
   userId: string | undefined,
 ) {
-  const queryKey = ["checklist", tripId];
+  const queryKey = queryKeys.checklist.byTrip(tripId);
 
   switch (payload.eventType) {
     case "INSERT": {
@@ -329,13 +330,15 @@ export function RealtimeProvider({ tripId, children }: RealtimeProviderProps) {
   const user = useAuthStore((s) => s.user);
   const channelRef = useRef<RealtimeChannel | null>(null);
 
-  // Stable refs so callback closures always have the latest user data
+  // Stable refs so callback closures always have the latest user data.
+  // Depend on user?.id only -- avoid rebuilding when unrelated user fields change.
   const userIdRef = useRef(user?.id);
   const userRef = useRef(user);
   useEffect(() => {
     userIdRef.current = user?.id;
     userRef.current = user;
-  }, [user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   const setupChannel = useCallback(() => {
     if (!tripId) return;
@@ -395,7 +398,7 @@ export function RealtimeProvider({ tripId, children }: RealtimeProviderProps) {
           filter: `trip_id=eq.${tripId}`,
         },
         () => {
-          queryClient.invalidateQueries({ queryKey: ["members", tripId] });
+          queryClient.invalidateQueries({ queryKey: queryKeys.members.byTrip(tripId) });
         },
       )
       // ---------------------------------------------------------------
@@ -463,7 +466,7 @@ export function RealtimeProvider({ tripId, children }: RealtimeProviderProps) {
         },
         (payload) => {
           queryClient.invalidateQueries({
-            queryKey: ["activity_logs", tripId],
+            queryKey: queryKeys.activity.byTrip(tripId),
           });
           // ActivityToast가 수신할 수 있도록 이벤트 발행
           presenceEventTarget.dispatchEvent(

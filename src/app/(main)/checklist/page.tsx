@@ -13,6 +13,7 @@ import {
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/auth-store";
+import { queryKeys } from "@/hooks/query-keys";
 import { useChecklistMutations } from "@/hooks/use-checklist";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -29,7 +30,7 @@ interface TripWithChecklist {
   userRole: MemberRole;
 }
 
-const GLOBAL_QUERY_KEY = ["checklist_global"];
+const GLOBAL_QUERY_KEY = queryKeys.checklist.global;
 
 function useAllChecklists() {
   const user = useAuthStore((s) => s.user);

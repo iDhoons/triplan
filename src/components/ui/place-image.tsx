@@ -53,6 +53,7 @@ export function PlaceImage({
       src={url}
       alt={alt}
       className={className}
+      loading="lazy"
       onError={() => setError(true)}
     />
   );

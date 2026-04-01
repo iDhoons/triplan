@@ -8,6 +8,9 @@ const MAX_ATTEMPTS = 3;
 /**
  * POST /api/places/[id]/enrich
  * 클라이언트 트리거 풍부화: 미풍부화 장소에 Places API 데이터 채우기.
+ *
+ * @TASK T7.2 - withAuth + 내부 멤버십/에디터 권한 검증 (place 조회 후 trip_id 결정)
+ * @SPEC docs/TASKS.md#Phase-7
  */
 export const POST = withAuth(async (
   _request,
@@ -18,14 +21,13 @@ export const POST = withAuth(async (
     return errorResponse("RATE_LIMITED", "너무 많은 요청입니다. 잠시 후 다시 시도해주세요.");
   }
 
-  // Next.js dynamic route params — withAuth 밖에서 접근 불가하므로 URL에서 추출
-  const url = new URL(_request.url);
-  const placeId = url.pathname.split("/places/")[1]?.split("/")[0];
+  // Next.js dynamic route params에서 place ID 추출
+  const placeId = new URL(_request.url).pathname.split("/places/")[1]?.split("/")[0];
   if (!placeId) {
     return errorResponse("BAD_REQUEST", "place ID가 필요합니다");
   }
 
-  // place 조회 + 권한 확인
+  // place 조회 (trip_id 포함)
   const { data: place } = await supabase
     .from("places")
     .select("id, source_url, enriched, enrich_attempts, trip_id")
@@ -36,7 +38,7 @@ export const POST = withAuth(async (
     return errorResponse("NOT_FOUND", "장소를 찾을 수 없습니다");
   }
 
-  // trip 멤버 확인
+  // trip 멤버 + 편집 권한 확인 (viewer 쓰기 차단)
   const { data: membership } = await supabase
     .from("trip_members")
     .select("role")
@@ -46,6 +48,10 @@ export const POST = withAuth(async (
 
   if (!membership) {
     return errorResponse("FORBIDDEN", "접근 권한이 없습니다");
+  }
+
+  if (membership.role === "viewer") {
+    return errorResponse("FORBIDDEN", "Viewer는 이 작업을 수행할 수 없습니다");
   }
 
   // 이미 풍부화됨 → 기존 데이터 반환

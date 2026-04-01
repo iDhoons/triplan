@@ -83,14 +83,17 @@ async function callGeminiWithRetry(
   }
 }
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+// @TASK T7.12 - 빈 문자열 fallback 제거
+if (!process.env.GEMINI_API_KEY?.trim()) {
+  throw new Error("GEMINI_API_KEY is not set");
+}
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 export async function extractPlacesFromTranscript(
   transcript: string,
   videoTitle: string,
   source: "transcript" | "description"
 ): Promise<ExtractedPlace[]> {
-  if (!process.env.GEMINI_API_KEY) throw new Error("GEMINI_API_KEY is not set");
 
   const model = genAI.getGenerativeModel({
     model: "gemini-2.0-flash",
