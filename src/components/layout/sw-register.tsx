@@ -11,8 +11,8 @@ export function ServiceWorkerRegister() {
     ) {
       navigator.serviceWorker
         .register("/sw.js", { scope: "/" })
-        .then((registration) => {
-          console.log("[SW] 등록 성공:", registration.scope);
+        .then(() => {
+          // SW 등록 성공
         })
         .catch((error) => {
           console.error("[SW] 등록 실패:", error);

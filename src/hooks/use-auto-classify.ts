@@ -4,13 +4,19 @@ import type { ChecklistCategory } from "@/types/database";
 
 type ClassifySource = "keyword" | "ai" | "default" | null;
 
-export function useAutoClassify() {
+interface UseAutoClassifyOptions {
+  onClassified?: (category: ChecklistCategory, source: ClassifySource) => void;
+}
+
+export function useAutoClassify(options?: UseAutoClassifyOptions) {
   const [classifiedCategory, setClassifiedCategory] =
     useState<ChecklistCategory | null>(null);
   const [source, setSource] = useState<ClassifySource>(null);
   const [isClassifying, setIsClassifying] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const onClassifiedRef = useRef(options?.onClassified);
+  onClassifiedRef.current = options?.onClassified;
 
   const classify = useCallback((title: string) => {
     // 이전 요청 취소
@@ -30,6 +36,7 @@ export function useAutoClassify() {
       setClassifiedCategory(keywordResult);
       setSource("keyword");
       setIsClassifying(false);
+      onClassifiedRef.current?.(keywordResult, "keyword");
       return;
     }
 
@@ -50,10 +57,12 @@ export function useAutoClassify() {
         const data = await res.json();
         setClassifiedCategory(data.category);
         setSource(data.source);
+        onClassifiedRef.current?.(data.category, data.source);
       } catch {
         if (!controller.signal.aborted) {
           setClassifiedCategory("shared");
           setSource("default");
+          onClassifiedRef.current?.("shared", "default");
         }
       } finally {
         if (!controller.signal.aborted) {

@@ -43,7 +43,13 @@ const nextConfig: NextConfig = {
   logging: false,
   reactCompiler: true,
   experimental: {
-    optimizePackageImports: ["lucide-react", "date-fns"],
+    optimizePackageImports: [
+      "lucide-react",
+      "date-fns",
+      "@dnd-kit/core",
+      "@dnd-kit/sortable",
+      "@dnd-kit/utilities",
+    ],
     viewTransition: true,
   },
   images: {

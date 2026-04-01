@@ -1,6 +1,11 @@
 import type { PrecacheEntry, SerwistGlobalConfig } from "serwist";
 import { Serwist } from "serwist";
-import { NetworkFirst, CacheFirst, StaleWhileRevalidate } from "serwist";
+import {
+  NetworkFirst,
+  CacheFirst,
+  StaleWhileRevalidate,
+  ExpirationPlugin,
+} from "serwist";
 
 // serwist 전역 설정 타입 확장
 declare global {
@@ -40,7 +45,12 @@ const serwist = new Serwist({
       matcher: /\.(?:png|jpg|jpeg|svg|gif|webp|ico)$/,
       handler: new CacheFirst({
         cacheName: "image-cache",
-        plugins: [],
+        plugins: [
+          new ExpirationPlugin({
+            maxEntries: 100,
+            maxAgeSeconds: 30 * 24 * 60 * 60, // 30일
+          }),
+        ],
       }),
     },
     // 정적 자산 (폰트, CSS): StaleWhileRevalidate

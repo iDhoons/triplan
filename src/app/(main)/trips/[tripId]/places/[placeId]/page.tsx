@@ -112,7 +112,7 @@ export default function PlaceDetailPage() {
   }, [placeId, tripId, supabase]);
 
   useEffect(() => {
-    fetchData();
+    void fetchData();
   }, [fetchData]);
 
   async function handleDelete() {
@@ -561,7 +561,7 @@ export default function PlaceDetailPage() {
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              "{place.name}"을(를) 어느 날짜에 추가할까요?
+              &ldquo;{place.name}&rdquo;을(를) 어느 날짜에 추가할까요?
             </p>
             <Select
               value={selectedScheduleId}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -58,6 +58,7 @@ export function AddItemForm({
   const [assignedTo, setAssignedTo] = useState<string>("none");
   const [memo, setMemo] = useState("");
   const [manualOverride, setManualOverride] = useState(!!defaultCategory);
+  const manualOverrideRef = useRef(!!defaultCategory);
 
   const {
     classifiedCategory,
@@ -65,7 +66,13 @@ export function AddItemForm({
     isClassifying,
     classify,
     reset: resetClassify,
-  } = useAutoClassify();
+  } = useAutoClassify({
+    onClassified: (cat) => {
+      if (!manualOverrideRef.current) {
+        setCategory(cat);
+      }
+    },
+  });
 
   const reset = () => {
     setTitle("");
@@ -74,15 +81,9 @@ export function AddItemForm({
     setAssignedTo("none");
     setMemo("");
     setManualOverride(!!defaultCategory);
+    manualOverrideRef.current = !!defaultCategory;
     resetClassify();
   };
-
-  // 분류 결과 → 카테고리 반영
-  useEffect(() => {
-    if (classifiedCategory && !manualOverride) {
-      setCategory(classifiedCategory);
-    }
-  }, [classifiedCategory, manualOverride]);
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newTitle = e.target.value;
@@ -96,6 +97,7 @@ export function AddItemForm({
     if (!v) return;
     setCategory(v as ChecklistCategory);
     setManualOverride(true);
+    manualOverrideRef.current = true;
   };
 
   const handleSubmit = (e: React.FormEvent) => {

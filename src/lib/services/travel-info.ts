@@ -1,15 +1,5 @@
 import type { Schedule, ScheduleItem } from "@/types/database";
-
-type SupabaseClient = {
-  from: (table: string) => {
-    select: (query: string) => {
-      eq: (col: string, val: string) => { single: () => Promise<{ data: unknown }> };
-    };
-    update: (data: Record<string, unknown>) => {
-      eq: (col: string, val: string) => Promise<{ error: unknown }>;
-    };
-  };
-};
+import type { SupabaseClient } from "@/lib/api/guards";
 
 /**
  * 특정 schedule의 인접 아이템 간 이동 정보를 자동 계산한다.

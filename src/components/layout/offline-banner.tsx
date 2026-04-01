@@ -5,12 +5,12 @@ import { WifiOff } from "lucide-react";
 import { toast } from "sonner";
 
 export function OfflineBanner() {
-  const [isOnline, setIsOnline] = useState(true);
+  const [isOnline, setIsOnline] = useState(() =>
+    typeof navigator !== "undefined" ? navigator.onLine : true
+  );
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // 초기 상태를 navigator.onLine으로 설정
-    setIsOnline(navigator.onLine);
     setMounted(true);
 
     function handleOnline() {
