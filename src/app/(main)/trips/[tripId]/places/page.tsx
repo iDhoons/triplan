@@ -254,26 +254,33 @@ export default function PlacesPage() {
     photoFixAttempted.current = true;
 
     (async () => {
-      const results = await Promise.allSettled(
-        needPhotos.map(async (place) => {
-          const res = await fetch(
-            `/api/places/resolve-photos?googlePlaceId=${encodeURIComponent(place.google_place_id!)}`
-          );
-          if (!res.ok) return false;
-          const { urls } = await res.json();
-          if (urls?.length > 0) {
-            await supabase
-              .from("places")
-              .update({ image_urls: urls })
-              .eq("id", place.id);
-            return true;
-          }
-          return false;
-        })
-      );
-      const updated = results.some(
-        (r) => r.status === "fulfilled" && r.value === true
-      );
+      const CONCURRENCY = 5;
+      let updated = false;
+
+      for (let i = 0; i < needPhotos.length; i += CONCURRENCY) {
+        const chunk = needPhotos.slice(i, i + CONCURRENCY);
+        const results = await Promise.allSettled(
+          chunk.map(async (place) => {
+            const res = await fetch(
+              `/api/places/resolve-photos?googlePlaceId=${encodeURIComponent(place.google_place_id!)}`
+            );
+            if (!res.ok) return false;
+            const { urls } = await res.json();
+            if (urls?.length > 0) {
+              await supabase
+                .from("places")
+                .update({ image_urls: urls })
+                .eq("id", place.id);
+              return true;
+            }
+            return false;
+          })
+        );
+        if (results.some((r) => r.status === "fulfilled" && r.value === true)) {
+          updated = true;
+        }
+      }
+
       if (updated) {
         queryClient.invalidateQueries({ queryKey: queryKeys.places.byTrip(tripId) });
       }

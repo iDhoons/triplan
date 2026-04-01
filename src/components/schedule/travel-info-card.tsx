@@ -153,6 +153,9 @@ function TransitSummary({ lines }: { lines: TransitLine[] }) {
 // -----------------------------------------------------------------------
 // Static Map Image (Google Static Maps API — JS 0줄, img 1개)
 // -----------------------------------------------------------------------
+const MARKER_COLORS = ["purple", "green", "orange", "yellow", "brown"];
+const MAX_URL_LENGTH = 16384;
+
 function StaticMapImage({
   origin,
   destination,
@@ -178,7 +181,6 @@ function StaticMapImage({
     `markers=color:0xef4444|label:B|${destination.lat},${destination.lng}`,
   ];
 
-  const MARKER_COLORS = ["purple", "green", "orange", "yellow", "brown"];
   if (transitLines?.length) {
     for (let i = 0; i < transitLines.length; i++) {
       const line = transitLines[i];
@@ -193,8 +195,6 @@ function StaticMapImage({
 
   let src = `${base}&${markerParts.join("&")}`;
 
-  // 경로선 추가 (전체 URL이 Static Maps 16384 제한 이내일 때만)
-  const MAX_URL_LENGTH = 16384;
   if (polyline) {
     const pathParam = `&path=weight:4|color:0x4285F4FF|enc:${polyline}`;
     if (src.length + pathParam.length < MAX_URL_LENGTH) {

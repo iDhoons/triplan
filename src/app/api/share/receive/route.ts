@@ -21,19 +21,13 @@ export const POST = withAuth(async (request) => {
   const rawText = formData.get("text");
   const rawUrl = formData.get("url");
 
-  // null 체크 + typeof 검증 — File 등 비문자열 타입 거부
-  const title =
-    rawTitle != null && typeof rawTitle === "string"
-      ? rawTitle.slice(0, 500)
-      : "";
-  const text =
-    rawText != null && typeof rawText === "string"
-      ? rawText.slice(0, 500)
-      : "";
-  const url =
-    rawUrl != null && typeof rawUrl === "string"
-      ? rawUrl.slice(0, 500)
-      : "";
+  const MAX_FIELD_LENGTH = 500;
+  const safeString = (v: FormDataEntryValue | null) =>
+    v != null && typeof v === "string" ? v.slice(0, MAX_FIELD_LENGTH) : "";
+
+  const title = safeString(rawTitle);
+  const text = safeString(rawText);
+  const url = safeString(rawUrl);
 
   // 공유받은 데이터를 반환 → 클라이언트에서 장소 등록 폼에 채움
   return NextResponse.json({ title, text, url });

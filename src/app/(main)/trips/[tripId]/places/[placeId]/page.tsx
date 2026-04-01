@@ -60,7 +60,7 @@ const PlaceMap = dynamic(
   }
 );
 
-import { PLACE_CATEGORY_LABELS as CATEGORY_LABELS } from "@/constants/categories";
+import { PLACE_CATEGORY_LABEL as CATEGORY_LABELS } from "@/config/categories";
 
 const CATEGORY_COLORS: Record<PlaceCategory, string> = {
   accommodation: "bg-cat-accommodation text-cat-accommodation-fg",

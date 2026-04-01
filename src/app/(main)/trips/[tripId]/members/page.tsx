@@ -115,15 +115,15 @@ export default function MembersPage() {
 
   async function handleRoleChange(memberId: string, newRole: MemberRole) {
     setUpdatingRole(memberId);
-    // Optimistic update via query cache
-    queryClient.setQueryData<TripMember[]>(queryKeys.members.byTrip(tripId), (old) =>
-      old?.map((m) => (m.id === memberId ? { ...m, role: newRole } : m))
-    );
-    await supabase
+    const { error } = await supabase
       .from("trip_members")
       .update({ role: newRole })
       .eq("id", memberId);
     setUpdatingRole(null);
+    if (error) {
+      toast.error("역할 변경에 실패했습니다.");
+      return;
+    }
     await invalidateMembers();
   }
 

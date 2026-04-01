@@ -27,7 +27,7 @@ interface PlaceFormProps {
   onCancel: () => void;
 }
 
-import { PLACE_CATEGORY_LABELS as CATEGORY_LABELS } from "@/constants/categories";
+import { PLACE_CATEGORY_LABEL as CATEGORY_LABELS } from "@/config/categories";
 
 type FormData = {
   name: string;

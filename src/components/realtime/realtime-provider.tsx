@@ -331,14 +331,15 @@ export function RealtimeProvider({ tripId, children }: RealtimeProviderProps) {
   const channelRef = useRef<RealtimeChannel | null>(null);
 
   // Stable refs so callback closures always have the latest user data.
-  // Depend on user?.id only -- avoid rebuilding when unrelated user fields change.
   const userIdRef = useRef(user?.id);
   const userRef = useRef(user);
   useEffect(() => {
     userIdRef.current = user?.id;
-    userRef.current = user;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [user?.id]);
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
 
   const setupChannel = useCallback(() => {
     if (!tripId) return;

@@ -1,9 +1,6 @@
 import { withTripMember } from "@/lib/api/guards";
 import { NextResponse } from "next/server";
-import { errorResponse } from "@/lib/api/error-response";
-
-// @TASK T7.8 - cursor ISO 8601 검증
-const ISO_DATE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/;
+import { errorResponse, ISO_DATE } from "@/lib/api/error-response";
 
 // GET /api/trips/[tripId]/activity — 최근 활동 타임라인
 export const GET = withTripMember(
