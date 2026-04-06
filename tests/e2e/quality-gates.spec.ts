@@ -179,7 +179,7 @@ test.describe('Quality Gates', () => {
     test('authentication system is operational', async ({ request }) => {
       // Should at least be able to reach auth endpoints
       const response = await request.get('/auth/sign-in', {
-        followRedirects: false,
+        maxRedirects: 0,
       });
 
       // Should not be a 500 error

@@ -18,6 +18,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { Trip } from "@/types/database";
+import type { TripWithRole } from "@/hooks/use-trips";
 import { nanoid } from "nanoid";
 import {
   MapPin,
@@ -30,7 +31,15 @@ import {
   CheckCircle2,
   Plus,
   ChevronRight,
+  MoreVertical,
+  Trash2,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { TripCardSkeleton } from "@/components/layout/loading-skeleton";
 import { useTrips, tripsQueryKey } from "@/hooks/use-trips";
 import { cn } from "@/lib/utils";
@@ -186,6 +195,43 @@ export default function DashboardPage() {
     setCreating(false);
     queryClient.invalidateQueries({ queryKey: tripsQueryKey });
     router.push(`/trips/${tripId}/places`);
+  }
+
+  function handleDelete(trip: TripWithRole) {
+    // 낙관적 업데이트: 즉시 목록에서 제거
+    queryClient.setQueryData<TripWithRole[]>(tripsQueryKey, (prev) =>
+      (prev ?? []).filter((t) => t.id !== trip.id)
+    );
+
+    let undone = false;
+    const timeoutId = setTimeout(async () => {
+      if (undone) return;
+      const res = await fetch(`/api/trips/${trip.id}`, { method: "DELETE" });
+      if (!res.ok) {
+        // 서버 오류 시 롤백
+        queryClient.setQueryData<TripWithRole[]>(tripsQueryKey, (prev) =>
+          prev ? [trip, ...prev] : [trip]
+        );
+        toast.error("삭제에 실패했습니다. 다시 시도해주세요.");
+      } else {
+        queryClient.invalidateQueries({ queryKey: tripsQueryKey });
+      }
+    }, 5000);
+
+    toast(`"${trip.title}" 여행을 삭제했습니다`, {
+      duration: 5000,
+      action: {
+        label: "되돌리기",
+        onClick: () => {
+          undone = true;
+          clearTimeout(timeoutId);
+          // 낙관적 업데이트 롤백
+          queryClient.setQueryData<TripWithRole[]>(tripsQueryKey, (prev) =>
+            prev ? [trip, ...prev] : [trip]
+          );
+        },
+      },
+    });
   }
 
   function getDaysLabel(trip: Trip) {
@@ -395,6 +441,7 @@ export default function DashboardPage() {
               {trips.map((trip) => {
                 const status = getTripStatus(trip);
                 const config = statusConfig[status];
+                const isAdmin = trip.myRole === "admin";
                 return (
                   <div
                     key={trip.id}
@@ -427,7 +474,31 @@ export default function DashboardPage() {
                     >
                       {config.label}
                     </span>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors shrink-0" />
+                    {isAdmin ? (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger
+                          onClick={(e) => e.stopPropagation()}
+                          className="shrink-0 p-1.5 rounded-md text-muted-foreground/50 hover:text-muted-foreground hover:bg-muted transition-colors"
+                          aria-label="더 보기"
+                        >
+                          <MoreVertical className="w-4 h-4" />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            variant="destructive"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(trip);
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            여행 삭제
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    ) : (
+                      <ChevronRight className="w-4 h-4 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors shrink-0" />
+                    )}
                   </div>
                 );
               })}
@@ -439,6 +510,7 @@ export default function DashboardPage() {
             {trips.map((trip) => {
               const status = getTripStatus(trip);
               const config = statusConfig[status];
+              const isAdmin = trip.myRole === "admin";
               return (
                 <Card
                   key={trip.id}
@@ -460,14 +532,39 @@ export default function DashboardPage() {
                           </p>
                         </div>
                       </div>
-                      <span
-                        className={cn(
-                          "shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide",
-                          config.className
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <span
+                          className={cn(
+                            "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide",
+                            config.className
+                          )}
+                        >
+                          {config.label}
+                        </span>
+                        {isAdmin && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger
+                              onClick={(e) => e.stopPropagation()}
+                              className="p-1 rounded-md text-muted-foreground/50 hover:text-muted-foreground hover:bg-muted transition-colors"
+                              aria-label="더 보기"
+                            >
+                              <MoreVertical className="w-3.5 h-3.5" />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                variant="destructive"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDelete(trip);
+                                }}
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                여행 삭제
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         )}
-                      >
-                        {config.label}
-                      </span>
+                      </div>
                     </div>
                     <div className="flex items-center justify-between mt-3 pt-3 border-t border-glass-border">
                       <div className="flex items-center gap-1.5 text-xs text-muted-foreground">

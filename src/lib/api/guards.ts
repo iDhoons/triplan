@@ -86,10 +86,13 @@ export function withTripMember(
   return withAuth(async (request, { supabase, user }) => {
     let body: unknown = null;
 
-    // body가 필요한 경우 clone하여 파싱
+    // body가 필요한 경우 clone하여 파싱 (빈 body DELETE 등은 null 유지)
     if (request.method !== "GET") {
       try {
-        body = await request.clone().json();
+        const text = await request.clone().text();
+        if (text.trim()) {
+          body = JSON.parse(text);
+        }
       } catch {
         return errorResponse("BAD_REQUEST", "Invalid JSON body");
       }

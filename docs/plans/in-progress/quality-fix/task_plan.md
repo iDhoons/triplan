@@ -65,29 +65,29 @@ Phase 9: Components & Performance — Status: in_progress
 ### Phase 9: Components & Performance (UI 계층)
 > Hooks가 안정된 후 컴포넌트 수정. 사용자 체감 성능에 직접 영향.
 
-- [ ] 9-1. **PlaceImage `loading="lazy"`** — `place-image.tsx:52` (5분, HIGH 임팩트)
-- [ ] 9-2. **Photos resolve 병렬화** — `places/page.tsx:256-279` for...of → Promise.allSettled + p-limit
-- [ ] 9-3. Error boundary 추가 — dashboard, checklist, notifications, profile (4파일)
-- [ ] 9-4. `@dnd-kit` dynamic import + `optimizePackageImports` 추가
-- [ ] 9-5. CATEGORY_LABELS 상수 중복 정리 → `src/constants/categories.ts`
-- [ ] 9-6. console.log 정리 — PlaceForm 등 디버그 로그 제거
-- [ ] 9-7. Image cache ExpirationPlugin — SW 이미지 캐시 `maxEntries: 100`
-- **Status:** pending
+- [x] 9-1. **PlaceImage `loading="lazy"`** — `src/components/ui/place-image.tsx` (commit a8f574e)
+- [x] 9-2. **Photos resolve 병렬화** — `places/page.tsx` Promise.allSettled + CONCURRENCY=5 청크 (commit a8f574e + 1882978)
+- [x] 9-3. Error boundary 추가 — dashboard, checklist, notifications, profile (Phase 3: 3-2)
+- [x] 9-4. `@dnd-kit` `optimizePackageImports` 추가 (commit 7c50bbd)
+- [x] 9-5. CATEGORY_LABELS 중복 정리 → `src/constants/categories.ts` (commit a8f574e, 1882978에서 config/categories.ts로 통합)
+- [x] 9-6. console.log 정리 — PlaceForm 디버그 로그 4건 제거 (commit 7c50bbd)
+- [x] 9-7. Image cache ExpirationPlugin — SW 이미지 캐시 `maxEntries: 100` (commit 7c50bbd)
+- **Status:** done — 2026-04-01 ~ 2026-04-06
 - **Severity:** MEDIUM(2) + LOW(3) + existing(2)
 
 ### Phase 10: Infrastructure & Cleanup (환경/설정)
 > 독립적으로 진행 가능한 설정, 의존성, 코드 정리.
 
-- [ ] 10-1. ESLint CRITICAL — `compare/page.tsx` key 6건 + 변수 접근 + ref 갱신
-- [ ] 10-2. `pnpm audit fix` — 취약 패키지 수정
-- [ ] 10-3. Next.js 업그레이드 가능 여부 확인 + 적용
-- [ ] 10-4. Pretendard 폰트 — CDN → `next/font/local` 전환
-- [ ] 10-5. `middleware.ts` → `proxy.ts` 리네임
-- [ ] 10-6. PWA 아이콘 생성 — `icon-192x192.png`, `icon-512x512.png`
-- [ ] 10-7. tripId 추출 중복 제거 — `withTripMember` context 전달
-- [ ] 10-8. SupabaseClient 타입 통합 — 3곳 → 1곳
-- [ ] 10-9. 접근성 개선 — ARIA 라벨, nav 랜드마크
-- **Status:** pending
+- [x] 10-1. ESLint CRITICAL — `compare/page.tsx` key 6건 + 변수 접근 + ref 갱신 (Phase 2: 2-2, commit 7c50bbd)
+- [x] 10-2. `pnpm audit fix` — 취약 패키지 수정 (Phase 2: 2-3)
+- [x] 10-3. Next.js 16.2.1 → 16.2.2 패치 업그레이드 (commit 7c50bbd)
+- [~] 10-4. Pretendard 폰트 — SKIPPED (CDN dynamic subset 이미 최적화, Phase 3: 3-12)
+- [x] 10-5. `middleware.ts` → `proxy.ts` 리네임 (Phase 3: 3-3)
+- [x] 10-6. PWA 아이콘 생성 — `icon-192x192.png`, `icon-512x512.png` (Phase 3: 3-4)
+- [x] 10-7. tripId 추출 중복 제거 — `MemberContext`에 `tripId` 추가 (Phase 3: 3-13)
+- [x] 10-8. SupabaseClient 타입 통합 — `guards.ts` export + 3곳 import (Phase 3: 3-15, commit 7c50bbd)
+- [ ] 10-9. 접근성 개선 — ARIA 라벨, nav 랜드마크 (보류)
+- **Status:** 8/9 done (10-9 보류) — 2026-04-01
 
 ### Phase 11: Advanced Optimization (장기 개선)
 > 대규모 리팩토링. 시간 여유가 있을 때 진행.
@@ -99,13 +99,13 @@ Phase 9: Components & Performance — Status: in_progress
 - **Status:** pending
 
 ### Phase 12: Verification
-- [ ] 12-1. `pnpm build` — 빌드 성공
-- [ ] 12-2. `npx tsc --noEmit` — 타입 에러 0건
-- [ ] 12-3. `pnpm lint` — ESLint error 0건
-- [ ] 12-4. `pnpm audit` — HIGH/CRITICAL 0건
-- [ ] 12-5. 기존 테스트 통과
+- [x] 12-1. `pnpm build` — 빌드 성공 (2026-04-06)
+- [x] 12-2. `npx tsc --noEmit` — 타입 에러 0건 (2026-04-06)
+- [x] 12-3. `pnpm lint` — ESLint error 0건 (commit 7c50bbd)
+- [x] 12-4. `pnpm audit` — 취약점 0건 (2026-04-06)
+- [x] 12-5. 기존 테스트 통과 — 120 tests passed (2026-04-06)
 - [ ] 12-6. docs/TASKS.md 업데이트
-- **Status:** pending
+- **Status:** done (12-6 제외) — 2026-04-06
 
 ---
 
