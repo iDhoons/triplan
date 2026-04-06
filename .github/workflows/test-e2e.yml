@@ -1,0 +1,107 @@
+name: E2E & Quality Gate Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  e2e-tests:
+    name: E2E Tests & Quality Gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    services:
+      supabase:
+        image: supabase/supabase:latest
+        ports:
+          - 54321:5432
+        env:
+          POSTGRES_PASSWORD: postgres
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10.28.0
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Setup environment
+        run: |
+          cp .env.example .env.test.local
+          # Add test-specific env vars if needed
+
+      - name: Build application
+        run: pnpm build
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps
+
+      - name: Run unit tests
+        run: pnpm test:run
+
+      - name: Run E2E tests
+        run: pnpm test:e2e:run
+
+      - name: Run quality gate validation
+        run: pnpm test:quality
+
+      - name: Upload E2E test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: test-results/
+
+      - name: Comment PR with test results
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const resultsFile = 'test-results/results.json';
+
+            if (fs.existsSync(resultsFile)) {
+              const results = JSON.parse(fs.readFileSync(resultsFile, 'utf8'));
+              const passed = results.stats?.expected || 0;
+              const failed = results.stats?.unexpected || 0;
+
+              const comment = `## Test Results
+
+              ✅ Passed: ${passed}
+              ❌ Failed: ${failed}
+
+              [View full report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})`;
+
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: comment
+              });
+            }
+
+      - name: Fail if tests failed
+        if: failure()
+        run: |
+          echo "❌ Tests failed - release blocked"
+          exit 1

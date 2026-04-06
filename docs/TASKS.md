@@ -58,6 +58,8 @@ owner: daehoonkim
 | **여행 삭제 기능**             | 🟢   | cascade 삭제 또는 soft delete. admin만 가능            | -         |
 | ~~장소 수정 기능~~             | ✅   | 완료 (2026-03-19)                                      | -         |
 | **에러 핸들링 통일**           | 🟢   | 공통 에러 바운더리 + API 응답 형식 `{ success, data, error }` | -         |
+| **일정 시간 입력 (start_time)**| 🟢   | schedule_item에 시작 시간 UI 추가 → Routes API departureTime 연동 | -         |
+| **OAuth 클라이언트 재생성**    | 🟢   | Google 로그인용 OAuth 클라이언트 삭제됨 → 재생성 + Supabase 연동 필요 | -         |
 
 ### P1 - CRUD 보완
 

@@ -11,6 +11,12 @@
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:run": "playwright test --reporter=html,json",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:debug": "playwright test --debug",
+    "test:quality": "playwright test tests/e2e/quality-gates.spec.ts --reporter=list",
+    "test:all": "pnpm test:run && pnpm test:e2e:run",
     "gen:types": "supabase gen types typescript --project-id $SUPABASE_PROJECT_ID > src/types/supabase.ts && echo '✅ Types generated at src/types/supabase.ts'"
   },
   "dependencies": {
@@ -57,6 +63,7 @@
     ]
   },
   "devDependencies": {
+    "@playwright/test": "^1.59.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
