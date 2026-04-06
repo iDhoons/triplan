@@ -1,4 +1,5 @@
 import { type DailyWeather, getWeatherMeta } from "./types";
+import { fetchWithRetry } from "@/lib/api/fetch-with-retry";
 
 /**
  * Open-Meteo API Gateway
@@ -37,9 +38,7 @@ export async function fetchWeatherForDateRange(
   );
   url.searchParams.set("timezone", "auto");
 
-  const res = await fetch(url.toString(), {
-    signal: AbortSignal.timeout(10000),
-  });
+  const res = await fetchWithRetry(url.toString(), {}, { timeoutMs: 10000 });
 
   if (!res.ok) {
     throw new Error(`Open-Meteo API error: ${res.status}`);

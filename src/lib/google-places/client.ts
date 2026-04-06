@@ -4,6 +4,7 @@
  */
 
 import type { GoogleAddressComponent } from "@/types/database";
+import { fetchWithRetry } from "@/lib/api/fetch-with-retry";
 
 const API_BASE = "https://places.googleapis.com/v1";
 
@@ -88,20 +89,23 @@ export async function textSearch(
   query: string,
   options?: { languageCode?: string; maxResultCount?: number }
 ): Promise<PlacesTextSearchResult[]> {
-  const res = await fetch(`${API_BASE}/places:searchText`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Goog-Api-Key": getApiKey(),
-      "X-Goog-FieldMask": DEFAULT_FIELD_MASK,
+  const res = await fetchWithRetry(
+    `${API_BASE}/places:searchText`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Goog-Api-Key": getApiKey(),
+        "X-Goog-FieldMask": DEFAULT_FIELD_MASK,
+      },
+      body: JSON.stringify({
+        textQuery: query,
+        languageCode: options?.languageCode ?? "ko",
+        maxResultCount: options?.maxResultCount ?? 1,
+      }),
     },
-    body: JSON.stringify({
-      textQuery: query,
-      languageCode: options?.languageCode ?? "ko",
-      maxResultCount: options?.maxResultCount ?? 1,
-    }),
-    signal: AbortSignal.timeout(5000),
-  });
+    { timeoutMs: 5000 }
+  );
 
   if (!res.ok) {
     const err = await res.text();
@@ -118,13 +122,16 @@ export async function textSearch(
 export async function getPlaceDetails(
   placeId: string
 ): Promise<PlacesTextSearchResult | null> {
-  const res = await fetch(`${API_BASE}/places/${placeId}`, {
-    headers: {
-      "X-Goog-Api-Key": getApiKey(),
-      "X-Goog-FieldMask": DETAIL_FIELD_MASK,
+  const res = await fetchWithRetry(
+    `${API_BASE}/places/${placeId}`,
+    {
+      headers: {
+        "X-Goog-Api-Key": getApiKey(),
+        "X-Goog-FieldMask": DETAIL_FIELD_MASK,
+      },
     },
-    signal: AbortSignal.timeout(5000),
-  });
+    { timeoutMs: 5000 }
+  );
 
   if (!res.ok) return null;
   return (await res.json()) as PlacesTextSearchResult;

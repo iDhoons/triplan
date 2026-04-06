@@ -7,6 +7,8 @@
  * - 순수 함수(haversineDistance, estimateDuration)는 export하여 테스트 가능
  */
 
+import { fetchWithRetry } from "@/lib/api/fetch-with-retry";
+
 // -----------------------------------------------------------------------
 // 순수 함수 (외부 의존성 없음)
 // -----------------------------------------------------------------------
@@ -162,16 +164,19 @@ async function fetchRoutesApi(
     computeAlternativeRoutes: false,
   };
 
-  const res = await fetch(ROUTES_API_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Goog-Api-Key": apiKey,
-      "X-Goog-FieldMask": FIELD_MASK,
+  const res = await fetchWithRetry(
+    ROUTES_API_URL,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Goog-Api-Key": apiKey,
+        "X-Goog-FieldMask": FIELD_MASK,
+      },
+      body: JSON.stringify(body),
     },
-    body: JSON.stringify(body),
-    signal: AbortSignal.timeout(10000),
-  });
+    { timeoutMs: 10000 }
+  );
 
   if (!res.ok) return null;
   const data = await res.json();
