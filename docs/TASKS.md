@@ -3,7 +3,7 @@ title: 여행 플래너 TASKS
 version: v1.0
 status: active
 created: 2026-03-11
-updated: 2026-03-20
+updated: 2026-04-07
 owner: daehoonkim
 ---
 
@@ -17,7 +17,7 @@ owner: daehoonkim
 
 # TASKS: Travel Planner
 
-> **최종 수정일**: 2026-03-20
+> **최종 수정일**: 2026-04-07
 > **관련 문서**: [PRD](./PRD.md) | [TRD](./TRD.md) | [CHECKLIST](./DEVELOPMENT-CHECKLIST.md)
 
 ---
@@ -45,7 +45,7 @@ owner: daehoonkim
 
 | 작업 | 상태 | 설명 | 관련 문서 |
 | ---- | ---- | ---- | --------- |
-| (없음) | - | - | - |
+| Phase 11: Advanced Optimization | 🟡 | 11-1 Server Component prefetch, 11-3 CSP nonce 강화, 11-4 RealtimeProvider 분할 | - |
 
 ---
 
@@ -129,11 +129,18 @@ owner: daehoonkim
 
 | 작업                              | 완료일     | 설명                                                        |
 | --------------------------------- | ---------- | ----------------------------------------------------------- |
+| **Quality Fix: Phase 8 (Realtime 동기화)** | 2026-04-07 | place_votes trip_id 컬럼+필터, schedule_items Realtime 필터, Query Key Factory 15개 파일, MembersPage React Query 전환 |
 | **Schedule Planner (Phase 4-6)** | 2026-04-07 | Push Notification(VAPID+SW+Edge Fn), Geolocation GPS 보강, departure-alert 컴포넌트 |
+| **Guards Coverage 테스트** | 2026-04-07 | API route 49개 가드 적용 검증 테스트 (withAuth/withTripMember/withTripEditor) |
+| **Quality Fix: Phase 9 (Components)** | 2026-04-06 | PlaceImage lazy loading, 사진 병렬화(Promise.allSettled CONCURRENCY=5), Error boundary 4개, SW 이미지 캐시, console.log 정리 |
 | **외부 API 재시도 로직 (11-2)** | 2026-04-06 | fetchWithRetry 유틸 추가, Quality Fix |
 | **일정 추가 UI 즉시 반영** | 2026-04-06 | 이동거리 계산 비동기 분리 (perf) |
 | **여행 삭제 기능** | 2026-04-06 | DELETE /api/trips/[tripId] (admin 전용) + 5초 Undo 패턴, 낙관적 업데이트 |
 | **Integration: /api/places/share** | 2026-04-06 | 인증/Rate limit/중복 감지/성공 케이스 11개 (Vitest 모킹) |
+| **Quality Fix: Phase 5 (travel-info-card)** | 2026-04-01 | markers 인코딩 수정, polyline 길이 상수화, duration NaN 방어, 지도 로딩 에러 UI |
+| **Quality Fix: Phase 6 (DB 기반)** | 2026-04-01 | DB 인덱스 6개, reorder_schedule_items RPC, activity_logs 불변화, place_votes UPDATE RLS, notifications uuid 타입, get_contribution_stats RPC |
+| **Quality Fix: Phase 7 (API 보안)** | 2026-04-01 | enrich viewer 차단, Place ID 검증, share FormData 검증, ISO 8601 cursor 검증, 에러 응답 통일, Gemini key trim |
+| **Quality Fix: Phase 10 (인프라)** | 2026-04-01 | ESLint CRITICAL 6건, pnpm audit fix, Next.js 16.2.2, middleware→proxy 리네임, PWA 아이콘, MemberContext tripId |
 
 ### 2026-03 (03-01 ~ 03-20)
 
@@ -213,7 +220,7 @@ owner: daehoonkim
 | 번들 분석 미수행            | P2       | `@next/bundle-analyzer` 도입 필요                             |
 | 환경 분리                   | P2       | .env.local 단일 → 개발/스테이징/프로덕션 분리                 |
 | 예산/후기 기능 복원 검토   | P2       | 제거된 기능의 재도입 시점/범위 판단 필요                       |
-| console.log 잔존           | P3       | 프로덕션 빌드 전 제거 필요                                     |
+| console.log 잔존           | P3       | PlaceForm 4건 제거 완료 (2026-04-06) — 다른 파일 잔존 여부 모니터링 필요 |
 
 ---
 
@@ -234,5 +241,6 @@ owner: daehoonkim
 
 | 날짜       | 변경 내용                                                          |
 | ---------- | ------------------------------------------------------------------ |
+| 2026-04-07 | Quality Fix Phase 5~10 완료 항목 추가, Guards Coverage 테스트 추가, Phase 11 진행 중 표시 |
 | 2026-03-18 | 완료 항목 24개 추가, 백로그에서 완료된 항목 제거, 기술부채 업데이트 |
 | 2026-03-11 | 초안 작성 — git log 기반으로 완료 항목 역추적, 백로그 우선순위 정리 |

@@ -34,17 +34,17 @@ Epic 4: Notification System ← activity_logs + 가장 큰 작업
 ### Phase 0: Activity Logging Foundation
 > activity_logs에 모든 사용자 활동을 자동 기록하는 DB 트리거 구축
 
-- [ ] 0-1. Supabase migration: `fn_log_activity()` SECURITY DEFINER 함수 작성
+- [ ] 🤖 0-1. Supabase migration: `fn_log_activity()` SECURITY DEFINER 함수 작성
   - places: INSERT → place_added, UPDATE → place_updated, DELETE → place_removed
   - schedule_items: INSERT → schedule_item_added, DELETE → schedule_item_removed
   - checklist_items: INSERT → checklist_item_added, UPDATE(is_checked) → checklist_checked/unchecked
   - place_votes: INSERT → vote_added
   - trip_members: INSERT → member_joined
-- [ ] 0-2. 각 테이블에 AFTER trigger 연결 (5개 테이블)
-- [ ] 0-3. trip_id 자동 해석 로직 (schedule_items → schedules → trip_id 조인)
-- [ ] 0-4. metadata에 target 이름 포함 (places.name, checklist_items.title 등)
-- [ ] 0-5. 검증: 장소 추가/삭제/투표 시 activity_logs 자동 기록 확인
-- [ ] 0-6. 기존 activity-toast.tsx 동작 정상 확인 (Realtime → Toast)
+- [ ] 🤖 0-2. 각 테이블에 AFTER trigger 연결 (5개 테이블)
+- [ ] 🤖 0-3. trip_id 자동 해석 로직 (schedule_items → schedules → trip_id 조인)
+- [ ] 🤖 0-4. metadata에 target 이름 포함 (places.name, checklist_items.title 등)
+- [ ] 🤖 0-5. 검증: 장소 추가/삭제/투표 시 activity_logs 자동 기록 확인
+- [ ] 🤖 0-6. 기존 activity-toast.tsx 동작 정상 확인 (Realtime → Toast)
 - **Status:** pending
 - **Files:**
   - Create: `supabase/migrations/YYYYMMDD_activity_log_triggers.sql`
