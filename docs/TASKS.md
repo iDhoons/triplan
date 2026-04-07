@@ -125,10 +125,13 @@ owner: daehoonkim
 
 ## ✅ 완료됨
 
-### 2026-04 (04-01 ~ 04-06)
+### 2026-04 (04-01 ~ 04-07)
 
 | 작업                              | 완료일     | 설명                                                        |
 | --------------------------------- | ---------- | ----------------------------------------------------------- |
+| **Schedule Planner (Phase 4-6)** | 2026-04-07 | Push Notification(VAPID+SW+Edge Fn), Geolocation GPS 보강, departure-alert 컴포넌트 |
+| **외부 API 재시도 로직 (11-2)** | 2026-04-06 | fetchWithRetry 유틸 추가, Quality Fix |
+| **일정 추가 UI 즉시 반영** | 2026-04-06 | 이동거리 계산 비동기 분리 (perf) |
 | **여행 삭제 기능** | 2026-04-06 | DELETE /api/trips/[tripId] (admin 전용) + 5초 Undo 패턴, 낙관적 업데이트 |
 | **Integration: /api/places/share** | 2026-04-06 | 인증/Rate limit/중복 감지/성공 케이스 11개 (Vitest 모킹) |
 

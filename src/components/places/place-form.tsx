@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/auth-store";
 import { PlaceSearch, type PlaceSearchResult } from "@/components/maps/place-search";
-import type { Place, PlaceCategory, ScrapeResponse } from "@/types/database";
+import type { Place, PlaceCategory, ScrapeResponse, GoogleAddressComponent } from "@/types/database";
 
 interface PlaceFormProps {
   tripId: string;
@@ -111,6 +111,7 @@ export function PlaceForm({
   const [searchImageUrl, setSearchImageUrl] = useState<string | null>(null);
   const [searchImageUrls, setSearchImageUrls] = useState<string[]>([]);
   const [googlePlaceId, setGooglePlaceId] = useState<string | null>(null);
+  const [addressComponents, setAddressComponents] = useState<GoogleAddressComponent[] | null>(null);
   const [scrapeUrl, setScrapeUrl] = useState("");
   const [scraping, setScraping] = useState(false);
   const [scrapeError, setScrapeError] = useState<string | null>(null);
@@ -210,6 +211,7 @@ export function PlaceForm({
     setLatitude(result.latitude);
     setLongitude(result.longitude);
     setGooglePlaceId(result.googlePlaceId);
+    setAddressComponents(result.addressComponents);
 
     // 서버 프록시 URL로 사진 가져오기 (임시 CDN URL 대신)
     if (result.googlePlaceId) {
@@ -305,6 +307,7 @@ export function PlaceForm({
         })(),
         added_by: user.id,
         ...(googlePlaceId && !place ? { google_place_id: googlePlaceId } : {}),
+        ...(addressComponents ? { address_components: addressComponents } : {}),
       };
 
 

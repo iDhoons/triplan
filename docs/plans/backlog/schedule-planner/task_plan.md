@@ -15,7 +15,7 @@
 
 ## Current Phase
 
-Phase 4: Push Notification 인프라 — Status: pending (Phase 1-3 완료)
+Phase 6 완료 — 전체 구현 완료 ✅ 2026-04-06
 
 ## Phases
 
@@ -67,45 +67,48 @@ Phase 4: Push Notification 인프라 — Status: pending (Phase 1-3 완료)
 
 ### Phase 4: Push Notification 인프라
 
-- [ ] 4-1. VAPID 키 생성 + 환경변수 추가
-  - `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`
-- [ ] 4-2. `sw.ts`에 push event listener 추가
-  - notification 표시 (제목, 본문, 아이콘, 클릭 시 해당 일정 페이지로 이동)
-- [ ] 4-3. `useNotifications` hook 생성 (`src/hooks/use-notifications.ts`)
+- [x] 4-1. VAPID 키 생성 + 환경변수 추가 ✅ 2026-04-06
+  - `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` (.env.local)
+- [x] 4-2. `sw.ts`에 push event listener 추가 ✅ 2026-04-06
+  - push 이벤트: showNotification (제목, 본문, 아이콘)
+  - notificationclick 이벤트: url로 탭 포커스 또는 openWindow
+- [x] 4-3. `usePushNotifications` hook 생성 (`src/hooks/use-push-notifications.ts`) ✅ 2026-04-06
   - 알림 권한 요청 (Notification.requestPermission)
-  - Push subscription 생성 (PushManager.subscribe)
-  - 구독 정보 서버 전송
-- [ ] 4-4. `/api/notifications/subscribe/route.ts` — 구독 저장/삭제 API
-- [ ] 4-5. `/api/notifications/send/route.ts` — 특정 사용자에게 push 발송
-  - web-push 라이브러리 사용
-  - Input: user_id, title, body, url
-- [ ] 4-6. 알림 스케줄링 로직
-  - arrival_by 설정 시 → 출발 시간 계산 (arrival_by - travel_duration - notify_before)
-  - Supabase pg_cron 또는 Edge Function cron으로 매분 체크 → push 발송
-- **Status:** pending
+  - Push subscription 생성 (PushManager.subscribe, VAPID)
+  - subscribe/unsubscribe 서버 전송
+- [x] 4-4. `/api/notifications/subscribe/route.ts` — 구독 저장/삭제 API ✅ 2026-04-06
+  - POST: upsert, DELETE: 구독 해제
+  - supabase/migrations/20260406_push_notification_subscriptions.sql
+- [x] 4-5. `/api/notifications/send/route.ts` — 특정 사용자에게 push 발송 ✅ 2026-04-06
+  - web-push 라이브러리, 만료 구독(410) 자동 삭제
+- [x] 4-6. 알림 스케줄링 로직 ✅ 2026-04-06
+  - `supabase/functions/push-scheduler/index.ts` (Edge Function cron)
+  - `get_due_departure_items` RPC: arrival_by - travel_duration - notify_before 계산
+  - supabase/migrations/20260406_push_scheduler_rpc.sql
+- **Status:** done ✅
 
 ### Phase 5: 포그라운드 GPS 보강
 
-- [ ] 5-1. `useGeolocation` hook 생성 (`src/hooks/use-geolocation.ts`)
+- [x] 5-1. `useGeolocation` hook 생성 (`src/hooks/use-geolocation.ts`) ✅ 2026-04-06
   - watchPosition으로 현재 위치 추적
   - 정확도/에러 처리
   - 포그라운드에서만 동작 (visibility API 연동)
-- [ ] 5-2. `departure-alert.tsx` 컴포넌트 생성
+- [x] 5-2. `departure-alert.tsx` 컴포넌트 생성 ✅ 2026-04-06
   - 현재 위치 → 다음 목적지 실시간 이동시간 계산 (Directions API)
   - "지금 출발하면 15:50 도착 (10분 여유)" 표시
-  - 이동시간이 남은시간에 근접하면 화면 내 알림
-- [ ] 5-3. schedule page에 통합
+  - 이동시간이 남은시간에 근접하면 화면 내 알림 (10분 미만 → 주황, 음수 → 빨강)
+- [x] 5-3. schedule page에 통합 ✅ 2026-04-06
   - arrival_by가 설정된 다음 일정이 있을 때 자동 활성화
-  - 하단 플로팅 바 또는 상단 배너 형태
-- **Status:** pending
+  - 하단 플로팅 바 형태 (fixed bottom)
+- **Status:** done ✅
 
 ### Phase 6: 통합 검증 + 정리
 
-- [ ] 6-1. `npm run build` 성공 확인
-- [ ] 6-2. 타입 에러 0개 확인
-- [ ] 6-3. 기존 DnD 기능 정상 동작 확인
-- [ ] 6-4. 미사용 import/파일 정리
-- **Status:** pending
+- [x] 6-1. `npm run build` 성공 확인 ✅ 2026-04-06
+- [x] 6-2. 타입 에러 0개 확인 ✅ 2026-04-06
+- [ ] 6-3. 기존 DnD 기능 정상 동작 확인 — E2E 테스트로 검증 필요
+- [x] 6-4. 미사용 import/파일 정리 ✅ 2026-04-06
+- **Status:** done ✅ (6-3 E2E는 QAEngineer 담당)
 
 ---
 

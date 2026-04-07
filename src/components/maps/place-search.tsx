@@ -18,6 +18,7 @@ export interface PlaceSearchResult {
   googlePlaceId: string | null;
   openingHours: Record<string, string> | null;
   placeTypes: string[];
+  addressComponents: { longText: string; shortText: string; types: string[]; languageCode: string }[] | null;
 }
 
 interface PlaceSearchProps {
@@ -170,6 +171,15 @@ export function PlaceSearch({ onSelect }: PlaceSearchProps) {
             }
           }
 
+          const addressComponents = place.address_components
+            ? place.address_components.map((c) => ({
+                longText: c.long_name,
+                shortText: c.short_name,
+                types: c.types,
+                languageCode: "ko",
+              }))
+            : null;
+
           const result: PlaceSearchResult = {
             name: place.name ?? "",
             address: place.formatted_address ?? "",
@@ -184,6 +194,7 @@ export function PlaceSearch({ onSelect }: PlaceSearchProps) {
             googlePlaceId: suggestion.placeId,
             openingHours,
             placeTypes: place.types ?? [],
+            addressComponents,
           };
 
           onSelect(result);

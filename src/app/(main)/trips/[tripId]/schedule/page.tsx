@@ -30,6 +30,7 @@ import {
 } from "@/components/schedule/schedule-item-form";
 import { DayPickerSheet } from "@/components/schedule/day-picker-sheet";
 import { UnscheduledFAB } from "@/components/schedule/unscheduled-fab";
+import { DepartureAlert } from "@/components/schedule/departure-alert";
 
 const RouteMap = dynamic(
   () => import("@/components/maps/route-map").then((mod) => mod.RouteMap),
@@ -580,6 +581,9 @@ export default function SchedulePage() {
         scheduledPlaceIds={scheduledPlaceIds}
         onAddClick={handlePlaceAddClick}
       />
+
+      {/* 포그라운드 GPS 보강: 출발 알림 배너 */}
+      <DepartureAlert schedules={schedules} />
     </DndContext>
   );
 }

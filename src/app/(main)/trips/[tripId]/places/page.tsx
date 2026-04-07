@@ -195,7 +195,35 @@ const PlaceCard = memo(function PlaceCard({
             )}>
               {place.rating}
             </span>
+            {place.review_count !== null && (
+              <span className={cn(
+                "text-xs",
+                hasImage ? "text-white/60" : "text-muted-foreground"
+              )}>
+                ({place.review_count.toLocaleString()})
+              </span>
+            )}
           </div>
+        )}
+
+        {/* 카테고리별 보조 정보 */}
+        {place.category === "accommodation" && place.price_per_night !== null && (
+          <p className={cn("text-xs", hasImage ? "text-white/70" : "text-muted-foreground")}>
+            ₩{place.price_per_night.toLocaleString()} / 박
+          </p>
+        )}
+        {place.category === "attraction" && (place.estimated_duration !== null || place.admission_fee !== null) && (
+          <p className={cn("text-xs", hasImage ? "text-white/70" : "text-muted-foreground")}>
+            {[
+              place.estimated_duration !== null && `${place.estimated_duration}분`,
+              place.admission_fee !== null && (place.admission_fee === 0 ? "무료" : `₩${place.admission_fee.toLocaleString()}`),
+            ].filter(Boolean).join(" · ")}
+          </p>
+        )}
+        {place.category === "restaurant" && place.price_level !== null && (
+          <p className={cn("text-xs", hasImage ? "text-white/70" : "text-muted-foreground")}>
+            {"₩".repeat(Math.min(place.price_level, 4)) || "무료"}
+          </p>
         )}
 
         {/* 비교 모드 체크박스 */}
@@ -303,6 +331,7 @@ export default function PlacesPage() {
       return;
     }
     queryClient.invalidateQueries({ queryKey: queryKeys.places.byTrip(tripId) });
+    queryClient.invalidateQueries({ queryKey: queryKeys.schedules.data(tripId) });
     toast("장소가 삭제되었어요", {
       action: {
         label: "되돌리기",
@@ -325,6 +354,7 @@ export default function PlacesPage() {
             google_place_id: place.google_place_id,
           });
           queryClient.invalidateQueries({ queryKey: queryKeys.places.byTrip(tripId) });
+          queryClient.invalidateQueries({ queryKey: queryKeys.schedules.data(tripId) });
           toast.success("장소가 복원되었어요");
         },
       },
@@ -335,6 +365,7 @@ export default function PlacesPage() {
 
   const handleFormSuccess = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: queryKeys.places.byTrip(tripId) });
+    queryClient.invalidateQueries({ queryKey: queryKeys.schedules.data(tripId) });
     setDialogOpen(false);
     setEditingPlace(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps

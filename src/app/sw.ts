@@ -84,3 +84,50 @@ const serwist = new Serwist({
 });
 
 serwist.addEventListeners();
+
+// ─── Push Notification ───────────────────────────────────────────────────────
+
+interface PushPayload {
+  title: string;
+  body: string;
+  url?: string;
+  icon?: string;
+}
+
+self.addEventListener("push", (event: PushEvent) => {
+  if (!event.data) return;
+
+  let payload: PushPayload;
+  try {
+    payload = event.data.json() as PushPayload;
+  } catch {
+    payload = { title: "triplan", body: event.data.text() };
+  }
+
+  const { title, body, url = "/", icon = "/icons/icon-192x192.png" } = payload;
+
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body,
+      icon,
+      badge: "/icons/icon-72x72.png",
+      data: { url },
+    })
+  );
+});
+
+self.addEventListener("notificationclick", (event: NotificationEvent) => {
+  event.notification.close();
+
+  const url: string = (event.notification.data as { url?: string })?.url ?? "/";
+
+  event.waitUntil(
+    self.clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then((clientList) => {
+        const existing = clientList.find((c) => c.url === url && "focus" in c);
+        if (existing) return existing.focus();
+        return self.clients.openWindow(url);
+      })
+  );
+});
