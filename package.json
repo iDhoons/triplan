@@ -17,7 +17,8 @@
     "test:e2e:debug": "playwright test --debug",
     "test:quality": "playwright test tests/e2e/quality-gates.spec.ts --reporter=list",
     "test:all": "pnpm test:run && pnpm test:e2e:run",
-    "gen:types": "supabase gen types typescript --project-id $SUPABASE_PROJECT_ID > src/types/supabase.ts && echo '✅ Types generated at src/types/supabase.ts'"
+    "gen:types": "supabase gen types typescript --project-id $SUPABASE_PROJECT_ID > src/types/supabase.ts && echo '✅ Types generated at src/types/supabase.ts'",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@base-ui/react": "^1.2.0",
