@@ -351,7 +351,7 @@ export default function DashboardPage() {
 
       {/* Stats Grid */}
       {!loading && trips.length > 0 && (
-        <section className="grid grid-cols-3 gap-2.5 md:gap-5 animate-fade-in-up">
+        <section aria-label="여행 통계" className="grid grid-cols-3 gap-2.5 md:gap-5 animate-fade-in-up">
           <StatCard
             icon={<Plane className="w-4 h-4 md:w-5 md:h-5 text-primary" />}
             iconBg="bg-primary/10"
@@ -445,8 +445,17 @@ export default function DashboardPage() {
                 return (
                   <div
                     key={trip.id}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`${trip.title} 여행 열기`}
                     className="flex items-center gap-5 px-6 py-4.5 cursor-pointer hover:bg-glass-light/60 transition-colors duration-200 group"
                     onClick={() => router.push(`/trips/${trip.id}/places`)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        router.push(`/trips/${trip.id}/places`);
+                      }
+                    }}
                   >
                     <div className="w-11 h-11 rounded-xl bg-primary/8 flex items-center justify-center shrink-0">
                       <MapPin className="w-5 h-5 text-primary" />
@@ -514,8 +523,17 @@ export default function DashboardPage() {
               return (
                 <Card
                   key={trip.id}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`${trip.title} 여행 열기`}
                   className="cursor-pointer hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-300"
                   onClick={() => router.push(`/trips/${trip.id}/places`)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      router.push(`/trips/${trip.id}/places`);
+                    }
+                  }}
                 >
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between gap-2">

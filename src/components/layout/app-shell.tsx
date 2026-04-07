@@ -52,9 +52,15 @@ export function AppShell({ children }: { children: ReactNode }) {
   // loading gate 제거 — children 즉시 렌더, trips fetch와 profile fetch 병렬 실행
   return (
     <div className="min-h-screen pb-[calc(50px+env(safe-area-inset-bottom,0px))] md:pb-0 md:pl-64">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:text-sm font-medium"
+      >
+        본문으로 이동
+      </a>
       <OfflineBanner />
       <Sidebar />
-      <main className="max-w-6xl mx-auto px-4 py-6">{children}</main>
+      <main id="main-content" className="max-w-6xl mx-auto px-4 py-6">{children}</main>
       <BottomNav />
     </div>
   );

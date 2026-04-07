@@ -69,10 +69,11 @@ export const ChecklistItem = memo(function ChecklistItem({
       {showDragHandle && (
         <button
           className="cursor-grab touch-none text-muted-foreground hover:text-foreground"
+          aria-label={`${item.title} 순서 변경`}
           {...attributes}
           {...listeners}
         >
-          <GripVertical className="h-4 w-4" />
+          <GripVertical className="h-4 w-4" aria-hidden="true" />
         </button>
       )}
 
