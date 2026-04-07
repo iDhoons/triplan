@@ -68,8 +68,9 @@ export function useScheduleActions({
         toast.success("일정이 추가되었습니다.");
       }
 
-      await computeTravelInfoForSchedule(supabase, targetScheduleId);
       await invalidateSchedules();
+      // 이동거리 계산은 비동기로 처리 — UI 즉시 반영 후 백그라운드 업데이트
+      computeTravelInfoForSchedule(supabase, targetScheduleId).then(invalidateSchedules);
     } catch (err) {
       console.error(err);
       toast.error("저장에 실패했습니다.");
@@ -138,8 +139,9 @@ export function useScheduleActions({
         _ordered_ids: orderedItems.map((i) => i.id),
       });
       if (error) throw error;
-      await computeTravelInfoForSchedule(supabase, scheduleId);
       await invalidateSchedules();
+      // 이동거리 계산은 비동기로 처리 — UI 즉시 반영 후 백그라운드 업데이트
+      computeTravelInfoForSchedule(supabase, scheduleId).then(invalidateSchedules);
     } catch {
       toast.error("순서 저장에 실패했습니다.");
       await invalidateSchedules(); // revert via refetch
@@ -187,8 +189,9 @@ export function useScheduleActions({
       });
       if (error) throw error;
       toast.success(`"${place.name}" 을(를) 일정에 추가했습니다.`);
-      await computeTravelInfoForSchedule(supabase, scheduleId);
       await invalidateSchedules();
+      // 이동거리 계산은 비동기로 처리 — UI 즉시 반영 후 백그라운드 업데이트
+      computeTravelInfoForSchedule(supabase, scheduleId).then(invalidateSchedules);
     } catch (err) {
       console.error(err);
       toast.error("장소 추가에 실패했습니다.");
@@ -252,11 +255,12 @@ export function useScheduleActions({
       }
 
       toast.success("일정을 이동했습니다.");
-      await Promise.all([
+      await invalidateSchedules();
+      // 이동거리 계산은 비동기로 처리 — UI 즉시 반영 후 백그라운드 업데이트
+      Promise.all([
         computeTravelInfoForSchedule(supabase, fromScheduleId),
         computeTravelInfoForSchedule(supabase, toScheduleId),
-      ]);
-      await invalidateSchedules();
+      ]).then(invalidateSchedules);
     } catch (err) {
       console.error(err);
       toast.error("일정 이동에 실패했습니다.");
