@@ -104,8 +104,8 @@ Phase 11: Advanced Optimization — Status: in_progress (11-2 완료, 11-1/3/4 p
 - [x] 12-3. `pnpm lint` — ESLint error 0건 (commit 7c50bbd)
 - [x] 12-4. `pnpm audit` — 취약점 0건 (2026-04-06)
 - [x] 12-5. 기존 테스트 통과 — 120 tests passed (2026-04-06)
-- [ ] 12-6. docs/TASKS.md 업데이트
-- **Status:** done (12-6 제외) — 2026-04-06
+- [x] 12-6. docs/TASKS.md 업데이트 — 2026-04-07 (commit 8642a32)
+- **Status:** done — 2026-04-07
 
 ---
 
