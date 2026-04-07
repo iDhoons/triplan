@@ -370,7 +370,7 @@ export function RealtimeProvider({ tripId, children }: RealtimeProviderProps) {
         },
       )
       // ---------------------------------------------------------------
-      // place_votes -- place_votes만 invalidate, places는 건드리지 않음
+      // place_votes -- trip_id 필터로 해당 여행 투표만 수신 (8-4/8-5 fix)
       // ---------------------------------------------------------------
       .on(
         "postgres_changes",
@@ -378,6 +378,7 @@ export function RealtimeProvider({ tripId, children }: RealtimeProviderProps) {
           event: "*",
           schema: "public",
           table: "place_votes",
+          filter: `trip_id=eq.${tripId}`,
         },
         (payload) => {
           handlePlaceVotesChange(

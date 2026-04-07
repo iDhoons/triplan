@@ -115,6 +115,7 @@ export interface ScrapeResponse {
 
 export interface PlaceVote {
   id: string;
+  trip_id: string;
   place_id: string;
   user_id: string;
   vote_type: number;
