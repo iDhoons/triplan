@@ -12,7 +12,7 @@ import { errorResponse } from "@/lib/api/error-response";
  */
 export const POST = withAuth(async (request, { supabase, user }) => {
   // Rate limiting (guards.ts 공통 모듈 사용)
-  if (!checkRateLimit("places-share", user.id)) {
+  if (!(await checkRateLimit("places-share", user.id))) {
     return errorResponse("RATE_LIMITED", "요청이 너무 많습니다. 잠시 후 다시 시도해주세요.");
   }
 

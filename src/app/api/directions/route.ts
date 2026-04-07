@@ -15,7 +15,7 @@ const VALID_MODES = ["walking", "transit", "driving"];
 const COORD_PATTERN = /^-?\d+(\.\d+)?,-?\d+(\.\d+)?$/;
 
 export const GET = withAuth(async (request, { user }) => {
-  if (!checkRateLimit("directions", user.id, { maxRequests: 30 })) {
+  if (!(await checkRateLimit("directions", user.id, { maxRequests: 30 }))) {
     return errorResponse("RATE_LIMITED", "너무 많은 요청입니다. 잠시 후 다시 시도해주세요.");
   }
 

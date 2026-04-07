@@ -26,7 +26,7 @@ if (!process.env.GEMINI_API_KEY?.trim()) {
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 export const POST = withAuth(async (request, { user }) => {
-  if (!checkRateLimit("checklist-classify", user.id, { maxRequests: 30 })) {
+  if (!(await checkRateLimit("checklist-classify", user.id, { maxRequests: 30 }))) {
     return errorResponse("RATE_LIMITED", "Too many requests");
   }
 

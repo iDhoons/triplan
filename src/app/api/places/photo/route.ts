@@ -18,7 +18,7 @@ function snapWidth(w: number): number {
  * Google maxWidthPx가 서버 리사이즈를 수행하므로 sharp resize는 하지 않는다.
  */
 export const GET = withAuth(async (request, { user }) => {
-  if (!checkRateLimit("places-photo", user.id, { maxRequests: 60 })) {
+  if (!(await checkRateLimit("places-photo", user.id, { maxRequests: 60 }))) {
     return errorResponse("RATE_LIMITED", "너무 많은 요청입니다. 잠시 후 다시 시도해주세요.");
   }
 

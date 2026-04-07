@@ -9,7 +9,7 @@ import { errorResponse } from "@/lib/api/error-response";
  * 클라이언트 PlaceSearch에서 임시 CDN URL 대신 사용.
  */
 export const GET = withAuth(async (request, { user }) => {
-  if (!checkRateLimit("resolve-photos", user.id, { maxRequests: 20 })) {
+  if (!(await checkRateLimit("resolve-photos", user.id, { maxRequests: 20 }))) {
     return errorResponse("RATE_LIMITED", "너무 많은 요청입니다. 잠시 후 다시 시도해주세요.");
   }
 

@@ -27,31 +27,68 @@ type MemberHandler = (
   ctx: MemberContext
 ) => Promise<NextResponse>;
 
-// ─── Rate Limiter (in-memory, 프로덕션에서는 Upstash Redis 권장) ───
+// ─── Rate Limiter (DB 기반, check_rate_limit RPC 사용) ───
+//
+// DB 마이그레이션: 20260407_rate_limit_db.sql
+// - api_rate_limits 테이블 + check_rate_limit() SECURITY DEFINER 함수
+// - 서버리스 인스턴스 간 상태 공유, 원자적 카운트 증가
+//
+// 테스트 환경: VITEST 플래그가 있으면 in-memory 폴백 사용
+// (DB 연결 없이 단위 테스트 가능)
 
-const rateLimitMaps = new Map<string, Map<string, { count: number; reset: number }>>();
+const _testRateLimitMaps = new Map<string, Map<string, { count: number; reset: number }>>();
 
-export function checkRateLimit(
+function _checkRateLimitMemory(
   key: string,
   userId: string,
-  options: { windowMs?: number; maxRequests?: number } = {}
+  windowMs: number,
+  maxRequests: number
 ): boolean {
-  const { windowMs = 60_000, maxRequests = 10 } = options;
+  const compositeKey = `${key}:${userId}`;
+  if (!_testRateLimitMaps.has(key)) _testRateLimitMaps.set(key, new Map());
+  const map = _testRateLimitMaps.get(key)!;
+  const entry = map.get(compositeKey);
   const now = Date.now();
-
-  if (!rateLimitMaps.has(key)) {
-    rateLimitMaps.set(key, new Map());
-  }
-  const map = rateLimitMaps.get(key)!;
-  const entry = map.get(userId);
-
   if (!entry || now > entry.reset) {
-    map.set(userId, { count: 1, reset: now + windowMs });
+    map.set(compositeKey, { count: 1, reset: now + windowMs });
     return true;
   }
   if (entry.count >= maxRequests) return false;
   entry.count++;
   return true;
+}
+
+export async function checkRateLimit(
+  key: string,
+  userId: string,
+  options: { windowMs?: number; maxRequests?: number } = {}
+): Promise<boolean> {
+  const { windowMs = 60_000, maxRequests = 10 } = options;
+
+  // 테스트 환경에서는 in-memory 폴백
+  if (process.env.VITEST) {
+    return _checkRateLimitMemory(key, userId, windowMs, maxRequests);
+  }
+
+  try {
+    const supabase = await createClient();
+    const compositeKey = `${key}:${userId}`;
+    const { data, error } = await supabase.rpc("check_rate_limit", {
+      p_key: compositeKey,
+      p_window_ms: windowMs,
+      p_max: maxRequests,
+    });
+
+    if (error) {
+      // DB 오류 시 허용 (fail-open): 로그 후 통과
+      console.error("[checkRateLimit] DB error, fail-open:", error.message);
+      return true;
+    }
+    return data as boolean;
+  } catch (err) {
+    console.error("[checkRateLimit] Unexpected error, fail-open:", err);
+    return true;
+  }
 }
 
 // ─── Guards ─────────────────────────────────────────────

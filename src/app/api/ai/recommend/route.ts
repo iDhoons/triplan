@@ -13,7 +13,7 @@ if (!process.env.GEMINI_API_KEY?.trim()) {
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 export const POST = withAuth(async (request, { supabase, user }) => {
-  if (!checkRateLimit("ai-recommend", user.id, { maxRequests: 20 })) {
+  if (!(await checkRateLimit("ai-recommend", user.id, { maxRequests: 20 }))) {
     return errorResponse("RATE_LIMITED", "너무 많은 요청입니다. 잠시 후 다시 시도해주세요.");
   }
 

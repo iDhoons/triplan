@@ -17,7 +17,7 @@ export const POST = withAuth(async (
   { supabase, user }
 ) => {
   // Rate limiting — Google Places API 호출 보호
-  if (!checkRateLimit("places-enrich", user.id, { maxRequests: 10 })) {
+  if (!(await checkRateLimit("places-enrich", user.id, { maxRequests: 10 }))) {
     return errorResponse("RATE_LIMITED", "너무 많은 요청입니다. 잠시 후 다시 시도해주세요.");
   }
 

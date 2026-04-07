@@ -19,7 +19,7 @@ export async function GET(
   // IP 기반 rate limiting (열거 공격 방어)
   const forwarded = _request.headers.get("x-forwarded-for");
   const ip = forwarded?.split(",")[0]?.trim() ?? "unknown";
-  if (!checkRateLimit("guest-invite", ip, { windowMs: 60_000, maxRequests: 15 })) {
+  if (!(await checkRateLimit("guest-invite", ip, { windowMs: 60_000, maxRequests: 15 }))) {
     return errorResponse("RATE_LIMITED", "Too many requests");
   }
 

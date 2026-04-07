@@ -6,7 +6,7 @@ import { errorResponse } from "@/lib/api/error-response";
 
 export const POST = withAuth(async (request, { user }) => {
   // Rate limiting (guards.ts 공통 모듈 사용)
-  if (!checkRateLimit("scrape", user.id)) {
+  if (!(await checkRateLimit("scrape", user.id))) {
     return errorResponse("RATE_LIMITED", "요청이 너무 많습니다. 잠시 후 다시 시도해주세요.");
   }
 

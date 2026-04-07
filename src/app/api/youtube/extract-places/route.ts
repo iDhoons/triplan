@@ -16,7 +16,7 @@ import {
  */
 export const POST = withAuth(async (request, { supabase, user }) => {
   // 1. 버스트 방지 (in-memory)
-  if (!checkRateLimit("youtube-burst", user.id, { windowMs: 60_000, maxRequests: 3 })) {
+  if (!(await checkRateLimit("youtube-burst", user.id, { windowMs: 60_000, maxRequests: 3 }))) {
     return errorResponse("RATE_LIMITED", "분석 요청이 너무 많습니다. 잠시 후 다시 시도해주세요.");
   }
 
