@@ -1,0 +1,20 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/lint-on-edit.sh"
+          },
+          {
+            "type": "command",
+            "command": ".claude/hooks/test-on-edit.sh",
+            "timeout": 35
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -25,7 +25,9 @@ const securityHeaders = [
     key: "Content-Security-Policy",
     value: [
       "default-src 'self'",
-      `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""} https://maps.googleapis.com https://vercel.live`,
+      // middleware에서 nonce 기반 CSP를 설정하므로 여기서는 'unsafe-inline' 제거
+      // 이 헤더는 middleware 미적용 경로(정적 에셋 등)에만 폴백으로 적용됨
+      `script-src 'self'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""} https://maps.googleapis.com https://vercel.live`,
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net",
       "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net",
       // img-src: 'self'=프록시된 Google Places 사진(/api/places/photo), 로컬 이미지
