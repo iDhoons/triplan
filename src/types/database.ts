@@ -42,6 +42,15 @@ export interface Trip {
   updated_at: string;
 }
 
+export interface InviteToken {
+  id: string;
+  trip_id: string;
+  token: string;
+  created_by: string;
+  expires_at: string;
+  created_at: string;
+}
+
 export interface TripMember {
   id: string;
   trip_id: string;
