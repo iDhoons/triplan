@@ -44,10 +44,10 @@ Phase 11: Advanced Optimization — Status: in_progress (11-2 완료, 11-1/3/4 p
 - [x] 7-7. `notifications/[id]/read` — URL regex → Next.js route params 전환 (나머지 4곳은 withTripMember 콜백 내 regex로 유지가 적절)
 - [x] 7-8. cursor ISO 8601 검증 — `notifications`, `activity` route
 - [x] 7-9. 에러 응답 형식 통일 — ai/recommend(5곳) + places/photo(1곳) + scrape(2곳)
-- [ ] 👤 7-10. Rate limiter DB 기반 전환 — 별도 진행 (큰 작업)
-- [ ] 🤖 7-11. CSP img-src — 별도 진행
+- [x] 👤 7-10. Rate limiter DB 기반 전환 — 완료 (DEC-89, commit d7c9eac, 2026-04-07)
+- [x] 🤖 7-11. CSP img-src — 완료 (DEC-90, commit b009933, 2026-04-07)
 - [x] 7-12. Gemini API Key `.trim()` 체크 — recommend + classify + extract-places
-- **Status:** 9/12 done (7-4, 7-10, 7-11 별도) — 2026-04-01
+- **Status:** 11/12 done (7-4 별도, 7-10/7-11 완료) — 2026-04-07
 - **Severity:** HIGH(5) + MEDIUM(4) + existing(3)
 
 ### Phase 8: Hooks & Realtime Sync (상태 동기화 계층)
@@ -86,8 +86,8 @@ Phase 11: Advanced Optimization — Status: in_progress (11-2 완료, 11-1/3/4 p
 - [x] 10-6. PWA 아이콘 생성 — `icon-192x192.png`, `icon-512x512.png` (Phase 3: 3-4)
 - [x] 10-7. tripId 추출 중복 제거 — `MemberContext`에 `tripId` 추가 (Phase 3: 3-13)
 - [x] 10-8. SupabaseClient 타입 통합 — `guards.ts` export + 3곳 import (Phase 3: 3-15, commit 7c50bbd)
-- [ ] 🤖 10-9. 접근성 개선 — ARIA 라벨, nav 랜드마크 (보류)
-- **Status:** 8/9 done (10-9 보류) — 2026-04-01
+- [x] 🤖 10-9. 접근성 개선 — ARIA 라벨, nav 랜드마크 — 완료 (DEC-93, commit d35026e, 2026-04-07)
+- **Status:** done (9/9) — 2026-04-07
 
 ### Phase 11: Advanced Optimization (장기 개선)
 > 대규모 리팩토링. 시간 여유가 있을 때 진행.

@@ -204,8 +204,8 @@ export default function SchedulePage() {
 
   // --- DnD ---
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } })
+    useSensor(PointerSensor, { activationConstraint: { distance: 10 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 300, tolerance: 5 } })
   );
 
   // 장소 드래그 여부를 ref로 추적 (collision callback 안에서 즉시 읽기 위해)

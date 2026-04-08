@@ -43,16 +43,18 @@ export const DraggableItem = memo(function DraggableItem({
 
   return (
     <div
-      {...dragHandleProps?.attributes}
-      {...dragHandleProps?.listeners}
       className={cn(
         "group relative bg-card border rounded-lg p-3 flex gap-2.5 items-start",
-        "hover:border-primary/50 transition-colors cursor-grab active:cursor-grabbing touch-none",
+        "hover:border-primary/50 transition-colors",
         isDragging && "opacity-50 shadow-lg border-primary"
       )}
     >
-      {/* Order number badge + grip icon */}
-      <div className="flex flex-col items-center gap-1 shrink-0">
+      {/* Order number badge + drag handle (grip icon) */}
+      <div
+        {...dragHandleProps?.attributes}
+        {...dragHandleProps?.listeners}
+        className="flex flex-col items-center gap-1 shrink-0 cursor-grab active:cursor-grabbing touch-none"
+      >
         <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground">
           {orderNumber}
         </span>
