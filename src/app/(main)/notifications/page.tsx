@@ -97,7 +97,7 @@ function NotificationItem({
 
 export default function NotificationsPage() {
   const router = useRouter();
-  const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } =
+  const { data, isLoading, isError, hasNextPage, fetchNextPage, isFetchingNextPage } =
     useNotifications();
   const markAsRead = useMarkAsRead();
   const markAllAsRead = useMarkAllAsRead();
@@ -124,6 +124,14 @@ export default function NotificationsPage() {
             </div>
           </div>
         ))}
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+        <p className="text-sm">알림을 불러올 수 없어요. 잠시 후 다시 시도해주세요.</p>
       </div>
     );
   }
