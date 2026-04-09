@@ -151,18 +151,24 @@ async function fetchRoutesApi(
   origin: string,
   destination: string,
   mode: string,
-  apiKey: string
+  apiKey: string,
+  departureTime?: string
 ): Promise<RoutesApiRoute | null> {
   const [lat1, lng1] = origin.split(",").map(Number);
   const [lat2, lng2] = destination.split(",").map(Number);
 
-  const body = {
+  const body: Record<string, unknown> = {
     origin: { location: { latLng: { latitude: lat1, longitude: lng1 } } },
     destination: { location: { latLng: { latitude: lat2, longitude: lng2 } } },
     travelMode: MODE_MAP[mode] ?? "TRANSIT",
     languageCode: "ko",
     computeAlternativeRoutes: false,
   };
+
+  // departureTime: RFC3339 형식 (Routes API 요구사항)
+  if (departureTime) {
+    body.departureTime = departureTime;
+  }
 
   const res = await fetchWithRetry(
     ROUTES_API_URL,
@@ -211,20 +217,22 @@ function formatDistanceText(meters: number): string {
  * @param destination "lat,lng" 형식
  * @param mode "walking" | "transit" | "driving"
  * @param apiKey Google API 키 (Routes API 활성화 필요)
+ * @param departureTime RFC3339 형식의 출발 시간 (optional, 정확한 대중교통 계산용)
  */
 export async function getDirections(
   origin: string,
   destination: string,
   mode: string,
-  apiKey: string
+  apiKey: string,
+  departureTime?: string
 ): Promise<DirectionsResult> {
   // 1. 요청된 mode로 시도
-  let route = await fetchRoutesApi(origin, destination, mode, apiKey);
+  let route = await fetchRoutesApi(origin, destination, mode, apiKey, departureTime);
   let usedMode = mode;
 
   // 2. 실패 시 transit fallback
   if (!route && mode !== "transit") {
-    route = await fetchRoutesApi(origin, destination, "transit", apiKey);
+    route = await fetchRoutesApi(origin, destination, "transit", apiKey, departureTime);
     usedMode = "transit";
   }
 

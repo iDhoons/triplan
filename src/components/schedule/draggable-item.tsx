@@ -39,7 +39,14 @@ export const DraggableItem = memo(function DraggableItem({
     }
   };
 
+  // "HH:MM:SS" → "HH:MM"
+  const formatStartTime = (startTime: string | null) => {
+    if (!startTime) return null;
+    return startTime.slice(0, 5);
+  };
+
   const arrivalTime = formatArrivalBy(item.arrival_by);
+  const startTimeDisplay = formatStartTime(item.start_time);
 
   return (
     <div
@@ -90,6 +97,14 @@ export const DraggableItem = memo(function DraggableItem({
             </Button>
           </div>
         </div>
+
+        {/* Start time */}
+        {startTimeDisplay && (
+          <div className="flex items-center gap-1 mt-1 text-xs text-primary/80 font-medium">
+            <Clock className="w-3 h-3" />
+            <span>{startTimeDisplay} 출발</span>
+          </div>
+        )}
 
         {/* Arrival by time */}
         {arrivalTime && (

@@ -44,7 +44,8 @@ export function useScheduleActions({
       place_id: data.place_id || null,
       arrival_by: data.arrival_by ? new Date(data.arrival_by).toISOString() : null,
       travel_mode: data.travel_mode || null,
-      start_time: null,
+      // "HH:MM" → "HH:MM:00" (TIME 컬럼 호환)
+      start_time: data.start_time ? `${data.start_time}:00` : null,
       end_time: null,
       transport_to_next: null,
     };

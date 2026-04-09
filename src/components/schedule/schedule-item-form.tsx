@@ -29,6 +29,7 @@ const TRAVEL_MODE_OPTIONS: { value: TravelMode; label: string }[] = [
 
 export interface ScheduleItemFormData {
   title: string;
+  start_time: string;
   arrival_by: string;
   memo: string;
   travel_mode: string;
@@ -45,6 +46,7 @@ interface ScheduleItemFormProps {
 
 const EMPTY_FORM: ScheduleItemFormData = {
   title: "",
+  start_time: "",
   arrival_by: "",
   memo: "",
   travel_mode: "",
@@ -77,6 +79,9 @@ export function ScheduleItemForm({
     if (editingItem) {
       setForm({
         title: editingItem.title,
+        start_time: editingItem.start_time
+          ? editingItem.start_time.slice(0, 5) // "HH:MM:SS" → "HH:MM"
+          : "",
         arrival_by: toDatetimeLocal(editingItem.arrival_by),
         memo: editingItem.memo ?? "",
         travel_mode: editingItem.travel_mode ?? "",
@@ -122,6 +127,20 @@ export function ScheduleItemForm({
               placeholder="일정 제목을 입력하세요"
               required
             />
+          </div>
+
+          {/* Start time (time picker) */}
+          <div className="space-y-1.5">
+            <Label htmlFor="start_time">시작 시간</Label>
+            <Input
+              id="start_time"
+              type="time"
+              value={form.start_time}
+              onChange={(e) => set("start_time")(e.target.value)}
+            />
+            <p className="text-[11px] text-muted-foreground">
+              이동 시간 계산 시 출발 기준 시간으로 사용됩니다.
+            </p>
           </div>
 
           {/* Arrival by (datetime-local) */}

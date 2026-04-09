@@ -23,6 +23,7 @@ export const GET = withAuth(async (request, { user }) => {
   const origin = searchParams.get("origin");
   const destination = searchParams.get("destination");
   const mode = searchParams.get("mode") || "transit";
+  const departureTime = searchParams.get("departureTime") || undefined;
 
   if (!origin || !destination) {
     return errorResponse("BAD_REQUEST", "origin과 destination 파라미터가 필요합니다 (lat,lng 형식)");
@@ -42,7 +43,7 @@ export const GET = withAuth(async (request, { user }) => {
   }
 
   try {
-    const result = await getDirections(origin, destination, mode, apiKey);
+    const result = await getDirections(origin, destination, mode, apiKey, departureTime);
     return NextResponse.json(result);
   } catch (err) {
     console.error("[directions]", err);
