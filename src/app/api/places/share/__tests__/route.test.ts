@@ -78,7 +78,8 @@ describe("POST /api/places/share", () => {
 
       expect(res.status).toBe(401);
       const body = await res.json();
-      expect(body.error.code).toBe("UNAUTHORIZED");
+      expect(body.success).toBe(false);
+      expect(body.error).toBe("Unauthorized");
     });
   });
 
@@ -97,14 +98,16 @@ describe("POST /api/places/share", () => {
       );
       expect(res.status).toBe(400);
       const body = await res.json();
-      expect(body.error.code).toBe("BAD_REQUEST");
+      expect(body.success).toBe(false);
+      expect(body.error).toBe("url(또는 input)과 trip_id가 필요합니다");
     });
 
     it("url/input이 없으면 400을 반환한다", async () => {
       const res = await POST(makeRequest({ trip_id: "trip-1" }));
       expect(res.status).toBe(400);
       const body = await res.json();
-      expect(body.error.code).toBe("BAD_REQUEST");
+      expect(body.success).toBe(false);
+      expect(body.error).toBe("url(또는 input)과 trip_id가 필요합니다");
     });
 
     it("유효하지 않은 URL/텍스트(빈 입력)는 400을 반환한다", async () => {
@@ -162,7 +165,8 @@ describe("POST /api/places/share", () => {
       );
       expect(res.status).toBe(429);
       const body = await res.json();
-      expect(body.error.code).toBe("RATE_LIMITED");
+      expect(body.success).toBe(false);
+      expect(body.error).toBe("요청이 너무 많습니다. 잠시 후 다시 시도해주세요.");
     });
   });
 
@@ -188,7 +192,8 @@ describe("POST /api/places/share", () => {
 
       expect(res.status).toBe(403);
       const body = await res.json();
-      expect(body.error.code).toBe("FORBIDDEN");
+      expect(body.success).toBe(false);
+      expect(body.error).toBe("해당 여행에 접근할 수 없습니다");
     });
   });
 

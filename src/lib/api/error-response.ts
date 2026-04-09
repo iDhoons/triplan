@@ -22,7 +22,10 @@ export const ISO_DATE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/;
 
 export function errorResponse(code: ErrorCode, message: string) {
   return NextResponse.json(
-    { error: { code, message } },
+    {
+      success: false as const,
+      error: message,
+    },
     { status: STATUS_MAP[code] }
   );
 }
