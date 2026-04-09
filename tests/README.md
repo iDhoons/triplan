@@ -103,6 +103,17 @@ testUsers.alice // alice@triplan.test
 testUsers.bob   // bob@triplan.test
 ```
 
+Seed (or reset password for) fixture accounts in Supabase:
+
+```bash
+node scripts/seed-e2e-users.mjs
+```
+
+Required environment variables:
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+
 New users are created with unique emails using timestamps to avoid collisions.
 
 ### Test Trips & Places
