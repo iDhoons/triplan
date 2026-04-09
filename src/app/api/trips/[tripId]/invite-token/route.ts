@@ -1,36 +1,21 @@
-import { createClient } from "@/lib/supabase/server";
+import { withTripEditor, withTripMember } from "@/lib/api/guards";
 import { NextResponse } from "next/server";
 import { errorResponse } from "@/lib/api/error-response";
 import { nanoid } from "nanoid";
+import { z } from "zod";
 
 const EXPIRY_DAYS = 7;
+const TRIP_ID_PATTERN = /\/trips\/([^/]+)\/invite-token/;
+
+const getTripIdFromRequest = (request: Request) =>
+  request.url.match(TRIP_ID_PATTERN)?.[1] ?? null;
+
+const deleteTokenSchema = z.object({
+  tokenId: z.string().min(1),
+});
 
 // POST /api/trips/[tripId]/invite-token — 게스트 초대 토큰 생성 (admin/editor 전용)
-export async function POST(
-  request: Request,
-  { params }: { params: Promise<{ tripId: string }> },
-) {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return errorResponse("UNAUTHORIZED", "Authentication required");
-
-  const { tripId } = await params;
-
-  // 편집자/관리자만 토큰 생성 가능
-  const { data: member } = await supabase
-    .from("trip_members")
-    .select("role")
-    .eq("trip_id", tripId)
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  if (!member || !["admin", "editor"].includes(member.role)) {
-    return errorResponse("FORBIDDEN", "Only trip admins and editors can create invite tokens");
-  }
-
+export const POST = withTripEditor(getTripIdFromRequest, async (request, { supabase, user, tripId }) => {
   const token = nanoid(21);
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + EXPIRY_DAYS);
@@ -64,31 +49,10 @@ export async function POST(
     },
     { status: 201 },
   );
-}
+});
 
 // GET /api/trips/[tripId]/invite-token — 활성 토큰 목록 조회 (멤버 전용)
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ tripId: string }> },
-) {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return errorResponse("UNAUTHORIZED", "Authentication required");
-
-  const { tripId } = await params;
-
-  const { data: member } = await supabase
-    .from("trip_members")
-    .select("role")
-    .eq("trip_id", tripId)
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  if (!member) return errorResponse("FORBIDDEN", "Not a trip member");
-
+export const GET = withTripMember(getTripIdFromRequest, async (request, { supabase, tripId }) => {
   const { data: tokens, error } = await supabase
     .from("invite_tokens")
     .select("id, token, expires_at, created_at")
@@ -110,41 +74,16 @@ export async function GET(
       created_at: t.created_at,
     })),
   });
-}
+});
 
 // DELETE /api/trips/[tripId]/invite-token — 토큰 폐기 (admin/editor 전용)
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ tripId: string }> },
-) {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return errorResponse("UNAUTHORIZED", "Authentication required");
-
-  const { tripId } = await params;
-
-  const { member: memberCheck } = await (async () => {
-    const { data } = await supabase
-      .from("trip_members")
-      .select("role")
-      .eq("trip_id", tripId)
-      .eq("user_id", user.id)
-      .maybeSingle();
-    return { member: data };
-  })();
-
-  if (!memberCheck || !["admin", "editor"].includes(memberCheck.role)) {
-    return errorResponse("FORBIDDEN", "Only trip admins and editors can revoke invite tokens");
-  }
-
-  let tokenId: string;
+export const DELETE = withTripEditor(getTripIdFromRequest, async (request, { supabase, tripId }) => {
+  let parsedBody: z.infer<typeof deleteTokenSchema>;
   try {
     const body = await request.json();
-    tokenId = body.tokenId;
-    if (!tokenId || typeof tokenId !== "string") throw new Error();
+    const result = deleteTokenSchema.safeParse(body);
+    if (!result.success) throw new Error("invalid body");
+    parsedBody = result.data;
   } catch {
     return errorResponse("BAD_REQUEST", "tokenId is required");
   }
@@ -152,7 +91,7 @@ export async function DELETE(
   const { error } = await supabase
     .from("invite_tokens")
     .delete()
-    .eq("id", tokenId)
+    .eq("id", parsedBody.tokenId)
     .eq("trip_id", tripId); // trip_id 일치 확인 (다른 여행 토큰 삭제 방지)
 
   if (error) {
@@ -160,4 +99,4 @@ export async function DELETE(
   }
 
   return NextResponse.json({ success: true });
-}
+});
