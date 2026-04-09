@@ -1,6 +1,6 @@
 import { withTripMember } from "@/lib/api/guards";
-import { NextResponse } from "next/server";
 import { errorResponse } from "@/lib/api/error-response";
+import { successResponse } from "@/lib/api/response";
 
 // DELETE /api/trips/[tripId] — 여행 삭제 (admin 전용)
 export const DELETE = withTripMember(
@@ -16,6 +16,6 @@ export const DELETE = withTripMember(
       return errorResponse("INTERNAL_ERROR", "여행 삭제에 실패했습니다");
     }
 
-    return NextResponse.json({ success: true });
+    return successResponse({ deleted: true });
   },
 );

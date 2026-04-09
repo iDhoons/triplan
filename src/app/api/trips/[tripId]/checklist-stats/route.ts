@@ -1,6 +1,6 @@
 import { withTripMember } from "@/lib/api/guards";
-import { NextResponse } from "next/server";
 import { errorResponse } from "@/lib/api/error-response";
+import { successResponse } from "@/lib/api/response";
 
 // GET /api/trips/[tripId]/checklist-stats — 멤버별 체크리스트 현황
 export const GET = withTripMember(
@@ -55,7 +55,7 @@ export const GET = withTripMember(
         ...statsMap.get(m.user_id)!,
       }));
 
-    return NextResponse.json({
+    return successResponse({
       members: memberStats,
       unassigned: { total: unassignedTotal, checked: unassignedChecked },
       summary: {

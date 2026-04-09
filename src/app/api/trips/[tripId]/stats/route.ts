@@ -1,6 +1,6 @@
 import { withTripMember } from "@/lib/api/guards";
-import { NextResponse } from "next/server";
 import { errorResponse } from "@/lib/api/error-response";
+import { successResponse } from "@/lib/api/response";
 
 // GET /api/trips/[tripId]/stats — 멤버별 기여도 집계
 export const GET = withTripMember(
@@ -47,6 +47,6 @@ export const GET = withTripMember(
 
     stats.sort((a, b) => b.contributions.total - a.contributions.total);
 
-    return NextResponse.json({ stats });
+    return successResponse({ stats });
   },
 );
