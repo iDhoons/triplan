@@ -107,9 +107,51 @@ export function isInAppBrowser(): boolean {
  */
 const PHOTO_PROXY_PREFIX = "/api/places/photo";
 
+function extractLegacyGooglePhotoName(url: string): string | null {
+  try {
+    const parsed = new URL(url, "http://localhost");
+
+    if (parsed.pathname === PHOTO_PROXY_PREFIX) {
+      return parsed.searchParams.get("name");
+    }
+
+    const isGooglePlacesMedia =
+      parsed.hostname === "places.googleapis.com" &&
+      parsed.pathname.startsWith("/v1/") &&
+      parsed.pathname.endsWith("/media");
+
+    if (!isGooglePlacesMedia) return null;
+
+    const photoName = parsed.pathname
+      .replace(/^\/v1\//, "")
+      .replace(/\/media$/, "");
+
+    return photoName.startsWith("places/") ? photoName : null;
+  } catch {
+    return null;
+  }
+}
+
+export function isLegacyGooglePhotoUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url, "http://localhost");
+    return (
+      (parsed.hostname === "places.googleapis.com" &&
+        parsed.pathname.startsWith("/v1/places/") &&
+        parsed.pathname.includes("/photos/")) ||
+      parsed.hostname === "lh3.googleusercontent.com"
+    );
+  } catch {
+    return false;
+  }
+}
+
 export function placeImageUrl(url: string, width: number): string {
-  if (!url.startsWith(PHOTO_PROXY_PREFIX)) return url;
-  const parsed = new URL(url, "http://localhost");
+  const photoName = extractLegacyGooglePhotoName(url);
+  if (!photoName) return url;
+
+  const parsed = new URL(PHOTO_PROXY_PREFIX, "http://localhost");
+  parsed.searchParams.set("name", photoName);
   parsed.searchParams.set("maxWidth", String(width));
   return `${parsed.pathname}?${parsed.searchParams.toString()}`;
 }

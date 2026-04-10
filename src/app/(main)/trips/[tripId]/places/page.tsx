@@ -52,14 +52,69 @@ const PlaceMap = dynamic(
 import { usePlaces } from "@/hooks/use-places";
 import { queryKeys } from "@/hooks/query-keys";
 import { PlaceCardSkeleton } from "@/components/layout/loading-skeleton";
-import { cn, formatShortAddress } from "@/lib/utils";
+import { cn, formatShortAddress, isLegacyGooglePhotoUrl } from "@/lib/utils";
 import { PLACE_CATEGORY_LABEL, PLACE_CATEGORY_BADGE_CLASS } from "@/config/categories";
 import type { Place, PlaceCategory } from "@/types/database";
+
+type IdleHandle = number;
 
 type TabValue = PlaceCategory | "all";
 const TAB_VALUES: TabValue[] = ["all", "accommodation", "attraction", "restaurant", "other"];
 
 type ViewMode = "list" | "map";
+
+function scheduleBackgroundWork(task: () => void): { cancel: () => void } {
+  if (typeof window === "undefined") {
+    return { cancel: () => undefined };
+  }
+
+  if ("requestIdleCallback" in window) {
+    const handle = (
+      window as Window & {
+        requestIdleCallback: (
+          callback: IdleRequestCallback,
+          options?: IdleRequestOptions
+        ) => IdleHandle;
+        cancelIdleCallback: (id: IdleHandle) => void;
+      }
+    ).requestIdleCallback(() => task(), { timeout: 2000 });
+
+    return {
+      cancel: () =>
+        (
+          window as Window & {
+            cancelIdleCallback: (id: IdleHandle) => void;
+          }
+        ).cancelIdleCallback(handle),
+    };
+  }
+
+  const handle = window.setTimeout(task, 1200);
+  return {
+    cancel: () => window.clearTimeout(handle),
+  };
+}
+
+function getPhotoRepairConcurrency(): number {
+  if (typeof navigator === "undefined") return 3;
+
+  const connection = (
+    navigator as Navigator & {
+      connection?: {
+        saveData?: boolean;
+        effectiveType?: string;
+      };
+    }
+  ).connection;
+
+  if (!connection) return 3;
+  if (connection.saveData) return 1;
+  if (connection.effectiveType === "slow-2g" || connection.effectiveType === "2g") {
+    return 1;
+  }
+  if (connection.effectiveType === "3g") return 2;
+  return 3;
+}
 
 interface PlaceCardProps {
   place: Place;
@@ -274,45 +329,74 @@ export default function PlacesPage() {
   useEffect(() => {
     if (!places.length || photoFixAttempted.current) return;
 
-    const needPhotos = places.filter(
-      (p) => p.google_place_id && (!p.image_urls || p.image_urls.length === 0)
-    );
+    const needPhotos = places.filter((p) => {
+      if (!p.image_urls || p.image_urls.length === 0) return true;
+      return p.image_urls.some((url) => isLegacyGooglePhotoUrl(url));
+    });
     if (needPhotos.length === 0) return;
 
     photoFixAttempted.current = true;
+    let cancelled = false;
+    const backgroundTask = scheduleBackgroundWork(() => {
+      void (async () => {
+        const concurrency = getPhotoRepairConcurrency();
+        const updates = new Map<string, string[]>();
 
-    (async () => {
-      const CONCURRENCY = 5;
-      let updated = false;
+        for (let i = 0; i < needPhotos.length && !cancelled; i += concurrency) {
+          const chunk = needPhotos.slice(i, i + concurrency);
+          const results = await Promise.allSettled(
+            chunk.map(async (place) => {
+              const query = [place.name, place.address].filter(Boolean).join(" ");
+              const res = await fetch(
+                `/api/places/resolve-photos?${new URLSearchParams({
+                  ...(place.google_place_id ? { googlePlaceId: place.google_place_id } : {}),
+                  ...(query ? { query } : {}),
+                }).toString()}`
+              );
+              if (!res.ok) return null;
+              const { urls } = await res.json();
+              if (!urls?.length) return null;
 
-      for (let i = 0; i < needPhotos.length; i += CONCURRENCY) {
-        const chunk = needPhotos.slice(i, i + CONCURRENCY);
-        const results = await Promise.allSettled(
-          chunk.map(async (place) => {
-            const res = await fetch(
-              `/api/places/resolve-photos?googlePlaceId=${encodeURIComponent(place.google_place_id!)}`
-            );
-            if (!res.ok) return false;
-            const { urls } = await res.json();
-            if (urls?.length > 0) {
-              await supabase
+              const { error } = await supabase
                 .from("places")
                 .update({ image_urls: urls })
                 .eq("id", place.id);
-              return true;
-            }
-            return false;
-          })
-        );
-        if (results.some((r) => r.status === "fulfilled" && r.value === true)) {
-          updated = true;
-        }
-      }
 
-      if (updated) {
-        queryClient.invalidateQueries({ queryKey: queryKeys.places.byTrip(tripId) });
-      }
-    })();
+              if (error) return null;
+              return { placeId: place.id, urls };
+            })
+          );
+
+          for (const result of results) {
+            if (result.status === "fulfilled" && result.value) {
+              updates.set(result.value.placeId, result.value.urls);
+            }
+          }
+
+          // Yield between chunks so scrolling and taps stay responsive.
+          if (i + concurrency < needPhotos.length) {
+            await new Promise((resolve) => window.setTimeout(resolve, 150));
+          }
+        }
+
+        if (cancelled || updates.size === 0) return;
+
+        queryClient.setQueryData<Place[]>(
+          queryKeys.places.byTrip(tripId),
+          (current = []) =>
+            current.map((place) =>
+              updates.has(place.id)
+                ? { ...place, image_urls: updates.get(place.id)! }
+                : place
+            )
+        );
+      })();
+    });
+
+    return () => {
+      cancelled = true;
+      backgroundTask.cancel();
+    };
   }, [places, supabase, queryClient, tripId]);
 
   const [activeTab, setActiveTab] = useState<TabValue>("all");

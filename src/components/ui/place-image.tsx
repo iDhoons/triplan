@@ -29,10 +29,11 @@ export function PlaceImage({
   className,
   fallbackIcon,
 }: PlaceImageProps) {
-  const [error, setError] = useState(false);
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
   const url = src && width ? placeImageUrl(src, width) : src;
+  const hasError = !!url && failedUrl === url;
 
-  if (!url || error) {
+  if (!url || hasError) {
     return (
       <div
         className={cn(
@@ -54,7 +55,9 @@ export function PlaceImage({
       alt={alt}
       className={className}
       loading="lazy"
-      onError={() => setError(true)}
+      decoding="async"
+      fetchPriority="low"
+      onError={() => setFailedUrl(url)}
     />
   );
 }
