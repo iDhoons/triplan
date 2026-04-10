@@ -12,14 +12,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
 
-    services:
-      supabase:
-        image: supabase/supabase:latest
-        ports:
-          - 54321:5432
-        env:
-          POSTGRES_PASSWORD: postgres
-
     steps:
       - uses: actions/checkout@v4
 
@@ -39,7 +31,7 @@ jobs:
 
       - name: Setup environment
         run: |
-          cp .env.example .env.test.local
+          cp .env.local.example .env.test.local
           # Add test-specific env vars if needed
 
       - name: Build application

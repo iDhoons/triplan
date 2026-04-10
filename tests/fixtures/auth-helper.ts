@@ -1,7 +1,7 @@
 import { Page } from '@playwright/test';
 
 /**
- * Helper functions for authentication testing
+ * Helper functions for authentication testing.
  */
 
 export async function signUp(
@@ -10,58 +10,41 @@ export async function signUp(
   password: string,
   name: string
 ) {
-  await page.goto('/auth/sign-up');
+  await page.goto('/signup');
+  await page.fill('#name', name);
+  await page.fill('#email', email);
+  await page.fill('#password', password);
+  await page.getByRole('button', { name: '가입하기' }).click();
 
-  // Fill signup form
-  await page.fill('input[type="email"]', email);
-  await page.fill('input[type="password"]', password);
-  await page.fill('input[placeholder*="Name"]', name);
-
-  // Submit form
-  await page.click('button:has-text("Create Account")');
-
-  // Wait for redirect to dashboard or auth confirmation
-  await page.waitForURL(/\/(dashboard|trips)/, { timeout: 10000 });
+  await Promise.race([
+    page.waitForURL(/\/(dashboard|trips)/, { timeout: 10000 }),
+    page.getByText('이메일을 확인해주세요').waitFor({ timeout: 10000 }),
+  ]);
 }
 
 export async function signIn(page: Page, email: string, password: string) {
-  await page.goto('/auth/sign-in');
-
-  // Fill login form
-  await page.fill('input[type="email"]', email);
-  await page.fill('input[type="password"]', password);
-
-  // Submit form
-  await page.click('button:has-text("Sign In")');
-
-  // Wait for redirect to dashboard
+  await page.goto('/login');
+  await page.fill('#email', email);
+  await page.fill('#password', password);
+  await page.getByRole('button', { name: '로그인' }).click();
   await page.waitForURL(/\/(dashboard|trips)/, { timeout: 10000 });
 }
 
 export async function signOut(page: Page) {
-  // Open user menu (usually top-right)
-  await page.click('button[aria-label="User menu"]');
-
-  // Click sign out
-  await page.click('button:has-text("Sign Out")');
-
-  // Wait for redirect to login
-  await page.waitForURL('/auth/sign-in', { timeout: 5000 });
+  await page.locator('button').last().click();
+  await page.getByRole('menuitem', { name: '로그아웃' }).click();
+  await page.waitForURL(/\/login/, { timeout: 5000 });
 }
 
 export async function isAuthenticated(page: Page): Promise<boolean> {
   try {
-    // Check if we can reach a protected route
     await page.goto('/dashboard', { waitUntil: 'networkidle' });
-    return !page.url().includes('/auth');
+    return !page.url().includes('/login') && !page.url().includes('/signup');
   } catch {
     return false;
   }
 }
 
-/**
- * Check if user is on auth page
- */
 export async function isOnAuthPage(page: Page): Promise<boolean> {
-  return page.url().includes('/auth');
+  return page.url().includes('/login') || page.url().includes('/signup');
 }

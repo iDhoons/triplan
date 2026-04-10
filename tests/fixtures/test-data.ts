@@ -1,6 +1,5 @@
 /**
- * Test data fixtures for E2E tests
- * Generated test users, trips, and places for reproducible testing
+ * Test data fixtures for E2E tests.
  */
 
 export const testUsers = {
@@ -16,63 +15,26 @@ export const testUsers = {
   },
 };
 
-export const testTrips = {
-  tokyo: {
-    title: 'Tokyo 3 Days',
-    destination: 'Tokyo, Japan',
-    startDate: new Date(2026, 4, 1), // May 1
-    endDate: new Date(2026, 4, 3), // May 3
-  },
-  paris: {
-    title: 'Paris Weekend',
-    destination: 'Paris, France',
-    startDate: new Date(2026, 5, 1), // June 1
-    endDate: new Date(2026, 5, 2), // June 2
-  },
-};
-
-export const testPlaces = {
-  sensojiTemple: {
-    name: 'Senso-ji Temple',
-    address: '2 Chome-3-1 Asakusa, Taito Ward, Tokyo 111-0032, Japan',
-    category: 'temple',
-  },
-  tokyoTower: {
-    name: 'Tokyo Tower',
-    address: '4 Chome-2-8 Shibakoen, Minato Ward, Tokyo 105-0011, Japan',
-    category: 'landmark',
-  },
-  eiffelTower: {
-    name: 'Eiffel Tower',
-    address: '5 Avenue Anatole France, 75007 Paris, France',
-    category: 'landmark',
-  },
-};
-
-/**
- * Test quality metrics thresholds
- * Used to validate performance and error rates
- */
 export const qualityThresholds = {
-  responseTimeP95Ms: 3000, // 3 seconds
-  errorRatePercent: 1, // 1%
-  minTestCoverage: 80, // 80% for critical flows
+  responseTimeP95Ms: 3000,
+  errorRatePercent: 1,
+  minTestCoverage: 80,
 };
 
-/**
- * URL patterns for quality validation
- */
 export const qualityCheckPoints = {
-  // Price accuracy: chatbot responses must match DB
-  chatbotPriceEndpoint: '/api/chat', // Endpoint that returns price info
-  placesPriceEndpoint: '/api/places', // Source of truth for prices
-
-  // Performance monitoring
+  publicPages: ['/', '/login', '/signup'],
+  protectedPages: ['/dashboard', '/notifications', '/profile'],
   criticalApiEndpoints: [
-    '/api/auth/sign-up',
-    '/api/auth/sign-in',
-    '/api/trips',
-    '/api/places',
-    '/api/schedules',
+    { method: 'GET', path: '/api/notifications' },
+    { method: 'GET', path: '/api/weather?tripId=test-trip' },
+    {
+      method: 'GET',
+      path: '/api/directions?origin=37.5665,126.9780&destination=37.5700,126.9768&mode=walking',
+    },
+    {
+      method: 'POST',
+      path: '/api/scrape',
+      data: { url: 'https://example.com' },
+    },
   ],
 };
