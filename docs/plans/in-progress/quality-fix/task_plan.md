@@ -10,7 +10,7 @@
 
 ## Current Phase
 
-Phase 11: Advanced Optimization — Status: in_progress (11-2 완료, 11-1/3/4 pending)
+Phase 11: Advanced Optimization — Status: done (4/4, commit 7e70b2d, 2026-04-09)
 
 ## Phase History
 
@@ -92,11 +92,11 @@ Phase 11: Advanced Optimization — Status: in_progress (11-2 완료, 11-1/3/4 p
 ### Phase 11: Advanced Optimization (장기 개선)
 > 대규모 리팩토링. 시간 여유가 있을 때 진행.
 
-- [ ] 🤖 11-1. Server Component prefetch — Dashboard, PlaceDetail (HydrationBoundary + prefetchQuery)
+- [x] 🤖 11-1. Server Component prefetch — Dashboard SSR prefetch + HydrationBoundary (commit 7e70b2d)
 - [x] 11-2. 외부 API 1회 재시도 + exponential backoff — fetchWithRetry (commit 83165ab)
-- [ ] 👤 11-3. CSP nonce 기반 강화 (`unsafe-inline` 제거 검토)
-- [ ] 👤 11-4. RealtimeProvider 분할 — 테이블별 핸들러 모듈화
-- **Status:** 1/4 done — 2026-04-07
+- [x] 👤 11-3. CSP nonce 기반 강화 — proxy.ts 통합, unsafe-inline 제거 (commit 7e70b2d)
+- [x] 👤 11-4. RealtimeProvider 분할 — realtime-handlers.ts 추출, 539→182줄 (commit 7e70b2d)
+- **Status:** done (4/4) — 2026-04-09
 
 ### Phase 12: Verification
 - [x] 12-1. `pnpm build` — 빌드 성공 (2026-04-06)

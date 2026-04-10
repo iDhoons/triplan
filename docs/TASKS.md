@@ -45,7 +45,7 @@ owner: daehoonkim
 
 | 작업 | 상태 | 설명 | 관련 문서 |
 | ---- | ---- | ---- | --------- |
-| Phase 11: Advanced Optimization | 🟡 | 11-1 Server Component prefetch, 11-3 CSP nonce 강화, 11-4 RealtimeProvider 분할 | - |
+| (없음) | - | - | - |
 
 ---
 
@@ -89,7 +89,7 @@ owner: daehoonkim
 
 | 작업                           | 상태 | 설명                                                  | 관련 문서 |
 | ------------------------------ | ---- | ----------------------------------------------------- | --------- |
-| Sentry 에러 트래킹 연결        | 🟢   | 프론트엔드 + API 에러 수집                             | -         |
+| 에러 트래킹 도구 연결 없음     | ⚪   | 외부 에러 트래킹 도구는 현재 사용하지 않음            | -         |
 | Vercel Analytics 연결          | 🟢   | Web Vitals 추적                                        | -         |
 | Google API 사용량 모니터링     | 🟢   | Maps/Places/Gemini 무료 티어 한도 알림                 | -         |
 
@@ -125,10 +125,11 @@ owner: daehoonkim
 
 ## ✅ 완료됨
 
-### 2026-04 (04-01 ~ 04-07)
+### 2026-04 (04-01 ~ 04-09)
 
 | 작업                              | 완료일     | 설명                                                        |
 | --------------------------------- | ---------- | ----------------------------------------------------------- |
+| **Phase 11: Advanced Optimization** | 2026-04-09 | 11-1 Server Component prefetch, 11-2 외부 API 재시도, 11-3 CSP nonce 강화, 11-4 RealtimeProvider 분할 (commit 7e70b2d) |
 | **Quality Fix: Phase 8 (Realtime 동기화)** | 2026-04-07 | place_votes trip_id 컬럼+필터, schedule_items Realtime 필터, Query Key Factory 15개 파일, MembersPage React Query 전환 |
 | **Schedule Planner (Phase 4-6)** | 2026-04-07 | Push Notification(VAPID+SW+Edge Fn), Geolocation GPS 보강, departure-alert 컴포넌트 |
 | **Guards Coverage 테스트** | 2026-04-07 | API route 49개 가드 적용 검증 테스트 (withAuth/withTripMember/withTripEditor) |

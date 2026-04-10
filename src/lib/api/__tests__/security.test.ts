@@ -44,33 +44,33 @@ describe("OAuth Open Redirect 방어", () => {
 import { checkRateLimit } from "../guards";
 
 describe("checkRateLimit", () => {
-  it("첫 요청은 통과", () => {
-    expect(checkRateLimit("test-api", "user-1")).toBe(true);
+  it("첫 요청은 통과", async () => {
+    await expect(checkRateLimit("test-api", "user-1")).resolves.toBe(true);
   });
 
-  it("제한 내 요청은 통과", () => {
+  it("제한 내 요청은 통과", async () => {
     const key = "test-api-2";
     for (let i = 0; i < 10; i++) {
-      expect(checkRateLimit(key, "user-2", { maxRequests: 10 })).toBe(true);
+      await expect(checkRateLimit(key, "user-2", { maxRequests: 10 })).resolves.toBe(true);
     }
   });
 
-  it("제한 초과 시 차단", () => {
+  it("제한 초과 시 차단", async () => {
     const key = "test-api-3";
     for (let i = 0; i < 5; i++) {
-      checkRateLimit(key, "user-3", { maxRequests: 5 });
+      await checkRateLimit(key, "user-3", { maxRequests: 5 });
     }
-    expect(checkRateLimit(key, "user-3", { maxRequests: 5 })).toBe(false);
+    await expect(checkRateLimit(key, "user-3", { maxRequests: 5 })).resolves.toBe(false);
   });
 
-  it("다른 사용자는 독립적 카운트", () => {
+  it("다른 사용자는 독립적 카운트", async () => {
     const key = "test-api-4";
     for (let i = 0; i < 5; i++) {
-      checkRateLimit(key, "user-4a", { maxRequests: 5 });
+      await checkRateLimit(key, "user-4a", { maxRequests: 5 });
     }
     // user-4a는 차단
-    expect(checkRateLimit(key, "user-4a", { maxRequests: 5 })).toBe(false);
+    await expect(checkRateLimit(key, "user-4a", { maxRequests: 5 })).resolves.toBe(false);
     // user-4b는 통과
-    expect(checkRateLimit(key, "user-4b", { maxRequests: 5 })).toBe(true);
+    await expect(checkRateLimit(key, "user-4b", { maxRequests: 5 })).resolves.toBe(true);
   });
 });

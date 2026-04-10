@@ -7,7 +7,7 @@ export default function GlobalError({
 }: {
   error: Error & { digest?: string };
 }) {
-  // 서버 측 Sentry(instrumentation.ts)가 이 에러를 자동 캡처
+  // 전역 에러는 서버 로그로만 남긴다.
   console.error("[GlobalError]", error);
 
   return (

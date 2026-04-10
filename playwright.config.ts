@@ -1,5 +1,10 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const DEFAULT_E2E_WEB_SERVER_COMMAND =
+  'NODE_OPTIONS=--max-old-space-size=4096 pnpm exec next dev --webpack';
+const webServerCommand =
+  process.env.PLAYWRIGHT_WEB_SERVER_COMMAND ?? DEFAULT_E2E_WEB_SERVER_COMMAND;
+
 export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: true,
@@ -20,7 +25,8 @@ export default defineConfig({
   },
 
   webServer: {
-    command: 'pnpm dev:test',
+    // E2E 기본 경로는 webpack dev server로 고정한다.
+    command: webServerCommand,
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,

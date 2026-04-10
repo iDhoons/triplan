@@ -10,7 +10,7 @@ import {
   StarIcon,
   SlidersHorizontalIcon,
   ListIcon,
-  Map,
+  Map as MapIcon,
   YoutubeIcon,
   MoreHorizontalIcon,
 } from "lucide-react";
@@ -43,7 +43,7 @@ const PlaceMap = dynamic(
   {
     loading: () => (
       <div className="h-[500px] w-full rounded-lg bg-muted animate-pulse flex items-center justify-center">
-        <Map className="size-8 text-muted-foreground/40" />
+        <MapIcon className="size-8 text-muted-foreground/40" />
       </div>
     ),
     ssr: false,
@@ -64,13 +64,15 @@ const TAB_VALUES: TabValue[] = ["all", "accommodation", "attraction", "restauran
 type ViewMode = "list" | "map";
 
 function scheduleBackgroundWork(task: () => void): { cancel: () => void } {
-  if (typeof window === "undefined") {
+  const browserWindow = typeof window !== "undefined" ? window : null;
+
+  if (!browserWindow) {
     return { cancel: () => undefined };
   }
 
-  if ("requestIdleCallback" in window) {
+  if ("requestIdleCallback" in browserWindow) {
     const handle = (
-      window as Window & {
+      browserWindow as Window & {
         requestIdleCallback: (
           callback: IdleRequestCallback,
           options?: IdleRequestOptions
@@ -82,16 +84,16 @@ function scheduleBackgroundWork(task: () => void): { cancel: () => void } {
     return {
       cancel: () =>
         (
-          window as Window & {
+          browserWindow as Window & {
             cancelIdleCallback: (id: IdleHandle) => void;
           }
         ).cancelIdleCallback(handle),
     };
   }
 
-  const handle = window.setTimeout(task, 1200);
+  const handle = globalThis.setTimeout(task, 1200);
   return {
-    cancel: () => window.clearTimeout(handle),
+    cancel: () => globalThis.clearTimeout(handle),
   };
 }
 
@@ -521,7 +523,7 @@ export default function PlacesPage() {
               size="xs"
               onClick={() => setViewMode("map")}
             >
-              <Map className="size-3.5" />
+              <MapIcon className="size-3.5" />
               지도
             </Button>
           </div>

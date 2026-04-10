@@ -616,6 +616,6 @@ matcher: ['/login', '/signup', '/join/:inviteCode', '/offline']
 | Rate Limiting | In-memory (서버리스에서 리셋됨) | Redis 또는 Supabase 기반 | P2 |
 | 이미지 최적화 | Next/Image 부분 전환 완료 (PlaceCard) | Next/Image + Supabase Storage 프록시 | P2 |
 | 번들 분석 | 미수행 | @next/bundle-analyzer 도입 | P2 |
-| 모니터링 | 없음 | Sentry 에러 트래킹 | P1 |
+| 모니터링 | 없음 | 별도 외부 에러 트래킹 없음 | - |
 | CI/CD | GitHub Actions CI 구축 완료 | CD: Vercel 자동 배포 추가 | P1 |
 | 환경 분리 | .env.local 단일 | 개발/스테이징/프로덕션 분리 | P2 |

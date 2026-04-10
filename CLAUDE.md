@@ -150,9 +150,9 @@ profiles, trips, trip_members, places, place_votes, schedules, schedule_items, c
 | 배포 | Vercel |
 | DB | Supabase |
 | API | Google Gemini, Google Maps, Naver Maps |
-| 모니터링 | Sentry |
+| 모니터링 | 없음 |
 | 패키지 | pnpm (Next.js 16, PWA via Serwist) |
-| 환경변수 | Supabase URL/Key, Gemini/Maps API Keys, Sentry DSN |
+| 환경변수 | Supabase URL/Key, Gemini/Maps API Keys |
 
 ### 알려진 이슈
 
