@@ -4,11 +4,28 @@ import { errorResponse } from "@/lib/api/error-response";
 import { z } from "zod";
 import webpush from "web-push";
 
-webpush.setVapidDetails(
-  process.env.VAPID_SUBJECT!,
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!
-);
+let vapidInitialized = false;
+
+/**
+ * web-push는 모듈 평가 시점이 아니라 첫 호출 시점에 초기화한다.
+ * 빌드 타임 page data 수집 단계에서 환경변수가 없어도 빌드가 실패하지
+ * 않도록 하기 위함. 환경변수 누락 시 false를 반환하고 핸들러에서 503을 낸다.
+ */
+function configureVapid(): boolean {
+  if (vapidInitialized) return true;
+
+  const subject = process.env.VAPID_SUBJECT;
+  const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+  const privateKey = process.env.VAPID_PRIVATE_KEY;
+
+  if (!subject || !publicKey || !privateKey) {
+    return false;
+  }
+
+  webpush.setVapidDetails(subject, publicKey, privateKey);
+  vapidInitialized = true;
+  return true;
+}
 
 const SendSchema = z.object({
   user_id: z.string().uuid(),
@@ -20,6 +37,13 @@ const SendSchema = z.object({
 // POST /api/notifications/send — 특정 사용자에게 Push 발송
 // 서버 내부 또는 관리자만 호출 (user_id 검증은 RLS로 보호)
 export const POST = withAuth(async (request, { supabase }) => {
+  if (!configureVapid()) {
+    return errorResponse(
+      "INTERNAL_ERROR",
+      "Push notifications are not configured on this deployment"
+    );
+  }
+
   let body: unknown;
   try {
     body = await request.json();
