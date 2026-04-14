@@ -173,18 +173,21 @@ export default function PlaceDetailPage() {
     setSubmittingComment(true);
 
     const existingVote = votes.find((v) => v.user_id === user.id);
-    if (existingVote) {
-      await supabase
-        .from("place_votes")
-        .update({ comment: comment.trim() })
-        .eq("id", existingVote.id);
-    } else {
-      await supabase.from("place_votes").insert({
-        place_id: placeId,
-        user_id: user.id,
-        vote_type: 3,
-        comment: comment.trim(),
-      });
+    const { error: voteError } = existingVote
+      ? await supabase
+          .from("place_votes")
+          .update({ comment: comment.trim() })
+          .eq("id", existingVote.id)
+      : await supabase.from("place_votes").insert({
+          place_id: placeId,
+          user_id: user.id,
+          vote_type: 3,
+          comment: comment.trim(),
+        });
+    if (voteError) {
+      toast.error("코멘트 저장에 실패했어요");
+      setSubmittingComment(false);
+      return;
     }
 
     setComment("");

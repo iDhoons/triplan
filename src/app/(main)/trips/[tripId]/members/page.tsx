@@ -137,7 +137,11 @@ export default function MembersPage() {
     }
 
     const removedMember = target;
-    await supabase.from("trip_members").delete().eq("id", memberId);
+    const { error } = await supabase.from("trip_members").delete().eq("id", memberId);
+    if (error) {
+      toast.error("멤버 내보내기에 실패했어요");
+      return;
+    }
     // Optimistic removal via query cache
     queryClient.setQueryData<TripMember[]>(queryKeys.members.byTrip(tripId), (old) =>
       old?.filter((m) => m.id !== memberId)

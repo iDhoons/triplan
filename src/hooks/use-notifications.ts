@@ -1,4 +1,5 @@
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { queryKeys } from "./query-keys";
 import type { Notification } from "@/types/database";
 
@@ -38,6 +39,9 @@ export function useMarkAsRead() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all });
     },
+    onError: () => {
+      toast.error("알림 읽기 처리에 실패했어요");
+    },
   });
 }
 
@@ -54,6 +58,9 @@ export function useMarkAllAsRead() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all });
+    },
+    onError: () => {
+      toast.error("알림 일괄 읽기 처리에 실패했어요");
     },
   });
 }
