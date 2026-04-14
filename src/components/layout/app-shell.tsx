@@ -26,7 +26,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("id, display_name, avatar_url")
+        .select("id, display_name, avatar_url, created_at")
         .eq("id", session.user.id)
         .single();
 

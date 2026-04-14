@@ -101,18 +101,24 @@ export function useScheduleActions({
         label: "되돌리기",
         onClick: async () => {
           if (!deletedItem || !parentSchedule) return;
-          await supabase.from("schedule_items").insert({
-            id: deletedItem.id,
-            schedule_id: parentSchedule.id,
-            title: deletedItem.title,
-            memo: deletedItem.memo,
-            place_id: deletedItem.place_id,
-            sort_order: deletedItem.sort_order,
-            arrival_by: deletedItem.arrival_by,
-            travel_mode: deletedItem.travel_mode,
-            travel_duration_seconds: deletedItem.travel_duration_seconds,
-            travel_distance_meters: deletedItem.travel_distance_meters,
-          });
+          const { error: restoreError } = await supabase
+            .from("schedule_items")
+            .insert({
+              id: deletedItem.id,
+              schedule_id: parentSchedule.id,
+              title: deletedItem.title,
+              memo: deletedItem.memo,
+              place_id: deletedItem.place_id,
+              sort_order: deletedItem.sort_order,
+              arrival_by: deletedItem.arrival_by,
+              travel_mode: deletedItem.travel_mode,
+              travel_duration_seconds: deletedItem.travel_duration_seconds,
+              travel_distance_meters: deletedItem.travel_distance_meters,
+            });
+          if (restoreError) {
+            toast.error("복원에 실패했습니다. 다시 시도해주세요.");
+            return;
+          }
           await invalidateSchedules();
           toast.success("일정이 복원되었어요");
         },

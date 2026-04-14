@@ -36,7 +36,7 @@ const SendSchema = z.object({
 
 // POST /api/notifications/send — 특정 사용자에게 Push 발송
 // 서버 내부 또는 관리자만 호출 (user_id 검증은 RLS로 보호)
-export const POST = withAuth(async (request, { supabase }) => {
+export const POST = withAuth(async (request, { supabase, user }) => {
   if (!configureVapid()) {
     return errorResponse(
       "INTERNAL_ERROR",
@@ -57,6 +57,10 @@ export const POST = withAuth(async (request, { supabase }) => {
   }
 
   const { user_id, title, body: msgBody, url } = parsed.data;
+
+  if (user_id !== user.id) {
+    return errorResponse("FORBIDDEN", "자신에게만 알림을 보낼 수 있습니다");
+  }
 
   const { data: subscriptions, error: fetchError } = await supabase
     .from("notification_subscriptions")
