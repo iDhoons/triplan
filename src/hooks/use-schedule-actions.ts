@@ -143,8 +143,9 @@ export function useScheduleActions({
       await invalidateSchedules();
       // 이동거리 계산은 비동기로 처리 — UI 즉시 반영 후 백그라운드 업데이트
       computeTravelInfoForSchedule(supabase, scheduleId).then(invalidateSchedules);
-    } catch {
-      toast.error("순서 저장에 실패했습니다.");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "알 수 없는 오류";
+      toast.error(`순서 저장 실패: ${message}`);
       await invalidateSchedules(); // revert via refetch
     }
   };
@@ -194,8 +195,8 @@ export function useScheduleActions({
       // 이동거리 계산은 비동기로 처리 — UI 즉시 반영 후 백그라운드 업데이트
       computeTravelInfoForSchedule(supabase, scheduleId).then(invalidateSchedules);
     } catch (err) {
-      console.error(err);
-      toast.error("장소 추가에 실패했습니다.");
+      const message = err instanceof Error ? err.message : "알 수 없는 오류";
+      toast.error(`장소 추가 실패: ${message}`);
     }
   };
 
@@ -263,8 +264,8 @@ export function useScheduleActions({
         computeTravelInfoForSchedule(supabase, toScheduleId),
       ]).then(invalidateSchedules);
     } catch (err) {
-      console.error(err);
-      toast.error("일정 이동에 실패했습니다.");
+      const message = err instanceof Error ? err.message : "알 수 없는 오류";
+      toast.error(`일정 이동 실패: ${message}`);
     }
   };
 

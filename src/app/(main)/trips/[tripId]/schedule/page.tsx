@@ -25,6 +25,7 @@ import { cn } from "@/lib/utils";
 import dynamic from "next/dynamic";
 import { PlannerView } from "@/components/schedule/planner-view";
 import { PlaceSidebar } from "@/components/schedule/place-sidebar";
+import { DraggableItem } from "@/components/schedule/draggable-item";
 import {
   ScheduleItemForm,
 } from "@/components/schedule/schedule-item-form";
@@ -63,34 +64,8 @@ function getPointerCoords(event: Event): { x: number; y: number } | null {
   return null;
 }
 
-/**
- * DragOverlay 중심을 커서 위치에 맞추는 modifier.
- * PlaceCard(원본)와 DragOverlay(작은 프리뷰)의 크기 차이로 인한
- * 오버레이 위치 오프셋 문제를 해결한다.
- */
-const snapCenterToCursor: Modifier = ({
-  activatorEvent,
-  draggingNodeRect,
-  transform,
-}) => {
-  if (!draggingNodeRect || !activatorEvent) return transform;
-
-  const coords = getPointerCoords(activatorEvent);
-  if (!coords) return transform;
-
-  const offsetX =
-    coords.x - draggingNodeRect.left - draggingNodeRect.width / 2;
-  const offsetY =
-    coords.y - draggingNodeRect.top - draggingNodeRect.height / 2;
-
-  return {
-    ...transform,
-    x: transform.x + offsetX,
-    y: transform.y + offsetY,
-  };
-};
-
-const OVERLAY_MODIFIERS: Modifier[] = [snapCenterToCursor];
+// 원본 크기 그대로 드래그하므로 modifier 불필요
+const OVERLAY_MODIFIERS: Modifier[] = [];
 
 function formatDateShort(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString("ko-KR", {
@@ -548,11 +523,18 @@ export default function SchedulePage() {
           </div>
         )}
         {activeItemObj && (
-          <div className="pointer-events-none bg-card border border-primary rounded-lg p-3 shadow-xl max-w-sm scale-[1.02]">
-            <p className="font-medium text-sm">{activeItemObj.title}</p>
-            {activeItemObj.place && (
-              <span className="text-xs text-muted-foreground">{activeItemObj.place.name}</span>
-            )}
+          <div className="pointer-events-none shadow-xl">
+            <DraggableItem
+              item={activeItemObj}
+              orderNumber={
+                schedules
+                  .flatMap((s) => s.items ?? [])
+                  .findIndex((i) => i.id === activeItemObj.id) + 1
+              }
+              onEdit={() => {}}
+              onDelete={() => {}}
+              isDragging
+            />
           </div>
         )}
       </DragOverlay>

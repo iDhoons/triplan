@@ -29,19 +29,22 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  const pathname = request.nextUrl.pathname;
+
   // 정확 매칭: 해당 경로이거나 해당 경로 + "/" 하위 경로
-  const exactPublicPaths = ["/login", "/signup", "/api/auth/callback", "/offline", "/share-target"];
+  const exactPublicPaths = ["/", "/login", "/signup", "/api/auth/callback", "/offline", "/share-target"];
   // 접두사 매칭: 하위 경로가 올 수 있는 경로 (e.g. /join/invite-code)
   const prefixPublicPaths = ["/join/", "/api/guest/"];
-
-  const pathname = request.nextUrl.pathname;
+  // 개발 환경 전용 경로
+  const devOnlyPaths = ["/api/places/debug"];
+  const isDevPath = process.env.NODE_ENV === "development" && devOnlyPaths.some(p => pathname.startsWith(p));
   const isPublicPath =
     exactPublicPaths.some(
       (path) => pathname === path || pathname.startsWith(path + "/")
     ) ||
     prefixPublicPaths.some((path) => pathname.startsWith(path));
 
-  if (!user && !isPublicPath) {
+  if (!user && !isPublicPath && !isDevPath) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);

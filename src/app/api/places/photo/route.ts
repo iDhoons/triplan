@@ -34,13 +34,16 @@ export const GET = withAuth(async (request, { user }) => {
 
   try {
     const googleUrl = getPhotoUrlDirect(photoName, maxWidth);
+    console.log("[photo proxy] Fetching:", googleUrl.replace(/key=[^&]+/, "key=***"));
+
     const res = await fetch(googleUrl, {
       redirect: "follow",
       signal: AbortSignal.timeout(8000),
     });
 
     if (!res.ok) {
-      // @TASK T7.9 - 에러 응답 형식 통일
+      const errorText = await res.text().catch(() => "");
+      console.error("[photo proxy] Google API error:", res.status, errorText.slice(0, 200));
       const code = res.status === 404 ? "NOT_FOUND" as const : "INTERNAL_ERROR" as const;
       return errorResponse(code, "이미지를 불러올 수 없습니다");
     }
