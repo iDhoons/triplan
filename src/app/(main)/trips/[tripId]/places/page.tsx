@@ -11,7 +11,6 @@ import {
   SlidersHorizontalIcon,
   ListIcon,
   Map as MapIcon,
-  YoutubeIcon,
   MoreHorizontalIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -35,7 +34,6 @@ import { createClient } from "@/lib/supabase/client";
 import { PlaceImage } from "@/components/ui/place-image";
 import { PlaceForm } from "@/components/places/place-form";
 import { PlaceDetailDrawer } from "@/components/places/place-detail-drawer";
-import { YouTubePlacePicker } from "@/components/places/youtube-place-picker";
 import dynamic from "next/dynamic";
 
 const PlaceMap = dynamic(
@@ -408,7 +406,6 @@ export default function PlacesPage() {
   const [compareMode, setCompareMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
-  const [youtubePickerOpen, setYoutubePickerOpen] = useState(false);
 
   const handleDelete = useCallback(async (place: Place) => {
     const { error } = await supabase.from("places").delete().eq("id", place.id);
@@ -505,8 +502,7 @@ export default function PlacesPage() {
   return (
     <div className="flex flex-col gap-4">
       {/* 상단 액션 바 */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">장소 목록</h2>
+      <div className="flex items-center justify-end">
         <div className="flex items-center gap-2">
           {/* 목록 / 지도 뷰 토글 */}
           <div className="flex rounded-lg border p-0.5 gap-0.5">
@@ -538,15 +534,6 @@ export default function PlacesPage() {
             <SlidersHorizontalIcon className="size-3.5" />
             비교하기
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setYoutubePickerOpen(true)}
-          >
-            <YoutubeIcon className="size-3.5 text-red-500" />
-            YouTube
-          </Button>
-
           <Dialog
             open={dialogOpen}
             onOpenChange={(open) => {
@@ -646,22 +633,14 @@ export default function PlacesPage() {
                   <p className="font-medium text-foreground/80">아직 등록된 장소가 없어요</p>
                   <p className="text-sm text-muted-foreground">가보고 싶은 장소를 추가해보세요!</p>
                 </div>
-                <div className="flex gap-2 mt-1">
-                  <Button
-                    variant="outline"
-                    onClick={() => setDialogOpen(true)}
-                  >
-                    <PlusIcon className="size-3.5" />
-                    장소 추가하기
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => setYoutubePickerOpen(true)}
-                  >
-                    <YoutubeIcon className="size-3.5 text-red-500" />
-                    YouTube에서 가져오기
-                  </Button>
-                </div>
+                <Button
+                  variant="outline"
+                  className="mt-1"
+                  onClick={() => setDialogOpen(true)}
+                >
+                  <PlusIcon className="size-3.5" />
+                  장소 추가하기
+                </Button>
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 animate-stagger">
@@ -682,13 +661,6 @@ export default function PlacesPage() {
           </TabsContent>
         ))}
       </Tabs>
-
-      {/* YouTube 장소 가져오기 */}
-      <YouTubePlacePicker
-        tripId={tripId}
-        open={youtubePickerOpen}
-        onOpenChange={setYoutubePickerOpen}
-      />
 
       {/* 장소 상세 Drawer */}
       <PlaceDetailDrawer

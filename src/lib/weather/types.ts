@@ -1,3 +1,11 @@
+/** 오전/오후 날씨 */
+export interface HalfDayWeather {
+  weather_code: number;
+  label: string;
+  icon: string;
+  temp: number;
+}
+
 /** Open-Meteo daily forecast 도메인 타입 */
 export interface DailyWeather {
   date: string;
@@ -8,6 +16,8 @@ export interface DailyWeather {
   precip_pct: number;
   precip_mm: number;
   icon: string;
+  am?: HalfDayWeather;
+  pm?: HalfDayWeather;
 }
 
 /** WMO Weather Code → 한국어 라벨 + 아이콘 매핑 */

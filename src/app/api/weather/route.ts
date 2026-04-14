@@ -76,9 +76,14 @@ export const GET = withTripMember(
     });
   }
 
-  const firstSchedule = schedules[0];
-  if (firstSchedule.weather_fetched_at) {
-    const fetchedAt = new Date(firstSchedule.weather_fetched_at).getTime();
+  // 예보 가능한 스케줄(오늘 이후)에서 캐시 판정 — 과거 날짜는 AM/PM 데이터가 없을 수 있음
+  const todayStr = today.toISOString().slice(0, 10);
+  const forecastableSchedule = schedules.find(
+    (s) => s.date >= todayStr && s.weather_fetched_at
+  ) ?? schedules[0];
+  const hasAmPm = forecastableSchedule.weather_summary && "am" in forecastableSchedule.weather_summary;
+  if (forecastableSchedule.weather_fetched_at && hasAmPm) {
+    const fetchedAt = new Date(forecastableSchedule.weather_fetched_at).getTime();
     const ttl = getTTLMs(daysUntilStart);
     if (Date.now() - fetchedAt < ttl) {
       return NextResponse.json({

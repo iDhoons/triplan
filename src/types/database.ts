@@ -132,6 +132,13 @@ export interface PlaceVote {
   created_at: string;
 }
 
+export interface HalfDayWeather {
+  weather_code: number;
+  label: string;
+  icon: string;
+  temp: number;
+}
+
 export interface WeatherSummary {
   weather_code: number;
   label: string;
@@ -140,6 +147,8 @@ export interface WeatherSummary {
   precip_pct: number;
   precip_mm: number;
   icon: string;
+  am?: HalfDayWeather;
+  pm?: HalfDayWeather;
 }
 
 export interface Schedule {

@@ -114,20 +114,15 @@ function DayCard({
     <div ref={setNodeRef} className="space-y-2">
       {/* Day header */}
       <div className="flex items-center gap-2">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0 whitespace-nowrap">
           <span className="text-sm font-bold text-foreground">
             Day {dayIndex + 1}
           </span>
           <span className="text-sm text-muted-foreground">({dateLabel})</span>
         </div>
         <WeatherBadge weather={schedule.weather_summary ?? null} />
-        {schedule.day_memo && (
-          <span className="text-xs text-muted-foreground truncate">
-            — {schedule.day_memo}
-          </span>
-        )}
         {items.length > 0 && (
-          <span className="text-xs text-muted-foreground ml-auto">
+          <span className="text-xs text-muted-foreground ml-auto whitespace-nowrap">
             {items.length}개 일정
           </span>
         )}
