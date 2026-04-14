@@ -17,9 +17,31 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
+const siteUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
+  ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+  : "http://localhost:3001";
+
 export const metadata: Metadata = {
-  title: "여행 플래너",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "여행 플래너",
+    template: "%s | 여행 플래너",
+  },
   description: "함께 계획하고, 비교하고, AI로 똑똑하게 여행하세요",
+  openGraph: {
+    title: "여행 플래너",
+    description: "함께 계획하고, 비교하고, AI로 똑똑하게 여행하세요",
+    siteName: "여행 플래너",
+    type: "website",
+    locale: "ko_KR",
+    images: [{ url: "/icons/icon-512x512.png", width: 512, height: 512 }],
+  },
+  twitter: {
+    card: "summary",
+    title: "여행 플래너",
+    description: "함께 계획하고, 비교하고, AI로 똑똑하게 여행하세요",
+    images: ["/icons/icon-512x512.png"],
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
