@@ -12,7 +12,12 @@ import {
   TrainFront,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { haversineDistance, estimateDuration } from "@/lib/directions/client";
 import type { ScheduleItem, TravelMode } from "@/types/database";
+
+// 직선거리 임계값 (m)
+const APPROX_WALK_MAX_M = 1_500;
+const APPROX_MID_MAX_M = 10_000;
 
 // -----------------------------------------------------------------------
 // Helpers
@@ -351,12 +356,15 @@ export const TravelInfoCard = memo(function TravelInfoCard({
     );
   }
 
-  // 좌표 없음 → 단순 구분선
+  // 좌표 없음 → 구분선 + 안내 텍스트
   if (!hasCachedInfo && !hasCoords) {
     return (
       <div className="flex items-center gap-2 py-1 pl-4">
         <div className="flex-1 border-t border-dashed border-muted-foreground/20" />
-        <ArrowDown className="w-3 h-3 text-muted-foreground/40" />
+        <span className="flex items-center gap-1 text-[10px] text-muted-foreground/50">
+          <ArrowDown className="w-3 h-3" />
+          이동 정보 없음
+        </span>
         <div className="flex-1 border-t border-dashed border-muted-foreground/20" />
       </div>
     );
@@ -462,7 +470,59 @@ export const TravelInfoCard = memo(function TravelInfoCard({
     );
   }
 
-  // 미계산 → 길찾기 버튼
+  // 미계산 + 좌표 있음 → Haversine 근사 3단 표현
+  // 탭 시 정확한 Directions 호출(기존 로직 재사용)
+  const approxDistance = hasCoords
+    ? Math.round(
+        haversineDistance(
+          currentItem.place!.latitude!,
+          currentItem.place!.longitude!,
+          nextItem.place!.latitude!,
+          nextItem.place!.longitude!
+        )
+      )
+    : 0;
+
+  const approxTier: "walk" | "mid" | "far" | null = hasCoords
+    ? approxDistance < APPROX_WALK_MAX_M
+      ? "walk"
+      : approxDistance < APPROX_MID_MAX_M
+        ? "mid"
+        : "far"
+    : null;
+
+  function renderApproxContent() {
+    if (approxTier === "walk") {
+      const secs = estimateDuration(approxDistance, "walking");
+      return (
+        <>
+          <Footprints className="w-3 h-3" />
+          <span className="font-medium">약 {formatDuration(secs)}</span>
+          <span className="text-muted-foreground/60">&middot;</span>
+          <span>~{formatDistance(approxDistance)}</span>
+        </>
+      );
+    }
+    if (approxTier === "mid") {
+      return (
+        <>
+          <span className="font-medium">약 {formatDistance(approxDistance)}</span>
+          <span className="text-muted-foreground/60">&middot;</span>
+          <span>길찾기</span>
+        </>
+      );
+    }
+    // far
+    return (
+      <>
+        <span className="font-medium">먼 거리</span>
+        <span className="text-muted-foreground/60">&middot;</span>
+        <span>길찾기 필요</span>
+      </>
+    );
+  }
+
+  // 미계산
   return (
     <div className="space-y-0">
       <div className="flex items-center gap-2 py-1.5 pl-4">
@@ -476,12 +536,17 @@ export const TravelInfoCard = memo(function TravelInfoCard({
                 : fetchDirections
             }
             disabled={fetching}
+            aria-label={
+              fetchedInfo
+                ? "정확한 이동 정보 보기"
+                : "탭하여 정확한 이동 정보 조회"
+            }
             className={cn(
               "flex items-center gap-1.5 rounded-full px-2.5 py-0.5",
-              "text-xs transition-all",
+              "text-xs transition-all cursor-pointer",
               fetchedInfo
-                ? "bg-muted text-muted-foreground hover:bg-muted/80 cursor-pointer"
-                : "text-muted-foreground/60 hover:text-primary cursor-pointer",
+                ? "bg-muted text-muted-foreground hover:bg-muted/80"
+                : "border border-dashed border-muted-foreground/40 text-muted-foreground/70 hover:text-primary hover:border-primary/60",
               fetching && "opacity-60 cursor-wait"
             )}
           >
@@ -506,10 +571,7 @@ export const TravelInfoCard = memo(function TravelInfoCard({
                 />
               </>
             ) : (
-              <>
-                {getModeIcon(null, "w-2.5 h-2.5")}
-                <span>길찾기</span>
-              </>
+              renderApproxContent()
             )}
           </button>
         ) : (
