@@ -4,6 +4,16 @@ const DEFAULT_E2E_WEB_SERVER_COMMAND =
   'NODE_OPTIONS=--max-old-space-size=4096 pnpm exec next dev --webpack';
 const webServerCommand =
   process.env.PLAYWRIGHT_WEB_SERVER_COMMAND ?? DEFAULT_E2E_WEB_SERVER_COMMAND;
+const defaultDevLoginEmail = 'test-alice@triplan.test';
+const defaultDevLoginPassword = 'TestPassword123!@#';
+const playwrightDevLoginEmail =
+  process.env.PLAYWRIGHT_DEV_LOGIN_EMAIL ??
+  process.env.E2E_AUTH_EMAIL ??
+  defaultDevLoginEmail;
+const playwrightDevLoginPassword =
+  process.env.PLAYWRIGHT_DEV_LOGIN_PASSWORD ??
+  process.env.E2E_AUTH_PASSWORD ??
+  defaultDevLoginPassword;
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -30,6 +40,11 @@ export default defineConfig({
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
+    env: {
+      ...process.env,
+      NEXT_PUBLIC_DEV_LOGIN_EMAIL: playwrightDevLoginEmail,
+      NEXT_PUBLIC_DEV_LOGIN_PASSWORD: playwrightDevLoginPassword,
+    },
   },
 
   projects: [
