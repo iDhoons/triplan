@@ -120,7 +120,7 @@ owner: daehoonkim
 - [ ] **N-10** 디자인 시스템 정리 (1일)
 - [ ] **N-07** 지출 차트 (3~4시간)
 - [ ] **N-08** 커버 이미지 업로드 (3~4시간)
-- [ ] **N-09** OG 메타태그 (2~3시간)
+- [x] **N-09** OG 메타태그 (완료 2026-04-14)
 - [ ] **N-11** CI/CD (3~4시간)
 - [ ] **N-12** Vercel 배포 (2~3시간)
 - [ ] **N-13** 보안 점검 (1일)
@@ -131,7 +131,7 @@ owner: daehoonkim
 
 > 랜딩 페이지 + 법적 문서 + 사용자 유입.
 
-- [ ] **N-16** 랜딩 페이지 (1~2일)
+- [x] **N-16** 랜딩 페이지 (완료 2026-04-14)
 - [ ] **N-17** 이용약관/개인정보 (3~4시간)
 - [ ] Vercel Analytics 연결 (1시간)
 - [ ] 사용자 피드백 채널 구축 (2~3시간)
@@ -145,7 +145,7 @@ owner: daehoonkim
 - [ ] **N-20** 여행 템플릿
 - [ ] **N-21** 여행 공개/탐색
 - [x] **N-22** 날씨 연동 (완료 2026-03-15)
-- [ ] E2E 테스트 (Playwright)
+- [x] E2E 테스트 (Playwright) (완료 2026-04-14)
 
 ---
 
@@ -178,6 +178,11 @@ owner: daehoonkim
 
 | 완료일 | 기능 | 비고 |
 | ------ | ---- | ---- |
+| 04-14 | 랜딩 페이지 (N-16) | Magic Link 로그인 전환 + dev 빠른 로그인 |
+| 04-14 | OG 메타태그 (N-09) | Twitter Card 포함 |
+| 04-14 | E2E 테스트 (Playwright) | fixture 계정 안정화, 핵심 플로우 자동화 |
+| 04-14 | 스케줄 Haversine 이동 정보 | 장소 이동 사이 거리/시간 자동 표시 |
+| 04-09 | Phase 11 Advanced Optimization | Server Component prefetch, 외부 API 재시도, CSP nonce, RealtimeProvider 분할 |
 | 03-20 | AppShell 성능 최적화 | getUser→getSession, loading gate 제거 |
 | 03-20 | fn_log_activity 타입 버그 수정 | target_id::text → uuid 타입 불일치 해결 |
 | 03-19 | 활동 자동 기록 (activity_logs) | DB 트리거로 CUD 자동 로깅 |

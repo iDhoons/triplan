@@ -1,0 +1,147 @@
+- generic [ref=e1]:
+  - generic [ref=e89]:
+    - link "본문으로 이동" [ref=e90] [cursor=pointer]:
+      - /url: "#main-content"
+    - complementary [ref=e91]:
+      - link "여행 플래너" [ref=e93] [cursor=pointer]:
+        - /url: /dashboard
+      - navigation "메인 네비게이션" [ref=e94]:
+        - link "내 여행" [ref=e95] [cursor=pointer]:
+          - /url: /dashboard
+          - img [ref=e97]
+          - text: 내 여행
+        - link "체크리스트" [ref=e100] [cursor=pointer]:
+          - /url: /checklist
+          - img [ref=e102]
+          - text: 체크리스트
+        - link "알림" [ref=e105] [cursor=pointer]:
+          - /url: /notifications
+          - img [ref=e107]
+          - text: 알림
+        - link "내 정보" [ref=e110] [cursor=pointer]:
+          - /url: /profile
+          - img [ref=e112]
+          - text: 내 정보
+        - paragraph [ref=e116]: 내 여행
+        - list "여행 목록" [ref=e117]:
+          - generic [ref=e118]:
+            - button "지안이 첫 대만여행" [expanded] [ref=e119] [cursor=pointer]:
+              - img [ref=e120]
+              - generic [ref=e122]: 지안이 첫 대만여행
+            - navigation "지안이 첫 대만여행 탭" [ref=e196]:
+              - link "장소" [ref=e197] [cursor=pointer]:
+                - /url: /trips/dcccb091-5519-4446-802b-cc6f22784c80/places
+                - img [ref=e198]
+                - text: 장소
+              - link "일정" [ref=e201] [cursor=pointer]:
+                - /url: /trips/dcccb091-5519-4446-802b-cc6f22784c80/schedule
+                - img [ref=e202]
+                - text: 일정
+              - link "체크리스트" [ref=e204] [cursor=pointer]:
+                - /url: /trips/dcccb091-5519-4446-802b-cc6f22784c80/checklist
+                - img [ref=e205]
+                - text: 체크리스트
+              - link "멤버" [ref=e208] [cursor=pointer]:
+                - /url: /trips/dcccb091-5519-4446-802b-cc6f22784c80/members
+                - img [ref=e209]
+                - text: 멤버
+      - button "김" [ref=e124]:
+        - generic [ref=e126]: 김
+    - main [ref=e127]:
+      - generic [ref=e214]:
+        - generic [ref=e215]:
+          - generic [ref=e216]:
+            - button "대시보드로 돌아가기" [ref=e217]:
+              - img
+            - button "여행 정보 수정" [ref=e218]:
+              - generic [ref=e219]:
+                - heading "지안이 첫 대만여행" [level=1] [ref=e220]
+                - img [ref=e221]
+              - paragraph [ref=e224]: 대만 · 2026-04-25 ~ 2026-04-28
+          - group "1명 접속 중" [ref=e226]:
+            - list "접속 중인 멤버" [ref=e227]:
+              - listitem "김댜훈 (접속 중)" [ref=e228]:
+                - generic [ref=e229]: 김
+            - generic [ref=e231]: 1명 접속 중
+        - generic [ref=e232]:
+          - generic [ref=e233]:
+            - img [ref=e234]
+            - generic [ref=e237]: 장소 15개
+          - generic [ref=e238]:
+            - img [ref=e239]
+            - generic [ref=e242]: 일정 17개
+        - generic [ref=e1202]:
+          - generic [ref=e1203]:
+            - heading "체크리스트" [level=2] [ref=e1204]
+            - generic [ref=e1205]:
+              - button "생성순" [ref=e1206]
+              - button "급한순서" [ref=e1207]
+              - button "수동 정렬" [ref=e1208]
+          - generic [ref=e1209]:
+            - generic [ref=e1210]:
+              - generic [ref=e1212]:
+                - button "필수 서류" [ref=e1213]:
+                  - img [ref=e1214]
+                  - generic [ref=e1217]: 필수 서류
+                  - img [ref=e1218]
+                - button "필수 서류에 항목 추가" [ref=e1220]:
+                  - img [ref=e1221]
+              - generic [ref=e1223]:
+                - button "의류" [ref=e1224]:
+                  - img [ref=e1225]
+                  - generic [ref=e1227]: 의류
+                  - img [ref=e1228]
+                - button "의류에 항목 추가" [ref=e1230]:
+                  - img [ref=e1231]
+              - generic [ref=e1233]:
+                - button "전자기기" [ref=e1234]:
+                  - img [ref=e1235]
+                  - generic [ref=e1237]: 전자기기
+                  - img [ref=e1238]
+                - button "전자기기에 항목 추가" [ref=e1240]:
+                  - img [ref=e1241]
+              - generic [ref=e1243]:
+                - button "세면/의약" [ref=e1244]:
+                  - img [ref=e1245]
+                  - generic [ref=e1247]: 세면/의약
+                  - img [ref=e1248]
+                - button "세면/의약에 항목 추가" [ref=e1250]:
+                  - img [ref=e1251]
+              - generic [ref=e1252]:
+                - generic [ref=e1253]:
+                  - button "공동 준비물 0/1" [ref=e1254]:
+                    - img [ref=e1255]
+                    - generic [ref=e1260]: 공동 준비물
+                    - generic [ref=e1261]: 0/1
+                    - img [ref=e1262]
+                  - button "공동 준비물에 항목 추가" [ref=e1264]:
+                    - img [ref=e1265]
+                - generic [ref=e1267]:
+                  - button "체크" [active] [ref=e1268]
+                  - generic [ref=e1271]: 여권
+                  - button "더보기" [ref=e1272]:
+                    - img
+              - generic [ref=e1274]:
+                - button "할 일" [ref=e1275]:
+                  - img [ref=e1276]
+                  - generic [ref=e1279]: 할 일
+                  - img [ref=e1280]
+                - button "할 일에 항목 추가" [ref=e1282]:
+                  - img [ref=e1283]
+              - generic [ref=e1285]:
+                - button "쇼핑" [ref=e1286]:
+                  - img [ref=e1287]
+                  - generic [ref=e1290]: 쇼핑
+                  - img [ref=e1291]
+                - button "쇼핑에 항목 추가" [ref=e1293]:
+                  - img [ref=e1294]
+            - status [ref=e1295]
+          - button [ref=e1296]:
+            - img
+        - button "AI 어시스턴트 열기" [ref=e494]:
+          - img [ref=e495]
+          - generic [ref=e498]: AI 어시스턴트 열기
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e58] [cursor=pointer]:
+    - img [ref=e59]
+  - alert [ref=e52]

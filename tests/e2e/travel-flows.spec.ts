@@ -10,19 +10,27 @@ test.describe('Travel Planning Flows', () => {
   test('seeded user can open the create-trip dialog from dashboard', async ({
     page,
   }) => {
+    await page.goto('/login');
+    const hasDevQuickLogin =
+      (await page.getByRole('button', { name: /Dev 빠른 로그인/ }).count()) > 0;
+    const hasSeededCredentials =
+      !!process.env.E2E_AUTH_EMAIL && !!process.env.E2E_AUTH_PASSWORD;
+
     test.skip(
-      !process.env.E2E_AUTH_EMAIL || !process.env.E2E_AUTH_PASSWORD,
-      'requires seeded E2E auth credentials'
+      !hasDevQuickLogin && !hasSeededCredentials,
+      'requires dev quick login button or seeded E2E auth credentials'
     );
 
     await signIn(
       page,
-      process.env.E2E_AUTH_EMAIL!,
-      process.env.E2E_AUTH_PASSWORD!
+      process.env.E2E_AUTH_EMAIL ?? '',
+      process.env.E2E_AUTH_PASSWORD ?? ''
     );
 
     await expect(page).toHaveURL(/\/dashboard/);
-    await expect(page.getByRole('heading', { name: '내 여행' })).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: '새 여행 만들기' })
+    ).toBeVisible();
 
     await page.getByRole('button', { name: '새 여행 만들기' }).click();
 

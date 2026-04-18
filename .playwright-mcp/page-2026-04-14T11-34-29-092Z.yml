@@ -1,0 +1,471 @@
+- generic [ref=e1]:
+  - generic [ref=e5]:
+    - link "본문으로 이동" [ref=e6] [cursor=pointer]:
+      - /url: "#main-content"
+    - main [ref=e7]:
+      - generic [ref=e130]:
+        - generic [ref=e131]:
+          - generic [ref=e132]:
+            - button "대시보드로 돌아가기" [ref=e133]:
+              - img
+            - button "여행 정보 수정" [ref=e134]:
+              - generic [ref=e135]:
+                - heading "지안이 첫 대만여행" [level=1] [ref=e136]
+                - img [ref=e137]
+              - paragraph [ref=e140]: 대만 · 2026-04-25 ~ 2026-04-28
+          - group "1명 접속 중" [ref=e427]:
+            - list "접속 중인 멤버" [ref=e428]:
+              - listitem "김댜훈 (접속 중)" [ref=e429]:
+                - generic [ref=e430]: 김
+            - generic [ref=e432]: 1명 접속 중
+        - navigation "여행 탭" [ref=e141]:
+          - link "장소" [ref=e142] [cursor=pointer]:
+            - /url: /trips/dcccb091-5519-4446-802b-cc6f22784c80/places
+            - img [ref=e143]
+            - text: 장소
+          - link "일정" [active] [ref=e146] [cursor=pointer]:
+            - /url: /trips/dcccb091-5519-4446-802b-cc6f22784c80/schedule
+            - img [ref=e147]
+            - text: 일정
+          - link "체크리스트" [ref=e149] [cursor=pointer]:
+            - /url: /trips/dcccb091-5519-4446-802b-cc6f22784c80/checklist
+            - img [ref=e150]
+            - text: 체크리스트
+          - link "멤버" [ref=e153] [cursor=pointer]:
+            - /url: /trips/dcccb091-5519-4446-802b-cc6f22784c80/members
+            - img [ref=e154]
+            - text: 멤버
+        - generic [ref=e159]:
+          - generic [ref=e160]:
+            - img [ref=e161]
+            - generic [ref=e164]: 장소 15개
+          - generic [ref=e165]:
+            - img [ref=e166]
+            - generic [ref=e169]: 일정 17개
+        - generic [ref=e433]:
+          - generic [ref=e434]:
+            - generic [ref=e435]:
+              - button "플래너" [ref=e436]:
+                - img
+                - text: 플래너
+              - button "동선" [ref=e437]:
+                - img
+                - text: 동선
+            - generic [ref=e438]: 4월 25일 ~ 4월 28일
+          - generic [ref=e441]:
+            - generic [ref=e442]:
+              - generic [ref=e443]:
+                - generic [ref=e444]:
+                  - generic [ref=e445]: Day 1
+                  - generic [ref=e446]: (4/25 토)
+                - generic [ref=e447]:
+                  - 'generic "오전: 흐림" [ref=e448]':
+                    - generic [ref=e449]: ☁️
+                    - generic [ref=e450]: 27°
+                  - generic [ref=e451]: /
+                  - 'generic "오후: 구름 조금" [ref=e452]':
+                    - generic [ref=e453]: ⛅
+                    - generic [ref=e454]: 31°
+                - generic [ref=e455]: 3개 일정
+              - generic [ref=e457]:
+                - generic [ref=e459]:
+                  - generic [ref=e460]:
+                    - button "1" [ref=e461]:
+                      - generic [ref=e462]: "1"
+                      - img [ref=e463]
+                    - generic [ref=e470]:
+                      - generic [ref=e471]:
+                        - paragraph [ref=e472]: 타오위안 공항 도착
+                        - generic [ref=e473]:
+                          - button "수정" [ref=e474]:
+                            - img
+                          - button "삭제" [ref=e475]:
+                            - img
+                      - generic [ref=e476]:
+                        - img [ref=e477]
+                        - generic [ref=e480]: 15:30 도착. 입국심사 + 이지카드 구매. 공항버스 1819번 → 타이베이역 (~40분, NT$145)
+                      - generic [ref=e481]: 타이완 타오위안 국제공항
+                  - img [ref=e484]
+                - generic [ref=e488]:
+                  - generic [ref=e489]:
+                    - button "2" [ref=e490]:
+                      - generic [ref=e491]: "2"
+                      - img [ref=e492]
+                    - generic [ref=e499]:
+                      - generic [ref=e500]:
+                        - paragraph [ref=e501]: 호텔 체크인
+                        - generic [ref=e502]:
+                          - button "수정" [ref=e503]:
+                            - img
+                          - button "삭제" [ref=e504]:
+                            - img
+                      - generic [ref=e505]:
+                        - img [ref=e506]
+                        - generic [ref=e509]: 짐 풀고 아기 적응 시간
+                  - img [ref=e512]
+                - generic [ref=e517]:
+                  - button "3" [ref=e518]:
+                    - generic [ref=e519]: "3"
+                    - img [ref=e520]
+                  - generic [ref=e527]:
+                    - generic [ref=e528]:
+                      - paragraph [ref=e529]: 닝샤 야시장
+                      - generic [ref=e530]:
+                        - button "수정" [ref=e531]:
+                          - img
+                        - button "삭제" [ref=e532]:
+                          - img
+                    - generic [ref=e533]:
+                      - img [ref=e534]
+                      - generic [ref=e537]: "18:00~20:00. MRT 중산역 1번출구 도보 10분. 추천: 굴전, 총좌빙, 루웨이. 야시장 중 가장 넓고 정돈됨. 유모차 OK"
+                    - generic [ref=e538]: 닝샤 야시장
+              - button "일정 추가" [ref=e539]:
+                - img
+                - text: 일정 추가
+            - generic [ref=e540]:
+              - generic [ref=e541]:
+                - generic [ref=e542]:
+                  - generic [ref=e543]: Day 2
+                  - generic [ref=e544]: (4/26 일)
+                - generic [ref=e545]:
+                  - 'generic "오전: 흐림" [ref=e546]':
+                    - generic [ref=e547]: ☁️
+                    - generic [ref=e548]: 25°
+                  - generic [ref=e549]: /
+                  - 'generic "오후: 흐림" [ref=e550]':
+                    - generic [ref=e551]: ☁️
+                    - generic [ref=e552]: 28°
+                - generic [ref=e553]: 5개 일정
+              - generic [ref=e555]:
+                - generic [ref=e557]:
+                  - generic [ref=e558]:
+                    - button "1" [ref=e559]:
+                      - generic [ref=e560]: "1"
+                      - img [ref=e561]
+                    - generic [ref=e568]:
+                      - generic [ref=e569]:
+                        - paragraph [ref=e570]: 타이베이 동물원
+                        - generic [ref=e571]:
+                          - button "수정" [ref=e572]:
+                            - img
+                          - button "삭제" [ref=e573]:
+                            - img
+                      - generic [ref=e574]:
+                        - img [ref=e575]
+                        - generic [ref=e578]: 09:00~12:00. MRT 브라운라인 동물원역 (~30분). 오전이 한산. 판다·펭귄·카피바라. 유모차 대여 가능
+                      - generic [ref=e579]: 타이베이 동물원
+                  - img [ref=e582]
+                - generic [ref=e586]:
+                  - generic [ref=e587]:
+                    - button "2" [ref=e588]:
+                      - generic [ref=e589]: "2"
+                      - img [ref=e590]
+                    - generic [ref=e597]:
+                      - generic [ref=e598]:
+                        - paragraph [ref=e599]: 아기 낮잠 타임
+                        - generic [ref=e600]:
+                          - button "수정" [ref=e601]:
+                            - img
+                          - button "삭제" [ref=e602]:
+                            - img
+                      - generic [ref=e603]:
+                        - img [ref=e604]
+                        - generic [ref=e607]: 13:00~15:00. 호텔 복귀 or 택시 이동 중 재우기
+                  - img [ref=e610]
+                - generic [ref=e614]:
+                  - generic [ref=e615]:
+                    - button "3" [ref=e616]:
+                      - generic [ref=e617]: "3"
+                      - img [ref=e618]
+                    - generic [ref=e625]:
+                      - generic [ref=e626]:
+                        - paragraph [ref=e627]: 딘타이펑 본점 (융캉제)
+                        - generic [ref=e628]:
+                          - button "수정" [ref=e629]:
+                            - img
+                          - button "삭제" [ref=e630]:
+                            - img
+                      - generic [ref=e631]:
+                        - img [ref=e632]
+                        - generic [ref=e635]: "17:00~18:30. 다안공원에서 도보 10분. 하이체어·아기식기 제공. 추천: 샤오롱바오, 새우볶음밥, 우육면"
+                      - generic [ref=e636]: 딘타이펑
+                  - button "11분 · 607m" [ref=e640] [cursor=pointer]:
+                    - img [ref=e641]
+                    - generic [ref=e644]: 11분
+                    - generic [ref=e645]: ·
+                    - generic [ref=e646]: 607m
+                    - img [ref=e647]
+                - generic [ref=e651]:
+                  - generic [ref=e652]:
+                    - button "4" [ref=e653]:
+                      - generic [ref=e654]: "4"
+                      - img [ref=e655]
+                    - generic [ref=e662]:
+                      - generic [ref=e663]:
+                        - paragraph [ref=e664]: 융캉제 산책 + 디저트
+                        - generic [ref=e665]:
+                          - button "수정" [ref=e666]:
+                            - img
+                          - button "삭제" [ref=e667]:
+                            - img
+                      - generic [ref=e668]:
+                        - img [ref=e669]
+                        - generic [ref=e672]: 19:00~. 망고빙수, 버블티
+                      - generic [ref=e673]: 융캉제
+                  - button "4분 · 1.2km" [ref=e677] [cursor=pointer]:
+                    - img [ref=e678]
+                    - generic [ref=e682]: 4분
+                    - generic [ref=e683]: ·
+                    - generic [ref=e684]: 1.2km
+                    - img [ref=e685]
+                - generic [ref=e690]:
+                  - button "5" [ref=e691]:
+                    - generic [ref=e692]: "5"
+                    - img [ref=e693]
+                  - generic [ref=e700]:
+                    - generic [ref=e701]:
+                      - paragraph [ref=e702]: 다안 삼림공원 산책
+                      - generic [ref=e703]:
+                        - button "수정" [ref=e704]:
+                          - img
+                        - button "삭제" [ref=e705]:
+                          - img
+                    - generic [ref=e706]:
+                      - img [ref=e707]
+                      - generic [ref=e710]: 15:00~17:00. MRT 다안삼림공원역. 놀이터·연못·새 관찰. 유모차 산책 최적
+                    - generic [ref=e711]: 다안 삼림공원
+              - button "일정 추가" [ref=e712]:
+                - img
+                - text: 일정 추가
+            - generic [ref=e713]:
+              - generic [ref=e714]:
+                - generic [ref=e715]:
+                  - generic [ref=e716]: Day 3
+                  - generic [ref=e717]: (4/27 월)
+                - generic [ref=e718]:
+                  - 'generic "오전: 흐림" [ref=e719]':
+                    - generic [ref=e720]: ☁️
+                    - generic [ref=e721]: 28°
+                  - generic [ref=e722]: /
+                  - 'generic "오후: 흐림" [ref=e723]':
+                    - generic [ref=e724]: ☁️
+                    - generic [ref=e725]: 31°
+                - generic [ref=e726]: 5개 일정
+              - generic [ref=e728]:
+                - generic [ref=e730]:
+                  - generic [ref=e731]:
+                    - button "1" [ref=e732]:
+                      - generic [ref=e733]: "1"
+                      - img [ref=e734]
+                    - generic [ref=e741]:
+                      - generic [ref=e742]:
+                        - paragraph [ref=e743]: 베이터우 온천 (가족탕)
+                        - generic [ref=e744]:
+                          - button "수정" [ref=e745]:
+                            - img
+                          - button "삭제" [ref=e746]:
+                            - img
+                      - generic [ref=e747]:
+                        - img [ref=e748]
+                        - generic [ref=e751]: 09:30~11:00. MRT 레드라인 신베이터우역 (~25분). 프라이빗 가족탕 1시간. 120cm 이하 유아 무료
+                      - generic [ref=e752]: 베이터우 온천 (수미온천)
+                  - img [ref=e755]
+                - generic [ref=e759]:
+                  - generic [ref=e760]:
+                    - button "2" [ref=e761]:
+                      - generic [ref=e762]: "2"
+                      - img [ref=e763]
+                    - generic [ref=e770]:
+                      - generic [ref=e771]:
+                        - paragraph [ref=e772]: 베이터우 마을 산책 + 점심
+                        - generic [ref=e773]:
+                          - button "수정" [ref=e774]:
+                            - img
+                          - button "삭제" [ref=e775]:
+                            - img
+                      - generic [ref=e776]:
+                        - img [ref=e777]
+                        - generic [ref=e780]: 11:00~13:00. 지열곡, 온천박물관 (무료)
+                  - img [ref=e783]
+                - generic [ref=e787]:
+                  - generic [ref=e788]:
+                    - button "3" [ref=e789]:
+                      - generic [ref=e790]: "3"
+                      - img [ref=e791]
+                    - generic [ref=e798]:
+                      - generic [ref=e799]:
+                        - paragraph [ref=e800]: 아기 낮잠 타임
+                        - generic [ref=e801]:
+                          - button "수정" [ref=e802]:
+                            - img
+                          - button "삭제" [ref=e803]:
+                            - img
+                      - generic [ref=e804]:
+                        - img [ref=e805]
+                        - generic [ref=e808]: 13:00~15:00. 호텔 복귀 or 카페 휴식
+                  - img [ref=e811]
+                - generic [ref=e815]:
+                  - generic [ref=e816]:
+                    - button "4" [ref=e817]:
+                      - generic [ref=e818]: "4"
+                      - img [ref=e819]
+                    - generic [ref=e826]:
+                      - generic [ref=e827]:
+                        - paragraph [ref=e828]: 단수이 강변 석양 감상
+                        - generic [ref=e829]:
+                          - button "수정" [ref=e830]:
+                            - img
+                          - button "삭제" [ref=e831]:
+                            - img
+                      - generic [ref=e832]:
+                        - img [ref=e833]
+                        - generic [ref=e836]: 17:30~18:30. 대만여행 하이라이트! 벤치에서 여유롭게
+                      - generic [ref=e837]: 단수이 강변 (석양 포인트)
+                  - button "3분 · 978m" [ref=e841] [cursor=pointer]:
+                    - img [ref=e842]
+                    - generic [ref=e846]: 3분
+                    - generic [ref=e847]: ·
+                    - generic [ref=e848]: 978m
+                    - img [ref=e849]
+                - generic [ref=e854]:
+                  - button "5" [ref=e855]:
+                    - generic [ref=e856]: "5"
+                    - img [ref=e857]
+                  - generic [ref=e864]:
+                    - generic [ref=e865]:
+                      - paragraph [ref=e866]: 단수이 노인가 산책 + 간식
+                      - generic [ref=e867]:
+                        - button "수정" [ref=e868]:
+                          - img
+                        - button "삭제" [ref=e869]:
+                          - img
+                    - generic [ref=e870]:
+                      - img [ref=e871]
+                      - generic [ref=e874]: 15:30~17:30. MRT 15분. 아게이·철알·터키아이스크림. 유모차 이동 편리
+                    - generic [ref=e875]: 단수이 노인가
+              - button "일정 추가" [ref=e876]:
+                - img
+                - text: 일정 추가
+            - generic [ref=e877]:
+              - generic [ref=e878]:
+                - generic [ref=e879]:
+                  - generic [ref=e880]: Day 4
+                  - generic [ref=e881]: (4/28 화)
+                - generic [ref=e882]:
+                  - 'generic "오전: 대체로 맑음" [ref=e883]':
+                    - generic [ref=e884]: 🌤
+                    - generic [ref=e885]: 29°
+                  - generic [ref=e886]: /
+                  - 'generic "오후: 이슬비" [ref=e887]':
+                    - generic [ref=e888]: 🌦
+                    - generic [ref=e889]: 29°
+                - generic [ref=e890]: 4개 일정
+              - generic [ref=e892]:
+                - generic [ref=e894]:
+                  - generic [ref=e895]:
+                    - button "1" [ref=e896]:
+                      - generic [ref=e897]: "1"
+                      - img [ref=e898]
+                    - generic [ref=e905]:
+                      - generic [ref=e906]:
+                        - paragraph [ref=e907]: 화산1914 창의문화원구
+                        - generic [ref=e908]:
+                          - button "수정" [ref=e909]:
+                            - img
+                          - button "삭제" [ref=e910]:
+                            - img
+                      - generic [ref=e911]:
+                        - img [ref=e912]
+                        - generic [ref=e915]: 09:00~10:30. MRT 충샤오신성역 1번출구 (1정거장). 넓은 잔디밭에서 아기와 마지막 산책 + 카페
+                      - generic [ref=e916]: 화산1914 창의문화원구
+                  - button "길찾기" [ref=e920] [cursor=pointer]:
+                    - img [ref=e921]
+                    - generic [ref=e925]: 길찾기
+                - generic [ref=e928]:
+                  - generic [ref=e929]:
+                    - button "2" [ref=e930]:
+                      - generic [ref=e931]: "2"
+                      - img [ref=e932]
+                    - generic [ref=e939]:
+                      - generic [ref=e940]:
+                        - paragraph [ref=e941]: 시먼딩 산책 + 쇼핑
+                        - generic [ref=e942]:
+                          - button "수정" [ref=e943]:
+                            - img
+                          - button "삭제" [ref=e944]:
+                            - img
+                      - generic [ref=e945]:
+                        - img [ref=e946]
+                        - generic [ref=e949]: 10:30~12:00. 도보 10분 or MRT 1정거장
+                      - generic [ref=e950]: 시먼딩
+                  - button "길찾기" [ref=e954] [cursor=pointer]:
+                    - img [ref=e955]
+                    - generic [ref=e959]: 길찾기
+                - generic [ref=e962]:
+                  - generic [ref=e963]:
+                    - button "3" [ref=e964]:
+                      - generic [ref=e965]: "3"
+                      - img [ref=e966]
+                    - generic [ref=e973]:
+                      - generic [ref=e974]:
+                        - paragraph [ref=e975]: 아종면선 (곱창국수) + 망고빙수
+                        - generic [ref=e976]:
+                          - button "수정" [ref=e977]:
+                            - img
+                          - button "삭제" [ref=e978]:
+                            - img
+                      - generic [ref=e979]:
+                        - img [ref=e980]
+                        - generic [ref=e983]: 12:00~13:00. 시먼딩 내. 대만 꼭 먹어야할 음식 1위!
+                      - generic [ref=e984]: 아종면선 (시먼딩)
+                  - button "길찾기" [ref=e988] [cursor=pointer]:
+                    - img [ref=e989]
+                    - generic [ref=e993]: 길찾기
+                - generic [ref=e997]:
+                  - button "4" [ref=e998]:
+                    - generic [ref=e999]: "4"
+                    - img [ref=e1000]
+                  - generic [ref=e1007]:
+                    - generic [ref=e1008]:
+                      - paragraph [ref=e1009]: 공항 이동 + 귀국
+                      - generic [ref=e1010]:
+                        - button "수정" [ref=e1011]:
+                          - img
+                        - button "삭제" [ref=e1012]:
+                          - img
+                    - generic [ref=e1013]:
+                      - img [ref=e1014]
+                      - generic [ref=e1017]: "13:30 출발. 공항버스 1819번 (~50분) or 택시. 17:10 OZ714 출발. 예약번호: D4ENTY"
+                    - generic [ref=e1018]: 타이완 타오위안 국제공항
+              - button "일정 추가" [ref=e1019]:
+                - img
+                - text: 일정 추가
+        - button "남은 장소 3개" [ref=e1020]:
+          - img [ref=e1021]
+          - generic [ref=e1024]: 남은 장소 3
+        - status [ref=e1025]
+        - button "AI 어시스턴트 열기" [ref=e421]:
+          - img [ref=e422]
+          - generic [ref=e425]: AI 어시스턴트 열기
+    - navigation "앱 메뉴" [ref=e20]:
+      - generic [ref=e21]:
+        - link "내 여행" [ref=e22] [cursor=pointer]:
+          - /url: /dashboard
+          - img [ref=e24]
+          - generic [ref=e27]: 내 여행
+        - link "체크리스트" [ref=e28] [cursor=pointer]:
+          - /url: /checklist
+          - img [ref=e30]
+          - generic [ref=e33]: 체크리스트
+        - link "알림" [ref=e34] [cursor=pointer]:
+          - /url: /notifications
+          - img [ref=e36]
+          - generic [ref=e39]: 알림
+        - link "내 정보" [ref=e40] [cursor=pointer]:
+          - /url: /profile
+          - img [ref=e42]
+          - generic [ref=e45]: 내 정보
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e51] [cursor=pointer]:
+    - img [ref=e52]
+  - alert [ref=e55]

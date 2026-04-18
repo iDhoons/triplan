@@ -1,0 +1,45 @@
+- generic [ref=e1]:
+  - generic [ref=e89]:
+    - link "본문으로 이동" [ref=e90] [cursor=pointer]:
+      - /url: "#main-content"
+    - complementary [ref=e91]:
+      - link "여행 플래너" [ref=e93] [cursor=pointer]:
+        - /url: /dashboard
+      - navigation "메인 네비게이션" [ref=e94]:
+        - link "내 여행" [ref=e95] [cursor=pointer]:
+          - /url: /dashboard
+          - img [ref=e97]
+          - text: 내 여행
+        - link "체크리스트" [ref=e100] [cursor=pointer]:
+          - /url: /checklist
+          - img [ref=e102]
+          - text: 체크리스트
+        - link "알림" [ref=e105] [cursor=pointer]:
+          - /url: /notifications
+          - img [ref=e107]
+          - text: 알림
+        - link "내 정보" [active] [ref=e110] [cursor=pointer]:
+          - /url: /profile
+          - img [ref=e112]
+          - text: 내 정보
+        - paragraph [ref=e116]: 내 여행
+        - list "여행 목록" [ref=e117]:
+          - button "지안이 첫 대만여행" [ref=e119] [cursor=pointer]:
+            - img [ref=e120]
+            - generic [ref=e122]: 지안이 첫 대만여행
+      - button "김" [ref=e124]:
+        - generic [ref=e126]: 김
+    - main [ref=e127]:
+      - generic [ref=e1358]:
+        - heading "내 정보" [level=1] [ref=e1359]
+        - generic [ref=e1360]:
+          - generic [ref=e1362]: 김
+          - generic [ref=e1363]:
+            - paragraph [ref=e1364]: 김댜훈
+            - paragraph [ref=e1365]: Invalid Date 가입
+          - button "김" [ref=e1366]:
+            - generic [ref=e1368]: 김
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e58] [cursor=pointer]:
+    - img [ref=e59]
+  - alert [ref=e52]

@@ -1,0 +1,27 @@
+- generic [ref=e1]:
+  - generic [ref=e58]:
+    - img [ref=e59]
+    - img [ref=e61]
+    - generic [ref=e63]:
+      - generic [ref=e64]:
+        - generic [ref=e65]:
+          - img [ref=e67]
+          - heading "여행 플래너" [level=1] [ref=e70]
+        - paragraph [ref=e71]: 함께 계획하고, 비교하고, 똑똑하게 여행하세요
+      - generic [ref=e72]:
+        - generic [ref=e73]:
+          - generic [ref=e74]: 이메일
+          - generic [ref=e75]:
+            - img
+            - textbox "이메일" [active] [ref=e76]:
+              - /placeholder: 이메일을 입력하세요
+        - button "로그인 링크 보내기" [ref=e77] [cursor=pointer]:
+          - img
+          - text: 로그인 링크 보내기
+      - paragraph [ref=e78]:
+        - text: 비밀번호 없이 이메일만으로 로그인합니다.
+        - text: 처음 사용하시면 자동으로 가입됩니다.
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e53] [cursor=pointer]:
+    - img [ref=e54]
+  - alert [ref=e57]

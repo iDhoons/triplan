@@ -1,0 +1,42 @@
+- generic [active] [ref=e1]:
+  - paragraph [ref=e4]: 여행 플래너
+  - generic [ref=e5]:
+    - link "본문으로 이동" [ref=e6] [cursor=pointer]:
+      - /url: "#main-content"
+    - complementary [ref=e7]:
+      - link "여행 플래너" [ref=e9] [cursor=pointer]:
+        - /url: /dashboard
+      - navigation "메인 네비게이션" [ref=e10]:
+        - link "내 여행" [ref=e11] [cursor=pointer]:
+          - /url: /dashboard
+          - img [ref=e13]
+          - text: 내 여행
+        - link "체크리스트" [ref=e16] [cursor=pointer]:
+          - /url: /checklist
+          - img [ref=e18]
+          - text: 체크리스트
+        - link "알림" [ref=e21] [cursor=pointer]:
+          - /url: /notifications
+          - img [ref=e23]
+          - text: 알림
+        - link "내 정보" [ref=e26] [cursor=pointer]:
+          - /url: /profile
+          - img [ref=e28]
+          - text: 내 정보
+        - paragraph [ref=e32]: 내 여행
+    - main [ref=e38]:
+      - generic [ref=e39]:
+        - generic [ref=e41]:
+          - button "대시보드로 돌아가기" [ref=e42]:
+            - img
+          - button "여행 정보 수정" [ref=e43]:
+            - generic [ref=e44]:
+              - heading "..." [level=1] [ref=e45]
+              - img [ref=e46]
+        - button "AI 어시스턴트 열기" [ref=e76]:
+          - img [ref=e77]
+          - generic [ref=e80]: AI 어시스턴트 열기
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e86] [cursor=pointer]:
+    - img [ref=e87]
+  - alert [ref=e90]

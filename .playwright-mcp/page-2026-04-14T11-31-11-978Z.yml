@@ -1,0 +1,30 @@
+- generic [ref=e1]:
+  - generic [ref=e62]:
+    - img [ref=e63]
+    - img [ref=e65]
+    - img [ref=e67]
+    - img [ref=e69]
+    - generic [ref=e71]:
+      - generic [ref=e72]:
+        - generic [ref=e73]:
+          - img [ref=e75]
+          - heading "여행 플래너" [level=1] [ref=e78]
+        - paragraph [ref=e79]: 함께 계획하고, 비교하고, 똑똑하게 여행하세요
+      - generic [ref=e80]:
+        - generic [ref=e81]:
+          - generic [ref=e82]: 이메일
+          - generic [ref=e83]:
+            - img
+            - textbox "이메일" [active] [ref=e84]:
+              - /placeholder: 이메일을 입력하세요
+        - button "로그인 링크 보내기" [ref=e85] [cursor=pointer]:
+          - img
+          - text: 로그인 링크 보내기
+      - paragraph [ref=e86]:
+        - text: 비밀번호 없이 이메일만으로 로그인합니다.
+        - text: 처음 사용하시면 자동으로 가입됩니다.
+      - button "Dev 빠른 로그인 (dhoons426@gmail.com)" [ref=e88] [cursor=pointer]
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e58] [cursor=pointer]:
+    - img [ref=e59]
+  - alert [ref=e52]

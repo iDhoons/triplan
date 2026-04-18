@@ -1,0 +1,281 @@
+- generic [ref=e1]:
+  - generic [ref=e5]:
+    - link "본문으로 이동" [ref=e6] [cursor=pointer]:
+      - /url: "#main-content"
+    - main [ref=e7]:
+      - generic [ref=e130]:
+        - generic [ref=e131]:
+          - generic [ref=e132]:
+            - button "대시보드로 돌아가기" [ref=e133]:
+              - img
+            - button "여행 정보 수정" [ref=e134]:
+              - generic [ref=e135]:
+                - heading "지안이 첫 대만여행" [level=1] [ref=e136]
+                - img [ref=e137]
+              - paragraph [ref=e140]: 대만 · 2026-04-25 ~ 2026-04-28
+          - group "1명 접속 중" [ref=e427]:
+            - list "접속 중인 멤버" [ref=e428]:
+              - listitem "김댜훈 (접속 중)" [ref=e429]:
+                - generic [ref=e430]: 김
+            - generic [ref=e432]: 1명 접속 중
+        - navigation "여행 탭" [ref=e141]:
+          - link "장소" [ref=e142] [cursor=pointer]:
+            - /url: /trips/dcccb091-5519-4446-802b-cc6f22784c80/places
+            - img [ref=e143]
+            - text: 장소
+          - link "일정" [active] [ref=e146] [cursor=pointer]:
+            - /url: /trips/dcccb091-5519-4446-802b-cc6f22784c80/schedule
+            - img [ref=e147]
+            - text: 일정
+          - link "체크리스트" [ref=e149] [cursor=pointer]:
+            - /url: /trips/dcccb091-5519-4446-802b-cc6f22784c80/checklist
+            - img [ref=e150]
+            - text: 체크리스트
+          - link "멤버" [ref=e153] [cursor=pointer]:
+            - /url: /trips/dcccb091-5519-4446-802b-cc6f22784c80/members
+            - img [ref=e154]
+            - text: 멤버
+        - generic [ref=e159]:
+          - generic [ref=e160]:
+            - img [ref=e161]
+            - generic [ref=e164]: 장소 15개
+          - generic [ref=e165]:
+            - img [ref=e166]
+            - generic [ref=e169]: 일정 17개
+        - generic [ref=e1026]:
+          - generic [ref=e1028]:
+            - generic [ref=e1029]:
+              - button "목록" [ref=e1030]:
+                - img
+                - text: 목록
+              - button "지도" [ref=e1031]:
+                - img
+                - text: 지도
+            - button "비교하기" [ref=e1032]:
+              - img
+              - text: 비교하기
+            - button "장소 추가" [ref=e1033]:
+              - img
+              - text: 장소 추가
+          - generic [ref=e1034]:
+            - tablist [ref=e1035]:
+              - tab "전체" [selected] [ref=e1036]
+              - tab "숙소 (0)" [ref=e1037]:
+                - text: 숙소
+                - generic [ref=e1038]: (0)
+              - tab "관광지 (10)" [ref=e1039]:
+                - text: 관광지
+                - generic [ref=e1040]: (10)
+              - tab "맛집 (3)" [ref=e1041]:
+                - text: 맛집
+                - generic [ref=e1042]: (3)
+              - tab "기타 (2)" [ref=e1043]:
+                - text: 기타
+                - generic [ref=e1044]: (2)
+            - tabpanel "전체" [ref=e1045]:
+              - generic [ref=e1046]:
+                - generic [ref=e1047] [cursor=pointer]:
+                  - img "닝샤 야시장" [ref=e1048]
+                  - generic [ref=e1050]:
+                    - generic [ref=e1051]: 관광지
+                    - button [ref=e1053]:
+                      - img
+                  - generic [ref=e1054]:
+                    - heading "닝샤 야시장" [level=3] [ref=e1055]
+                    - paragraph [ref=e1056]:
+                      - img [ref=e1057]
+                      - generic [ref=e1060]: No. 1, Ningxia Rd, Datong District, Taipei City, 103
+                - generic [ref=e1061] [cursor=pointer]:
+                  - img "시먼딩" [ref=e1062]
+                  - generic [ref=e1064]:
+                    - generic [ref=e1065]: 관광지
+                    - button [ref=e1067]:
+                      - img
+                  - generic [ref=e1068]:
+                    - heading "시먼딩" [level=3] [ref=e1069]
+                    - paragraph [ref=e1070]:
+                      - img [ref=e1071]
+                      - generic [ref=e1074]: Ximen, Wanhua District, Taipei City, 108
+                - generic [ref=e1075] [cursor=pointer]:
+                  - img "화산1914 창의문화원구" [ref=e1076]
+                  - generic [ref=e1078]:
+                    - generic [ref=e1079]: 관광지
+                    - button [ref=e1081]:
+                      - img
+                  - generic [ref=e1082]:
+                    - heading "화산1914 창의문화원구" [level=3] [ref=e1083]
+                    - paragraph [ref=e1084]:
+                      - img [ref=e1085]
+                      - generic [ref=e1088]: No. 1, Section 1, Bade Rd, Zhongzheng District, Taipei City, 100
+                - generic [ref=e1089] [cursor=pointer]:
+                  - img "아종면선 (시먼딩)" [ref=e1090]
+                  - generic [ref=e1092]:
+                    - generic [ref=e1093]: 맛집
+                    - button [ref=e1095]:
+                      - img
+                  - generic [ref=e1096]:
+                    - heading "아종면선 (시먼딩)" [level=3] [ref=e1097]
+                    - paragraph [ref=e1098]:
+                      - img [ref=e1099]
+                      - generic [ref=e1102]: No. 8-1, Emei St, Wanhua District, Taipei City, 108
+                - generic [ref=e1103] [cursor=pointer]:
+                  - img "타이베이 동물원" [ref=e1104]
+                  - generic [ref=e1106]:
+                    - generic [ref=e1107]: 관광지
+                    - button [ref=e1109]:
+                      - img
+                  - generic [ref=e1110]:
+                    - heading "타이베이 동물원" [level=3] [ref=e1111]
+                    - paragraph [ref=e1112]:
+                      - img [ref=e1113]
+                      - generic [ref=e1116]: No. 30, Section 2, Xinguang Rd, Wenshan District, Taipei City, 116
+                - generic [ref=e1117] [cursor=pointer]:
+                  - img "베이터우 온천 (수미온천)" [ref=e1118]
+                  - generic [ref=e1120]:
+                    - generic [ref=e1121]: 관광지
+                    - button [ref=e1123]:
+                      - img
+                  - generic [ref=e1124]:
+                    - heading "베이터우 온천 (수미온천)" [level=3] [ref=e1125]
+                    - paragraph [ref=e1126]:
+                      - img [ref=e1127]
+                      - generic [ref=e1130]: No. 224, Guangming Rd, Beitou District, Taipei City, 112
+                - generic [ref=e1131] [cursor=pointer]:
+                  - img "단수이 노인가" [ref=e1132]
+                  - generic [ref=e1134]:
+                    - generic [ref=e1135]: 관광지
+                    - button [ref=e1137]:
+                      - img
+                  - generic [ref=e1138]:
+                    - heading "단수이 노인가" [level=3] [ref=e1139]
+                    - paragraph [ref=e1140]:
+                      - img [ref=e1141]
+                      - generic [ref=e1144]: Zhongzheng Rd, Tamsui District, New Taipei City, 251
+                - generic [ref=e1145] [cursor=pointer]:
+                  - img "단수이 강변 (석양 포인트)" [ref=e1146]
+                  - generic [ref=e1148]:
+                    - generic [ref=e1149]: 관광지
+                    - button [ref=e1151]:
+                      - img
+                  - generic [ref=e1152]:
+                    - heading "단수이 강변 (석양 포인트)" [level=3] [ref=e1153]
+                    - paragraph [ref=e1154]:
+                      - img [ref=e1155]
+                      - generic [ref=e1158]: Tamsui Fisherman's Wharf, Tamsui District, New Taipei City, 251
+                - generic [ref=e1159] [cursor=pointer]:
+                  - img "융캉제" [ref=e1160]
+                  - generic [ref=e1162]:
+                    - generic [ref=e1163]: 관광지
+                    - button [ref=e1165]:
+                      - img
+                  - generic [ref=e1166]:
+                    - heading "융캉제" [level=3] [ref=e1167]
+                    - paragraph [ref=e1168]:
+                      - img [ref=e1169]
+                      - generic [ref=e1172]: Yongkang St, Da'an District, Taipei City, 106
+                - generic [ref=e1173] [cursor=pointer]:
+                  - img "다안 삼림공원" [ref=e1174]
+                  - generic [ref=e1176]:
+                    - generic [ref=e1177]: 관광지
+                    - button [ref=e1179]:
+                      - img
+                  - generic [ref=e1180]:
+                    - heading "다안 삼림공원" [level=3] [ref=e1181]
+                    - paragraph [ref=e1182]:
+                      - img [ref=e1183]
+                      - generic [ref=e1186]: No. 1, Section 2, Xinsheng S Rd, Da'an District, Taipei City, 106
+                - generic [ref=e1187] [cursor=pointer]:
+                  - img "딘타이펑" [ref=e1188]
+                  - generic [ref=e1190]:
+                    - generic [ref=e1191]: 맛집
+                    - button [ref=e1193]:
+                      - img
+                  - generic [ref=e1194]:
+                    - heading "딘타이펑" [level=3] [ref=e1195]
+                    - paragraph [ref=e1196]:
+                      - img [ref=e1197]
+                      - generic [ref=e1200]: 106 대만 Taipei City, Da’an District, Section 3, Zhongxiao E Rd, 300號B2
+                    - generic [ref=e1201]:
+                      - img [ref=e1202]
+                      - generic [ref=e1204]: "4.5"
+                - generic [ref=e1205] [cursor=pointer]:
+                  - img "지우펀 골목상점 입구" [ref=e1206]
+                  - generic [ref=e1208]:
+                    - generic [ref=e1209]: 맛집
+                    - button [ref=e1211]:
+                      - img
+                  - generic [ref=e1212]:
+                    - heading "지우펀 골목상점 입구" [level=3] [ref=e1213]
+                    - paragraph [ref=e1214]:
+                      - img [ref=e1215]
+                      - generic [ref=e1218]: 224 대만 New Taipei City, Ruifang District, Jishan St, 6-1號 號 號
+                    - generic [ref=e1219]:
+                      - img [ref=e1220]
+                      - generic [ref=e1222]: "4.8"
+                - generic [ref=e1223] [cursor=pointer]:
+                  - img "타이완 타오위안 국제공항" [ref=e1224]
+                  - generic [ref=e1226]:
+                    - generic [ref=e1227]: 기타
+                    - button [ref=e1229]:
+                      - img
+                  - generic [ref=e1230]:
+                    - heading "타이완 타오위안 국제공항" [level=3] [ref=e1231]
+                    - paragraph [ref=e1232]:
+                      - img [ref=e1233]
+                      - generic [ref=e1236]: No. 9號, Hangzhan S Rd, Dayuan District, Taoyuan City, 대만 33758
+                    - generic [ref=e1237]:
+                      - img [ref=e1238]
+                      - generic [ref=e1240]: "4.3"
+                - generic [ref=e1241] [cursor=pointer]:
+                  - img "타이베이 쑹산 공항" [ref=e1242]
+                  - generic [ref=e1244]:
+                    - generic [ref=e1245]: 기타
+                    - button [ref=e1247]:
+                      - img
+                  - generic [ref=e1248]:
+                    - heading "타이베이 쑹산 공항" [level=3] [ref=e1249]
+                    - paragraph [ref=e1250]:
+                      - img [ref=e1251]
+                      - generic [ref=e1254]: No. 340-9, DunHua N Rd, Songshan District, Taipei City, 대만 10548
+                    - generic [ref=e1255]:
+                      - img [ref=e1256]
+                      - generic [ref=e1258]: "4.4"
+                - generic [ref=e1259] [cursor=pointer]:
+                  - img "타이베이101 전망대" [ref=e1260]
+                  - generic [ref=e1262]:
+                    - generic [ref=e1263]: 관광지
+                    - button [ref=e1265]:
+                      - img
+                  - generic [ref=e1266]:
+                    - heading "타이베이101 전망대" [level=3] [ref=e1267]
+                    - paragraph [ref=e1268]:
+                      - img [ref=e1269]
+                      - generic [ref=e1272]: 110 대만 Taipei City, Xinyi District, Section 5, Xinyi Rd, 7號89樓
+                    - generic [ref=e1273]:
+                      - img [ref=e1274]
+                      - generic [ref=e1276]: "4.5"
+        - button "AI 어시스턴트 열기" [ref=e421]:
+          - img [ref=e422]
+          - generic [ref=e425]: AI 어시스턴트 열기
+    - navigation "앱 메뉴" [ref=e20]:
+      - generic [ref=e21]:
+        - link "내 여행" [ref=e22] [cursor=pointer]:
+          - /url: /dashboard
+          - img [ref=e24]
+          - generic [ref=e27]: 내 여행
+        - link "체크리스트" [ref=e28] [cursor=pointer]:
+          - /url: /checklist
+          - img [ref=e30]
+          - generic [ref=e33]: 체크리스트
+        - link "알림" [ref=e34] [cursor=pointer]:
+          - /url: /notifications
+          - img [ref=e36]
+          - generic [ref=e39]: 알림
+        - link "내 정보" [ref=e40] [cursor=pointer]:
+          - /url: /profile
+          - img [ref=e42]
+          - generic [ref=e45]: 내 정보
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e51] [cursor=pointer]:
+    - img [ref=e52]
+  - alert [ref=e55]

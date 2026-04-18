@@ -1,0 +1,80 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e5]:
+    - link "본문으로 이동" [ref=e6] [cursor=pointer]:
+      - /url: "#main-content"
+    - complementary [ref=e7]:
+      - link "여행 플래너" [ref=e9] [cursor=pointer]:
+        - /url: /dashboard
+      - navigation "메인 네비게이션" [ref=e10]:
+        - link "내 여행" [ref=e11] [cursor=pointer]:
+          - /url: /dashboard
+          - img [ref=e13]
+          - text: 내 여행
+        - link "체크리스트" [ref=e16] [cursor=pointer]:
+          - /url: /checklist
+          - img [ref=e18]
+          - text: 체크리스트
+        - link "알림" [ref=e21] [cursor=pointer]:
+          - /url: /notifications
+          - img [ref=e23]
+          - text: 알림
+        - link "내 정보" [ref=e26] [cursor=pointer]:
+          - /url: /profile
+          - img [ref=e28]
+          - text: 내 정보
+        - paragraph [ref=e32]: 내 여행
+        - list "여행 목록" [ref=e91]:
+          - button "지안이 첫 대만여행" [ref=e93] [cursor=pointer]:
+            - img [ref=e94]
+            - generic [ref=e96]: 지안이 첫 대만여행
+      - button "김" [ref=e116]:
+        - generic [ref=e118]: 김
+    - main [ref=e38]:
+      - generic [ref=e383]:
+        - generic [ref=e388]:
+          - heading "김댜훈님, 어디로 떠날까요?" [level=1] [ref=e389]:
+            - text: 김댜훈님,
+            - text: 어디로 떠날까요?
+          - paragraph [ref=e390]: 대만까지 11일 남았어요
+          - button "새 여행 만들기" [ref=e391]:
+            - img
+            - text: 새 여행 만들기
+        - region "여행 통계" [ref=e392]:
+          - generic [ref=e393]:
+            - img [ref=e395]
+            - generic [ref=e397]:
+              - paragraph [ref=e398]: 여행
+              - paragraph [ref=e399]: "1"
+          - generic [ref=e400]:
+            - img [ref=e402]
+            - generic [ref=e405]:
+              - paragraph [ref=e406]: 예정
+              - paragraph [ref=e407]: "1"
+          - generic [ref=e408]:
+            - img [ref=e410]
+            - generic [ref=e412]:
+              - paragraph [ref=e413]: D-Day
+              - paragraph [ref=e414]: D-11
+        - generic [ref=e415]:
+          - img [ref=e417]
+          - generic [ref=e423]:
+            - paragraph [ref=e424]: 네이버 지도, 구글맵에서 공유 버튼만 누르면 장소가 자동 저장됩니다
+            - paragraph [ref=e425]: 앱을 설치하면 다른 앱에서 바로 공유할 수 있어요
+          - button "닫기" [ref=e426]:
+            - img [ref=e427]
+        - generic [ref=e430]:
+          - heading "내 여행" [level=2] [ref=e431]
+          - button "지안이 첫 대만여행 여행 열기" [ref=e434] [cursor=pointer]:
+            - img [ref=e436]
+            - generic [ref=e439]:
+              - paragraph [ref=e440]: 지안이 첫 대만여행
+              - paragraph [ref=e441]: 대만
+            - generic [ref=e442]: 4월 25일 (토) — 4월 28일 (화)
+            - generic [ref=e443]: 3박4일
+            - generic [ref=e444]: 예정
+            - button "더 보기" [ref=e445]:
+              - img [ref=e446]
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e86] [cursor=pointer]:
+    - img [ref=e87]
+  - alert [ref=e90]

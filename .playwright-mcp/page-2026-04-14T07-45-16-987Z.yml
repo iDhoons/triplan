@@ -1,0 +1,32 @@
+- generic [active] [ref=e1]:
+  - paragraph [ref=e4]: 여행 플래너
+  - generic [ref=e5]:
+    - img [ref=e6]
+    - img [ref=e8]
+    - img [ref=e10]
+    - img [ref=e12]
+    - generic [ref=e14]:
+      - generic [ref=e15]:
+        - img [ref=e18]
+        - heading "여행 플래너" [level=1] [ref=e21]
+        - paragraph [ref=e22]: 함께 계획하고, 비교하고, AI로 똑똑하게 여행하세요
+      - generic [ref=e23]:
+        - generic [ref=e24]:
+          - img [ref=e26]
+          - heading "실시간 협업" [level=3] [ref=e31]
+          - paragraph [ref=e32]: 친구, 가족과 함께 여행을 계획하세요
+        - generic [ref=e33]:
+          - img [ref=e35]
+          - heading "장소 비교 & 투표" [level=3] [ref=e38]
+          - paragraph [ref=e39]: 가고 싶은 곳을 비교하고 투표로 결정하세요
+        - generic [ref=e40]:
+          - img [ref=e42]
+          - heading "AI 일정 추천" [level=3] [ref=e45]
+          - paragraph [ref=e46]: 최적의 일정과 이동 경로를 제안받으세요
+      - link "시작하기" [ref=e48] [cursor=pointer]:
+        - /url: /login
+        - text: 시작하기
+        - img [ref=e49]
+      - paragraph [ref=e51]: 비밀번호 없이 이메일로 간편 로그인
+  - region "Notifications alt+T"
+  - alert [ref=e52]
