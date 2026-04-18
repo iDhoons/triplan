@@ -57,8 +57,8 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const headersList = await headers();
-  const nonce = headersList.get("x-nonce") ?? undefined;
+  // headers()로 모든 하위 route를 dynamic 렌더링으로 전환
+  await headers();
 
   return (
     <html lang="ko">

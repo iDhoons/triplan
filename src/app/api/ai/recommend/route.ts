@@ -6,11 +6,16 @@ import { withAuth, checkRateLimit } from "@/lib/api/guards";
 import { errorResponse } from "@/lib/api/error-response";
 import { sanitizeUserMessage, detectInjectionAttempt } from "@/lib/services/ai-sanitize";
 
-// @TASK T7.12 - 빈 문자열도 거부 (falsy 체크)
-if (!process.env.GEMINI_API_KEY?.trim()) {
-  throw new Error("GEMINI_API_KEY 환경변수가 설정되지 않았습니다");
+// Lazy init: 빌드 시 환경변수 부재로 prerender 실패 방지
+let genAI: GoogleGenerativeAI | null = null;
+function getGenAI(): GoogleGenerativeAI {
+  if (!genAI) {
+    const key = process.env.GEMINI_API_KEY?.trim();
+    if (!key) throw new Error("GEMINI_API_KEY 환경변수가 설정되지 않았습니다");
+    genAI = new GoogleGenerativeAI(key);
+  }
+  return genAI;
 }
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 export const POST = withAuth(async (request, { supabase, user }) => {
   if (!(await checkRateLimit("ai-recommend", user.id, { maxRequests: 20 }))) {
@@ -74,7 +79,7 @@ export const POST = withAuth(async (request, { supabase, user }) => {
   const systemPrompt = getSystemPrompt(type, isFirstMessage);
 
   try {
-    const model = genAI.getGenerativeModel({
+    const model = getGenAI().getGenerativeModel({
       model: "gemini-2.0-flash",
       systemInstruction: `${systemPrompt}\n\n여행 컨텍스트:\n${context}`,
     });

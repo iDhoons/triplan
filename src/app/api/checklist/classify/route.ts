@@ -19,11 +19,16 @@ const VALID_CATEGORIES = [
   "shopping",
 ] as const;
 
-// @TASK T7.12 - 빈 문자열도 거부 (falsy 체크)
-if (!process.env.GEMINI_API_KEY?.trim()) {
-  throw new Error("GEMINI_API_KEY 환경변수가 설정되지 않았습니다");
+// Lazy init: 빌드 시 환경변수 부재로 prerender 실패 방지
+let genAI: GoogleGenerativeAI | null = null;
+function getGenAI(): GoogleGenerativeAI {
+  if (!genAI) {
+    const key = process.env.GEMINI_API_KEY?.trim();
+    if (!key) throw new Error("GEMINI_API_KEY 환경변수가 설정되지 않았습니다");
+    genAI = new GoogleGenerativeAI(key);
+  }
+  return genAI;
 }
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 export const POST = withAuth(async (request, { user }) => {
   if (!(await checkRateLimit("checklist-classify", user.id, { maxRequests: 30 }))) {
@@ -52,7 +57,7 @@ export const POST = withAuth(async (request, { user }) => {
 
   // 2차: Gemini
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    const model = getGenAI().getGenerativeModel({ model: "gemini-2.0-flash" });
     const result = await model.generateContent(
       `여행 체크리스트 항목 "${title}"을 아래 카테고리 중 하나로 분류해. 카테고리 key만 응답해.\n` +
         "documents(필수 서류), clothing(의류), electronics(전자기기), " +

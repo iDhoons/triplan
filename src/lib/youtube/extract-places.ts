@@ -83,11 +83,16 @@ async function callGeminiWithRetry(
   }
 }
 
-// @TASK T7.12 - 빈 문자열 fallback 제거
-if (!process.env.GEMINI_API_KEY?.trim()) {
-  throw new Error("GEMINI_API_KEY is not set");
+// Lazy init: 빌드 시 환경변수 부재로 prerender 실패 방지
+let genAI: GoogleGenerativeAI | null = null;
+function getGenAI(): GoogleGenerativeAI {
+  if (!genAI) {
+    const key = process.env.GEMINI_API_KEY?.trim();
+    if (!key) throw new Error("GEMINI_API_KEY is not set");
+    genAI = new GoogleGenerativeAI(key);
+  }
+  return genAI;
 }
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 export async function extractPlacesFromTranscript(
   transcript: string,
@@ -95,7 +100,7 @@ export async function extractPlacesFromTranscript(
   source: "transcript" | "description"
 ): Promise<ExtractedPlace[]> {
 
-  const model = genAI.getGenerativeModel({
+  const model = getGenAI().getGenerativeModel({
     model: "gemini-2.0-flash",
     generationConfig: {
       responseMimeType: "application/json",
