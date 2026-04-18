@@ -2,8 +2,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 type GuardContext = {
   supabase: {
-    from: (...args: unknown[]) => unknown;
-    rpc?: (...args: unknown[]) => Promise<{ data: unknown; error: unknown }>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    from: (table: string) => any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    rpc?: (...args: any[]) => Promise<{ data: unknown; error: unknown }>;
   };
   role?: "admin" | "editor" | "viewer";
   tripId: string;

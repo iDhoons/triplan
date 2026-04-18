@@ -15,27 +15,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.0
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '24'
           cache: 'pnpm'
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 10.28.0
-
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Setup environment
-        run: |
-          cp .env.local.example .env.test.local
-          # Add test-specific env vars if needed
-
       - name: Build application
         run: pnpm build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder
+          NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: placeholder
 
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps
