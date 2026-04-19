@@ -32,7 +32,7 @@ export async function updateSession(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   // 정확 매칭: 해당 경로이거나 해당 경로 + "/" 하위 경로
-  const exactPublicPaths = ["/", "/login", "/signup", "/api/auth/callback", "/offline", "/share-target"];
+  const exactPublicPaths = ["/", "/login", "/signup", "/api/auth/callback", "/offline", "/share-target", "/manifest.webmanifest", "/sw.js", "/favicon.ico"];
   // 접두사 매칭: 하위 경로가 올 수 있는 경로 (e.g. /join/invite-code)
   const prefixPublicPaths = ["/join/", "/api/guest/"];
   // 개발 환경 전용 경로
