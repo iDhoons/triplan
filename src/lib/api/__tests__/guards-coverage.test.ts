@@ -12,8 +12,9 @@ const API_DIR = join(process.cwd(), "src/app/api");
 
 // 인증이 불필요한 예외 경로
 const EXEMPT_PATHS = [
-  "auth/callback", // OAuth callback — Supabase가 직접 호출
-  "guest",         // 게스트 미리보기 — 공개 엔드포인트 (자체 rate limiting 적용)
+  "auth/callback",  // OAuth callback — Supabase가 직접 호출
+  "guest",          // 게스트 미리보기 — 공개 엔드포인트 (자체 rate limiting 적용)
+  "places/debug",   // 개발 전용 디버그 엔드포인트 — NODE_ENV !== development 시 403 반환
 ];
 
 function findRouteFiles(dir: string, base = ""): string[] {

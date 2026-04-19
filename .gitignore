@@ -72,3 +72,6 @@ travel-planner-*.md
 
 # MCP server config (personal)
 .mcp.json
+
+# Playwright MCP generated files
+.playwright-mcp/
