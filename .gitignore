@@ -3,6 +3,9 @@
 # claude temp files
 .claude-tmp/
 
+# test artifacts
+test-results/
+
 # dependencies
 /node_modules
 /.pnp
