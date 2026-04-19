@@ -34,7 +34,7 @@ export async function updateSession(request: NextRequest) {
   // 정확 매칭: 해당 경로이거나 해당 경로 + "/" 하위 경로
   const exactPublicPaths = ["/", "/login", "/signup", "/api/auth/callback", "/offline", "/share-target", "/manifest.webmanifest", "/sw.js", "/favicon.ico"];
   // 접두사 매칭: 하위 경로가 올 수 있는 경로 (e.g. /join/invite-code)
-  const prefixPublicPaths = ["/join/", "/api/guest/"];
+  const prefixPublicPaths = ["/join/", "/api/guest/", "/api/places/photo"];
   // 개발 환경 전용 경로
   const devOnlyPaths = ["/api/places/debug"];
   const isDevPath = process.env.NODE_ENV === "development" && devOnlyPaths.some(p => pathname.startsWith(p));
@@ -45,6 +45,9 @@ export async function updateSession(request: NextRequest) {
     prefixPublicPaths.some((path) => pathname.startsWith(path));
 
   if (!user && !isPublicPath && !isDevPath) {
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);

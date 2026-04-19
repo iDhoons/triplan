@@ -27,6 +27,28 @@ type MemberHandler = (
   ctx: MemberContext
 ) => Promise<NextResponse>;
 
+// ─── IP Rate Limiter (in-memory, 공개 엔드포인트용) ─────
+// 인증 불필요 공개 엔드포인트(사진 프록시 등)에서 사용.
+// 서버리스 재시작 시 초기화되므로 엄격한 제한이 필요할 때는 DB 기반을 사용할 것.
+
+const _ipRateMap = new Map<string, { count: number; reset: number }>();
+
+export function checkIpRateLimit(
+  ip: string,
+  options: { windowMs?: number; maxRequests?: number } = {}
+): boolean {
+  const { windowMs = 60_000, maxRequests = 120 } = options;
+  const now = Date.now();
+  const entry = _ipRateMap.get(ip);
+  if (!entry || now > entry.reset) {
+    _ipRateMap.set(ip, { count: 1, reset: now + windowMs });
+    return true;
+  }
+  if (entry.count >= maxRequests) return false;
+  entry.count++;
+  return true;
+}
+
 // ─── Rate Limiter (DB 기반, check_rate_limit RPC 사용) ───
 //
 // DB 마이그레이션: 20260407_rate_limit_db.sql

@@ -1,7 +1,7 @@
 import sharp from "sharp";
 import { getPhotoUrlDirect } from "@/lib/google-places/client";
 import { NextResponse } from "next/server";
-import { withAuth, checkRateLimit } from "@/lib/api/guards";
+import { checkIpRateLimit } from "@/lib/api/guards";
 import { errorResponse } from "@/lib/api/error-response";
 
 // CDN 캐시 파편화 방지 — 임의 maxWidth를 4단계 브레이크포인트로 snap
@@ -10,16 +10,21 @@ function snapWidth(w: number): number {
   return WIDTH_BREAKPOINTS.find((bp) => bp >= w) ?? 1200;
 }
 
+function getClientIp(request: Request): string {
+  const forwarded = (request.headers as Headers).get("x-forwarded-for");
+  if (forwarded) return forwarded.split(",")[0].trim();
+  return (request.headers as Headers).get("x-real-ip") ?? "unknown";
+}
+
 /**
  * GET /api/places/photo?name=...&maxWidth=...
  * Google Places Photo를 프록시하여 API 키 노출을 방지한다.
- * sharp로 WebP 변환하여 ~40-60% 용량 감소.
- * maxWidth는 4단계(200/400/800/1200)로 snap하여 CDN 캐시 효율 극대화.
- * Google maxWidthPx가 서버 리사이즈를 수행하므로 sharp resize는 하지 않는다.
+ * 공개 엔드포인트 — 사진은 공개 데이터이므로 인증 불필요.
+ * IP 기반 rate limiting으로 API 남용을 방지한다.
  */
-export const GET = withAuth(async (request, { user }) => {
-  // 이미지 자산은 한 화면에서 연속 요청이 많이 발생하므로 제한을 넉넉히 둔다.
-  if (!(await checkRateLimit("places-photo", user.id, { maxRequests: 300 }))) {
+export async function GET(request: Request) {
+  const ip = getClientIp(request);
+  if (!checkIpRateLimit(ip, { maxRequests: 120 })) {
     return errorResponse("RATE_LIMITED", "너무 많은 요청입니다. 잠시 후 다시 시도해주세요.");
   }
 
@@ -34,7 +39,6 @@ export const GET = withAuth(async (request, { user }) => {
 
   try {
     const googleUrl = getPhotoUrlDirect(photoName, maxWidth);
-    console.log("[photo proxy] Fetching:", googleUrl.replace(/key=[^&]+/, "key=***"));
 
     const res = await fetch(googleUrl, {
       redirect: "follow",
@@ -42,15 +46,11 @@ export const GET = withAuth(async (request, { user }) => {
     });
 
     if (!res.ok) {
-      const errorText = await res.text().catch(() => "");
-      console.error("[photo proxy] Google API error:", res.status, errorText.slice(0, 200));
       const code = res.status === 404 ? "NOT_FOUND" as const : "INTERNAL_ERROR" as const;
       return errorResponse(code, "이미지를 불러올 수 없습니다");
     }
 
     const imageBuffer = await res.arrayBuffer();
-
-    // WebP 변환만 수행 — Google이 maxWidthPx로 이미 리사이즈하므로 sharp resize 불필요
     const webpBuffer = await sharp(Buffer.from(imageBuffer))
       .webp({ quality: 80 })
       .toBuffer();
@@ -67,4 +67,4 @@ export const GET = withAuth(async (request, { user }) => {
     console.error("[photo proxy] Error:", error);
     return errorResponse("INTERNAL_ERROR", "이미지 프록시 실패");
   }
-});
+}
