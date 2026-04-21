@@ -4,6 +4,7 @@ import withSerwistInit from "@serwist/next";
 const withSerwist = withSerwistInit({
   swSrc: "src/app/sw.ts",
   swDest: "public/sw.js",
+  cacheOnNavigation: true,
   // production 환경에서만 Service Worker 활성화
   disable: process.env.NODE_ENV !== "production",
 });
