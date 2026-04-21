@@ -41,6 +41,7 @@ function SortableItemWrapper({
   isLast,
   onEdit,
   onDelete,
+  onPlaceClick,
 }: {
   item: ScheduleItem;
   orderNumber: number;
@@ -48,6 +49,7 @@ function SortableItemWrapper({
   isLast: boolean;
   onEdit: (item: ScheduleItem) => void;
   onDelete: (id: string) => void;
+  onPlaceClick?: (place: NonNullable<ScheduleItem["place"]>) => void;
 }) {
   const {
     attributes,
@@ -70,6 +72,7 @@ function SortableItemWrapper({
         orderNumber={orderNumber}
         onEdit={onEdit}
         onDelete={onDelete}
+        onPlaceClick={onPlaceClick}
         isDragging={isDragging}
         dragHandleProps={{ attributes, listeners }}
       />
@@ -90,6 +93,7 @@ interface DayCardProps {
   onAddItem: (scheduleId: string) => void;
   onEditItem: (item: ScheduleItem) => void;
   onDeleteItem: (itemId: string, scheduleId: string) => void;
+  onPlaceClick?: (place: NonNullable<ScheduleItem["place"]>) => void;
 }
 
 function DayCard({
@@ -99,6 +103,7 @@ function DayCard({
   onAddItem,
   onEditItem,
   onDeleteItem,
+  onPlaceClick,
 }: DayCardProps) {
   const isInsertTarget = insertIndex !== undefined;
   const { setNodeRef, isOver } = useDroppable({
@@ -176,6 +181,7 @@ function DayCard({
                     isLast={idx === items.length - 1}
                     onEdit={onEditItem}
                     onDelete={(id) => onDeleteItem(id, schedule.id)}
+                    onPlaceClick={onPlaceClick}
                   />
                   {/* 이 아이템 뒤에 삽입 라인 */}
                   {insertIndex === idx + 1 && <InsertionLine />}
@@ -218,6 +224,7 @@ interface PlannerViewProps {
   onAddItem: (scheduleId: string) => void;
   onEditItem: (item: ScheduleItem) => void;
   onDeleteItem: (itemId: string, scheduleId: string) => void;
+  onPlaceClick?: (place: NonNullable<ScheduleItem["place"]>) => void;
 }
 
 export function PlannerView({
@@ -226,6 +233,7 @@ export function PlannerView({
   onAddItem,
   onEditItem,
   onDeleteItem,
+  onPlaceClick,
 }: PlannerViewProps) {
   return (
     <div className="space-y-8">
@@ -242,6 +250,7 @@ export function PlannerView({
           onAddItem={onAddItem}
           onEditItem={onEditItem}
           onDeleteItem={onDeleteItem}
+          onPlaceClick={onPlaceClick}
         />
       ))}
     </div>

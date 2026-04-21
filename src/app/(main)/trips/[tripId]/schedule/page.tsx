@@ -32,6 +32,7 @@ import {
 import { DayPickerSheet } from "@/components/schedule/day-picker-sheet";
 import { UnscheduledFAB } from "@/components/schedule/unscheduled-fab";
 import { DepartureAlert } from "@/components/schedule/departure-alert";
+import { PlaceDetailDrawer } from "@/components/places/place-detail-drawer";
 
 const RouteMap = dynamic(
   () => import("@/components/maps/route-map").then((mod) => mod.RouteMap),
@@ -104,6 +105,7 @@ export default function SchedulePage() {
 
   // --- UI state ---
   const [viewMode, setViewMode] = useState<ViewMode>("planner");
+  const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
   const [routeDateIndex, setRouteDateIndex] = useState(0);
   const [formOpen, setFormOpen] = useState(false);
   const [targetScheduleId, setTargetScheduleId] = useState<string | null>(null);
@@ -485,6 +487,7 @@ export default function SchedulePage() {
                 onAddItem={handleOpenAddForm}
                 onEditItem={handleOpenEditForm}
                 onDeleteItem={handleDeleteItem}
+                onPlaceClick={(place) => setSelectedPlace(place as Place)}
               />
             ) : (
               <RouteView
@@ -499,7 +502,9 @@ export default function SchedulePage() {
           <aside
             className={cn(
               "shrink-0 hidden md:block",
-              "md:w-56 md:min-h-[500px]",
+              "md:w-56",
+              "md:sticky md:top-4",
+              "md:h-[calc(100vh-6rem)] md:overflow-y-auto",
               "border rounded-xl p-3"
             )}
           >
@@ -566,6 +571,16 @@ export default function SchedulePage() {
 
       {/* 포그라운드 GPS 보강: 출발 알림 배너 */}
       <DepartureAlert schedules={schedules} />
+
+      {/* 장소 상세 드로어 */}
+      {selectedPlace && (
+        <PlaceDetailDrawer
+          place={selectedPlace}
+          onOpenChange={(open) => { if (!open) setSelectedPlace(null); }}
+          onEdit={() => setSelectedPlace(null)}
+          onDelete={() => setSelectedPlace(null)}
+        />
+      )}
     </DndContext>
   );
 }

@@ -13,6 +13,7 @@ interface DraggableItemProps {
   orderNumber: number;
   onEdit: (item: ScheduleItem) => void;
   onDelete: (itemId: string) => void;
+  onPlaceClick?: (place: NonNullable<ScheduleItem["place"]>) => void;
   isDragging?: boolean;
   dragHandleProps?: {
     attributes: DraggableAttributes;
@@ -25,6 +26,7 @@ export const DraggableItem = memo(function DraggableItem({
   orderNumber,
   onEdit,
   onDelete,
+  onPlaceClick,
   isDragging = false,
   dragHandleProps,
 }: DraggableItemProps) {
@@ -124,7 +126,17 @@ export const DraggableItem = memo(function DraggableItem({
 
         {/* Place name */}
         {item.place && (
-          <Badge variant="secondary" className="mt-1.5 text-xs h-5">
+          <Badge
+            variant="secondary"
+            className={cn(
+              "mt-1.5 text-xs h-5",
+              onPlaceClick && "cursor-pointer hover:bg-primary/20 transition-colors"
+            )}
+            onClick={onPlaceClick ? (e) => {
+              e.stopPropagation();
+              onPlaceClick(item.place!);
+            } : undefined}
+          >
             {item.place.name}
           </Badge>
         )}
