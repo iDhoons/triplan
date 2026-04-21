@@ -22,6 +22,48 @@ const serwist = new Serwist({
   clientsClaim: true,
   navigationPreload: true,
   runtimeCaching: [
+    // Google Places photo proxy — CacheFirst
+    {
+      matcher: ({ url }) => url.pathname.startsWith("/api/places/photo"),
+      handler: new CacheFirst({
+        cacheName: "place-photos",
+        plugins: [
+          new ExpirationPlugin({
+            maxEntries: 200,
+            maxAgeSeconds: 7 * 24 * 60 * 60, // 7 days
+          }),
+        ],
+      }),
+      method: "GET",
+    },
+    // Weather API — CacheFirst
+    {
+      matcher: ({ url }) => url.pathname === "/api/weather",
+      handler: new CacheFirst({
+        cacheName: "weather-cache",
+        plugins: [
+          new ExpirationPlugin({
+            maxEntries: 50,
+            maxAgeSeconds: 3 * 60 * 60, // 3 hours
+          }),
+        ],
+      }),
+      method: "GET",
+    },
+    // Directions API — CacheFirst
+    {
+      matcher: ({ url }) => url.pathname === "/api/directions",
+      handler: new CacheFirst({
+        cacheName: "directions-cache",
+        plugins: [
+          new ExpirationPlugin({
+            maxEntries: 100,
+            maxAgeSeconds: 24 * 60 * 60, // 24 hours
+          }),
+        ],
+      }),
+      method: "GET",
+    },
     // API 응답: NetworkFirst — 오프라인 시 캐시 fallback
     {
       matcher: /^https?:\/\/.*\/api\//,
@@ -42,12 +84,12 @@ const serwist = new Serwist({
     },
     // 이미지: CacheFirst — 변경이 드물어 캐시 우선
     {
-      matcher: /\.(?:png|jpg|jpeg|svg|gif|webp|ico)$/,
+      matcher: /\.(?:png|jpg|jpeg|svg|gif|webp|ico)(\?.*)?$/,
       handler: new CacheFirst({
         cacheName: "image-cache",
         plugins: [
           new ExpirationPlugin({
-            maxEntries: 100,
+            maxEntries: 200,
             maxAgeSeconds: 30 * 24 * 60 * 60, // 30일
           }),
         ],
