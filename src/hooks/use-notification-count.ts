@@ -60,7 +60,7 @@ export function useNotificationCount() {
       const json = await res.json();
       return json.unread_count ?? 0;
     },
-    refetchInterval: 30_000,
+    refetchInterval: typeof window !== "undefined" && navigator.onLine ? 30_000 : false,
     refetchIntervalInBackground: false,
     staleTime: 10_000,
     enabled: !!user?.id,
