@@ -1,5 +1,5 @@
 import type { PrecacheEntry, SerwistGlobalConfig } from "serwist";
-import { Serwist } from "serwist";
+import { Serwist, BackgroundSyncQueue } from "serwist";
 import {
   NetworkFirst,
   CacheFirst,
@@ -172,4 +172,34 @@ self.addEventListener("notificationclick", (event: NotificationEvent) => {
         return self.clients.openWindow(url);
       })
   );
+});
+
+// ─── Background Sync for Offline Mutations ─────────────────────────────────────
+const mutationQueue = new BackgroundSyncQueue("offline-mutations", {
+  maxRetentionTime: 24 * 60, // 24 hours
+});
+
+self.addEventListener("fetch", (event) => {
+  const { request } = event
+  if (request.method !== "POST" && request.method !== "PATCH" && request.method !== "DELETE") {
+    return
+  }
+  if (!request.url.includes("/api/offline-mutation")) {
+    return
+  }
+
+  const handleRequest = async () => {
+    try {
+      const response = await fetch(request.clone())
+      return response
+    } catch {
+      await mutationQueue.pushRequest({ request: request.clone() })
+      return new Response(
+        JSON.stringify({ queued: true, queueSize: await mutationQueue.size() }),
+        { headers: { "Content-Type": "application/json" } }
+      )
+    }
+  }
+
+  event.respondWith(handleRequest())
 });
