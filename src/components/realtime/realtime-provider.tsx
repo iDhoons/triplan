@@ -162,6 +162,14 @@ export function RealtimeProvider({ tripId, children }: RealtimeProviderProps) {
             avatarUrl: currentUser.avatar_url,
             onlineAt: new Date().toISOString(),
           });
+          // 온라인 복구 시 캐시 리페치 (오프라인 중 놓친 변경사항 동기화)
+          queryClient.invalidateQueries({ queryKey: queryKeys.schedules.data(tripId) });
+          queryClient.invalidateQueries({ queryKey: queryKeys.places.byTrip(tripId) });
+          queryClient.invalidateQueries({ queryKey: queryKeys.checklist.byTrip(tripId) });
+        }
+
+        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+          console.warn(`[Realtime] channel status: ${status}`);
         }
       });
 
