@@ -22,6 +22,7 @@ import { ListOrdered, RouteIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 import dynamic from "next/dynamic";
 import { PlannerView } from "@/components/schedule/planner-view";
 import { PlaceSidebar } from "@/components/schedule/place-sidebar";
@@ -33,6 +34,16 @@ import { DayPickerSheet } from "@/components/schedule/day-picker-sheet";
 import { UnscheduledFAB } from "@/components/schedule/unscheduled-fab";
 import { DepartureAlert } from "@/components/schedule/departure-alert";
 import { PlaceDetailDrawer } from "@/components/places/place-detail-drawer";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 
 const RouteMap = dynamic(
   () => import("@/components/maps/route-map").then((mod) => mod.RouteMap),
@@ -114,13 +125,19 @@ export default function SchedulePage() {
   const [activeItemId, setActiveItemId] = useState<string | null>(null);
   const [insertIndicator, setInsertIndicator] = useState<InsertIndicator | null>(null);
   const insertIndicatorRef = useRef<InsertIndicator | null>(null);
+  const [groupDeleteTarget, setGroupDeleteTarget] = useState<{
+    id: string;
+    scheduleId: string;
+    title: string;
+    childCount: number;
+  } | null>(null);
 
   // --- DayPickerSheet state ---
   const [dayPickerOpen, setDayPickerOpen] = useState(false);
   const [dayPickerPlace, setDayPickerPlace] = useState<Place | null>(null);
   const dayPickerTriggerRef = useRef<HTMLElement | null>(null);
 
-  // --- Actions (React Query invalidation) ---
+  // --- Actions (React Query useMutation) ---
   const {
     handleFormSubmit,
     handleDeleteItem,
@@ -130,7 +147,6 @@ export default function SchedulePage() {
   } = useScheduleActions({
     tripId,
     supabase,
-    schedules,
     targetScheduleId,
     editingItem,
   });
@@ -153,6 +169,18 @@ export default function SchedulePage() {
     setFormOpen(true);
   };
 
+  const handleAddGroup = async (scheduleId: string) => {
+    const targetSchedule = schedules.find((s) => s.id === scheduleId);
+    const sortOrder = (targetSchedule?.items?.length ?? 0) + 1;
+    await supabase.from("schedule_items").insert({
+      schedule_id: scheduleId,
+      title: "새 지역 그룹",
+      item_type: "group",
+      sort_order: sortOrder,
+    });
+    await refetch();
+  };
+
   /** "+" 버튼 클릭 → DayPickerSheet 열기 */
   const handlePlaceAddClick = useCallback((place: Place, triggerEl: HTMLElement) => {
     setDayPickerPlace(place);
@@ -165,7 +193,7 @@ export default function SchedulePage() {
     async (scheduleId: string, place: Place) => {
       const targetSchedule = schedules.find((s) => s.id === scheduleId);
       const sortOrder = (targetSchedule?.items?.length ?? 0) + 1;
-      await handleDropPlace(scheduleId, place, sortOrder);
+      await handleDropPlace(scheduleId, place, sortOrder, schedules);
     },
     [schedules, handleDropPlace]
   );
@@ -178,6 +206,56 @@ export default function SchedulePage() {
     setEditingItem(item);
     setFormOpen(true);
   };
+
+  /** 그룹 삭제 시 하위 장소 처리 확인 래퍼 */
+  const handleDeleteWithGroupCheck = useCallback(
+    async (itemId: string, scheduleId: string) => {
+      const schedule = schedules.find((s) => s.id === scheduleId);
+      const item = schedule?.items?.find((i) => i.id === itemId);
+
+      if (item?.item_type === "group" && (item.children?.length ?? 0) > 0) {
+        setGroupDeleteTarget({
+          id: itemId,
+          scheduleId,
+          title: item.title,
+          childCount: item.children?.length ?? 0,
+        });
+        return;
+      }
+
+      await handleDeleteItem(itemId);
+    },
+    [schedules, handleDeleteItem]
+  );
+
+  /** 그룹 삭제 다이얼로그 선택 처리 */
+  const handleGroupDeleteChoice = useCallback(
+    async (mode: "promote" | "cascade") => {
+      if (!groupDeleteTarget) return;
+      const { id, scheduleId } = groupDeleteTarget;
+
+      if (mode === "promote") {
+        const schedule = schedules.find((s) => s.id === scheduleId);
+        const group = schedule?.items?.find((i) => i.id === id);
+        const children = group?.children ?? [];
+
+        if (children.length > 0) {
+          await Promise.all(
+            children.map((child) =>
+              supabase
+                .from("schedule_items")
+                .update({ parent_id: null })
+                .eq("id", child.id)
+            )
+          );
+        }
+      }
+
+      await handleDeleteItem(id);
+      setGroupDeleteTarget(null);
+    },
+    [groupDeleteTarget, schedules, supabase, handleDeleteItem]
+  );
 
   // --- DnD ---
   const sensors = useSensors(
@@ -195,9 +273,16 @@ export default function SchedulePage() {
     (args) => {
       const pw = pointerWithin(args);
       if (pw.length > 0) {
+        // 장소 드래그 시: 그룹 droppable 우선
+        if (isDraggingPlaceRef.current) {
+          const groupHits = pw.filter(
+            (c) => String(c.id).startsWith("group-")
+          );
+          if (groupHits.length > 0) return groupHits;
+        }
         // item droppable 우선 → 삽입 위치 감지
         const itemHits = pw.filter(
-          (c) => !String(c.id).startsWith("schedule-")
+          (c) => !String(c.id).startsWith("schedule-") && !String(c.id).startsWith("group-")
         );
         if (itemHits.length > 0) return itemHits;
         // item 없으면 schedule droppable (빈 영역)
@@ -223,9 +308,15 @@ export default function SchedulePage() {
     } else {
       setActiveItemId(id);
       isDraggingPlaceRef.current = false;
-      // 소스 스케줄 기록
+      // 소스 스케줄 기록 (최상위 + 그룹 내 하위 모두 검색)
       for (const s of schedules) {
-        if ((s.items ?? []).some((i) => i.id === id)) {
+        const items = s.items ?? [];
+        if (items.some((i) => i.id === id)) {
+          dragSourceScheduleRef.current = s.id;
+          break;
+        }
+        // 그룹 내 하위 장소 검색
+        if (items.some((i) => i.item_type === "group" && (i.children ?? []).some((c) => c.id === id))) {
           dragSourceScheduleRef.current = s.id;
           break;
         }
@@ -250,6 +341,15 @@ export default function SchedulePage() {
 
       const overId = String(over.id);
       let newIndicator: InsertIndicator | null = null;
+
+      // 그룹 droppable 위 — 삽입 라인 대신 그룹 하이라이트로 처리
+      if (overId.startsWith("group-")) {
+        if (insertIndicatorRef.current) {
+          insertIndicatorRef.current = null;
+          setInsertIndicator(null);
+        }
+        return;
+      }
 
       if (overId.startsWith("schedule-")) {
         const scheduleId = overId.replace("schedule-", "");
@@ -327,24 +427,89 @@ export default function SchedulePage() {
     const activeId = active.id as string;
     const overId = over.id as string;
 
-    // Case 1: 장소 카드를 일정에 드롭
+    // Case 1: 장소 카드 → 일정 또는 그룹에 드롭
     if (activeId.startsWith("place-")) {
       const place = active.data.current?.place as Place | undefined;
       if (!place) return;
 
+      // 1a: 장소 → 그룹 드롭 (하위 장소로 추가)
+      if (overId.startsWith("group-")) {
+        const groupId = over.data.current?.groupId as string | undefined;
+        const scheduleId = over.data.current?.scheduleId as string | undefined;
+        if (!groupId || !scheduleId) return;
+
+        const schedule = schedules.find((s) => s.id === scheduleId);
+        const group = schedule?.items?.find((i) => i.id === groupId);
+        const childCount = group?.children?.length ?? 0;
+
+        const { error } = await supabase.from("schedule_items").insert({
+          schedule_id: scheduleId,
+          parent_id: groupId,
+          title: place.name,
+          place_id: place.id,
+          sort_order: childCount + 1,
+        });
+        if (error) {
+          toast.error("장소 추가에 실패했습니다.");
+        } else {
+          toast.success(`"${place.name}"을(를) 그룹에 추가했습니다.`);
+          await refetch();
+        }
+        return;
+      }
+
+      // 1b: 장소 → 스케줄 드롭 (기존 로직)
       const dropScheduleId =
         indicator?.scheduleId ?? resolveDropScheduleId(overId, schedules);
       if (!dropScheduleId) return;
 
       const targetSchedule = schedules.find((s) => s.id === dropScheduleId);
       const totalItems = targetSchedule?.items?.length ?? 0;
-      // indicator가 있으면 해당 위치, 없으면 맨 끝
       const sortOrder = (indicator?.insertIndex ?? totalItems) + 1;
-      await handleDropPlace(dropScheduleId, place, sortOrder);
+      await handleDropPlace(dropScheduleId, place, sortOrder, schedules);
       return;
     }
 
-    // Case 2: 일정 아이템 재정렬 / 크로스 스케줄 이동
+    // Case 2: 하위 장소 재정렬 (같은 그룹 내)
+    const activeData = active.data.current;
+    const overData = over.data.current;
+    if (
+      activeData?.type === "child" &&
+      overData?.type === "child" &&
+      activeData.parent_id &&
+      activeData.parent_id === overData.parent_id
+    ) {
+      const groupId = activeData.parent_id as string;
+      for (const s of schedules) {
+        const group = (s.items ?? []).find(
+          (i) => i.id === groupId && i.item_type === "group"
+        );
+        if (!group) continue;
+
+        const children = group.children ?? [];
+        const oldIndex = children.findIndex((c) => c.id === activeId);
+        const newIndex = children.findIndex((c) => c.id === overId);
+        if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return;
+
+        const reordered = arrayMove(children, oldIndex, newIndex).map(
+          (c, idx) => ({ ...c, sort_order: idx + 1 })
+        );
+
+        await Promise.all(
+          reordered.map((child) =>
+            supabase
+              .from("schedule_items")
+              .update({ sort_order: child.sort_order })
+              .eq("id", child.id)
+          )
+        );
+        await refetch();
+        return;
+      }
+      return;
+    }
+
+    // Case 3: 최상위 아이템/그룹 재정렬 또는 크로스 스케줄 이동
     let sourceSchedule: Schedule | undefined;
     for (const s of schedules) {
       if ((s.items ?? []).some((i) => i.id === activeId)) {
@@ -359,7 +524,6 @@ export default function SchedulePage() {
     if (!dropScheduleId) return;
 
     if (sourceSchedule.id === dropScheduleId) {
-      // 같은 스케줄 내 재정렬
       const items = sourceSchedule.items ?? [];
       const oldIndex = items.findIndex((i) => i.id === activeId);
       const newIndex = items.findIndex((i) => i.id === overId);
@@ -370,7 +534,6 @@ export default function SchedulePage() {
       );
       await handleReorderItems(sourceSchedule.id, reordered);
     } else {
-      // 다른 스케줄로 이동
       const totalItems =
         schedules.find((s) => s.id === dropScheduleId)?.items?.length ?? 0;
       const sortOrder = (indicator?.insertIndex ?? totalItems) + 1;
@@ -378,7 +541,8 @@ export default function SchedulePage() {
         activeId,
         sourceSchedule.id,
         dropScheduleId,
-        sortOrder
+        sortOrder,
+        schedules
       );
     }
   };
@@ -392,12 +556,19 @@ export default function SchedulePage() {
   );
 
   const activeItemObj = useMemo(
-    () =>
-      activeItemId
-        ? schedules
-            .flatMap((s) => s.items ?? [])
-            .find((i) => i.id === activeItemId) ?? null
-        : null,
+    () => {
+      if (!activeItemId) return null;
+      for (const s of schedules) {
+        for (const item of (s.items ?? [])) {
+          if (item.id === activeItemId) return item;
+          if (item.item_type === "group") {
+            const child = (item.children ?? []).find((c) => c.id === activeItemId);
+            if (child) return child;
+          }
+        }
+      }
+      return null;
+    },
     [activeItemId, schedules]
   );
 
@@ -485,8 +656,9 @@ export default function SchedulePage() {
                 schedules={schedules}
                 insertIndicator={insertIndicator}
                 onAddItem={handleOpenAddForm}
+                onAddGroup={handleAddGroup}
                 onEditItem={handleOpenEditForm}
-                onDeleteItem={handleDeleteItem}
+                onDeleteItem={handleDeleteWithGroupCheck}
                 onPlaceClick={(place) => setSelectedPlace(place as Place)}
               />
             ) : (
@@ -550,7 +722,7 @@ export default function SchedulePage() {
         onOpenChange={setFormOpen}
         editingItem={editingItem}
         places={places}
-        onSubmit={handleFormSubmit}
+        onSubmit={(data) => handleFormSubmit(data, schedules)}
       />
 
       {/* Tap-to-Assign: 날짜 선택 시트 */}
@@ -581,6 +753,36 @@ export default function SchedulePage() {
           onDelete={() => setSelectedPlace(null)}
         />
       )}
+
+      {/* 그룹 삭제 확인 다이얼로그 */}
+      <AlertDialog
+        open={!!groupDeleteTarget}
+        onOpenChange={(open) => { if (!open) setGroupDeleteTarget(null); }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>지역 그룹 삭제</AlertDialogTitle>
+            <AlertDialogDescription>
+              &ldquo;{groupDeleteTarget?.title}&rdquo; 그룹에 {groupDeleteTarget?.childCount}개 장소가 있습니다. 어떻게 처리할까요?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>취소</AlertDialogCancel>
+            <AlertDialogAction
+              variant="outline"
+              onClick={() => handleGroupDeleteChoice("promote")}
+            >
+              하위 장소 유지
+            </AlertDialogAction>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={() => handleGroupDeleteChoice("cascade")}
+            >
+              모두 삭제
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DndContext>
   );
 }
@@ -594,6 +796,15 @@ function resolveDropScheduleId(
 ): string | null {
   if (overId.startsWith("schedule-")) {
     return overId.replace("schedule-", "");
+  }
+  if (overId.startsWith("group-")) {
+    for (const s of schedules) {
+      const groupId = overId.replace("group-", "");
+      if ((s.items ?? []).some((i) => i.id === groupId)) {
+        return s.id;
+      }
+    }
+    return null;
   }
   for (const s of schedules) {
     if ((s.items ?? []).some((i) => i.id === overId)) {
