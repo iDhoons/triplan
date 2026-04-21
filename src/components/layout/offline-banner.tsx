@@ -1,46 +1,38 @@
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
-import { WifiOff } from "lucide-react";
-import { toast } from "sonner";
+import { useOnlineStatus } from "@/hooks/use-online-status"
+import { useSyncStore } from "@/stores/sync-store"
+import { WifiOff, CloudOff } from "lucide-react"
 
 export function OfflineBanner() {
-  const [isOnline, setIsOnline] = useState(() =>
-    typeof navigator !== "undefined" ? navigator.onLine : true
-  );
-  const [mounted, setMounted] = useState(false);
+  const isOnline = useOnlineStatus()
+  const pendingCount = useSyncStore((s) => s.pendingCount())
+  const isSyncing = useSyncStore((s) => s.isSyncing)
 
-  useEffect(() => {
-    setMounted(true);
+  if (isOnline && !isSyncing) return null
 
-    function handleOnline() {
-      setIsOnline(true);
-      toast.success("다시 연결되었습니다", {
-        description: "인터넷 연결이 복구되었습니다.",
-        duration: 3000,
-      });
-    }
+  if (!isOnline) {
+    return (
+      <div className="bg-amber-500 text-white text-sm text-center py-1.5 px-4 flex items-center justify-center gap-2">
+        <WifiOff className="w-4 h-4 shrink-0" />
+        <span>오프라인 모드 — 변경사항은 연결 복구 시 동기화됩니다</span>
+        {pendingCount > 0 && (
+          <span className="bg-amber-700 rounded-full px-2 py-0.5 text-xs">
+            {pendingCount}개 대기
+          </span>
+        )}
+      </div>
+    )
+  }
 
-    function handleOffline() {
-      setIsOnline(false);
-    }
+  if (isSyncing) {
+    return (
+      <div className="bg-blue-500 text-white text-sm text-center py-1.5 px-4 flex items-center justify-center gap-2">
+        <CloudOff className="w-4 h-4 shrink-0 animate-pulse" />
+        <span>동기화 중...</span>
+      </div>
+    )
+  }
 
-    window.addEventListener("online", handleOnline);
-    window.addEventListener("offline", handleOffline);
-
-    return () => {
-      window.removeEventListener("online", handleOnline);
-      window.removeEventListener("offline", handleOffline);
-    };
-  }, []);
-
-  // SSR 불일치 방지: 마운트 전에는 렌더링하지 않음
-  if (!mounted || isOnline) return null;
-
-  return (
-    <div className="sticky top-0 z-50 flex items-center justify-center gap-2 bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground shadow-md">
-      <WifiOff className="h-4 w-4 shrink-0" />
-      <span>오프라인 모드입니다. 일부 기능이 제한될 수 있습니다.</span>
-    </div>
-  );
+  return null
 }
