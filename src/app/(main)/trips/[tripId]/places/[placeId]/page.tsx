@@ -23,7 +23,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PlaceImage } from "@/components/ui/place-image";
@@ -113,7 +112,7 @@ export default function PlaceDetailPage() {
 
   useEffect(() => {
     void fetchData();
-  }, [fetchData]);
+  }, []);
 
   async function handleDelete() {
     if (!place) return;
