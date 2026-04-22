@@ -91,6 +91,7 @@ interface DayCardProps {
   dayIndex: number;
   insertIndex?: number;
   onAddItem: (scheduleId: string) => void;
+  onAddGroup?: (scheduleId: string) => void | Promise<void>;
   onEditItem: (item: ScheduleItem) => void;
   onDeleteItem: (itemId: string, scheduleId: string) => void;
   onPlaceClick?: (place: NonNullable<ScheduleItem["place"]>) => void;
@@ -101,6 +102,7 @@ function DayCard({
   dayIndex,
   insertIndex,
   onAddItem,
+  onAddGroup,
   onEditItem,
   onDeleteItem,
   onPlaceClick,
@@ -153,14 +155,26 @@ function DayCard({
                 <p className="text-xs text-muted-foreground">
                   일정이 없습니다. 장소를 드래그하거나 추가하세요.
                 </p>
-                <Button
-                  variant="outline"
-                  size="xs"
-                  onClick={() => onAddItem(schedule.id)}
-                >
-                  <Plus className="w-3 h-3 mr-1" />
-                  일정 추가
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="xs"
+                    onClick={() => onAddItem(schedule.id)}
+                  >
+                    <Plus className="w-3 h-3 mr-1" />
+                    일정 추가
+                  </Button>
+                  {onAddGroup && (
+                    <Button
+                      variant="outline"
+                      size="xs"
+                      onClick={() => void onAddGroup(schedule.id)}
+                    >
+                      <Plus className="w-3 h-3 mr-1" />
+                      그룹 추가
+                    </Button>
+                  )}
+                </div>
               </>
             )}
           </div>
@@ -194,15 +208,28 @@ function DayCard({
 
       {/* Add button (always visible at bottom when items exist) */}
       {items.length > 0 && (
-        <Button
-          variant="ghost"
-          size="xs"
-          className="text-muted-foreground"
-          onClick={() => onAddItem(schedule.id)}
-        >
-          <Plus className="w-3 h-3 mr-1" />
-          일정 추가
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="xs"
+            className="text-muted-foreground"
+            onClick={() => onAddItem(schedule.id)}
+          >
+            <Plus className="w-3 h-3 mr-1" />
+            일정 추가
+          </Button>
+          {onAddGroup && (
+            <Button
+              variant="ghost"
+              size="xs"
+              className="text-muted-foreground"
+              onClick={() => void onAddGroup(schedule.id)}
+            >
+              <Plus className="w-3 h-3 mr-1" />
+              그룹 추가
+            </Button>
+          )}
+        </div>
       )}
     </div>
   );
@@ -222,6 +249,7 @@ interface PlannerViewProps {
   schedules: Schedule[];
   insertIndicator: InsertIndicator | null;
   onAddItem: (scheduleId: string) => void;
+  onAddGroup?: (scheduleId: string) => void | Promise<void>;
   onEditItem: (item: ScheduleItem) => void;
   onDeleteItem: (itemId: string, scheduleId: string) => void;
   onPlaceClick?: (place: NonNullable<ScheduleItem["place"]>) => void;
@@ -231,6 +259,7 @@ export function PlannerView({
   schedules,
   insertIndicator,
   onAddItem,
+  onAddGroup,
   onEditItem,
   onDeleteItem,
   onPlaceClick,
@@ -248,6 +277,7 @@ export function PlannerView({
               : undefined
           }
           onAddItem={onAddItem}
+          onAddGroup={onAddGroup}
           onEditItem={onEditItem}
           onDeleteItem={onDeleteItem}
           onPlaceClick={onPlaceClick}
