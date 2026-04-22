@@ -167,6 +167,8 @@ export interface ScheduleItem {
   id: string;
   schedule_id: string;
   place_id: string | null;
+  parent_id: string | null;
+  item_type: "group" | "place";
   title: string;
   start_time: string | null;
   end_time: string | null;
@@ -181,6 +183,7 @@ export interface ScheduleItem {
   created_at: string;
   updated_at: string;
   place?: Place;
+  children?: ScheduleItem[];
 }
 
 export interface ChecklistItem {

@@ -87,32 +87,32 @@ export default function PlaceDetailPage() {
   const [comment, setComment] = useState("");
   const [submittingComment, setSubmittingComment] = useState(false);
 
-  useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-      const [placeRes, votesRes, schedulesRes] = await Promise.all([
-        supabase.from("places").select("*").eq("id", placeId).single(),
-        supabase
-          .from("place_votes")
-          .select("*, profile:profiles(*)")
-          .eq("place_id", placeId)
-          .order("created_at", { ascending: false }),
-        supabase
-          .from("schedules")
-          .select("id, trip_id, date")
-          .eq("trip_id", tripId)
-          .order("date"),
-      ]);
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    const [placeRes, votesRes, schedulesRes] = await Promise.all([
+      supabase.from("places").select("*").eq("id", placeId).single(),
+      supabase
+        .from("place_votes")
+        .select("*, profile:profiles(*)")
+        .eq("place_id", placeId)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("schedules")
+        .select("id, trip_id, date")
+        .eq("trip_id", tripId)
+        .order("date"),
+    ]);
 
-      if (placeRes.data) setPlace(placeRes.data as Place);
-      if (votesRes.data)
-        setVotes(votesRes.data as (PlaceVote & { profile?: Profile })[]);
-      if (schedulesRes.data) setSchedules(schedulesRes.data as Schedule[]);
-      setLoading(false);
-    };
-
-    void loadData();
+    if (placeRes.data) setPlace(placeRes.data as Place);
+    if (votesRes.data)
+      setVotes(votesRes.data as (PlaceVote & { profile?: Profile })[]);
+    if (schedulesRes.data) setSchedules(schedulesRes.data as Schedule[]);
+    setLoading(false);
   }, [placeId, tripId, supabase]);
+
+  useEffect(() => {
+    void fetchData();
+  }, [fetchData]);
 
   async function handleDelete() {
     if (!place) return;
