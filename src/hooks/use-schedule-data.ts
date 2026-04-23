@@ -78,8 +78,7 @@ export function useScheduleData(tripId: string) {
     if (combinedQuery.data && !combinedQuery.isStale) {
       syncWeather();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [combinedQuery.data != null]);
+  }, [combinedQuery.data, combinedQuery.isStale, syncWeather]);
 
   return {
     trip: combinedQuery.data?.trip ?? null,

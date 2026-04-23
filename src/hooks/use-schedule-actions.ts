@@ -21,11 +21,6 @@ interface FormSubmitParams {
   schedules: Schedule[];
 }
 
-interface DeleteItemParams {
-  itemId: string;
-  schedules: Schedule[];
-}
-
 interface ReorderItemsParams {
   scheduleId: string;
   orderedItems: ScheduleItem[];
@@ -198,7 +193,7 @@ export function useScheduleActions({
         toast.success("일정이 수정되었습니다.");
       }
     },
-    onSettled: (_data, _error, _vars, context) => {
+    onSettled: () => {
       // temp ID cleanup: invalidate triggers refetch with real data
       void invalidateSchedules();
       // 이동거리 계산은 백그라운드 업데이트
@@ -401,7 +396,7 @@ export function useScheduleActions({
       if (error) throw error;
       return { scheduleId, itemId: inserted.id, place, sortOrder };
     },
-    onMutate: async ({ scheduleId, place, sortOrder, schedules }) => {
+    onMutate: async ({ scheduleId, place, sortOrder }) => {
       await queryClient.cancelQueries({ queryKey: dataQueryKey });
       const previous = queryClient.getQueryData<{
         trip: unknown;

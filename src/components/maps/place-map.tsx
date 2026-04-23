@@ -115,6 +115,7 @@ function PlaceMapInner({
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- refs and setState are stable across renders
   }, []);
 
   // places 변경 시 마커 갱신
@@ -167,6 +168,7 @@ function PlaceMapInner({
     } else {
       mapInstanceRef.current!.fitBounds(bounds, 60);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- refs are stable across renders
   }, [loaded, places]);
 
   if (error) {

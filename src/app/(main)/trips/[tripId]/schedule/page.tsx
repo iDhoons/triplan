@@ -64,18 +64,6 @@ import type { Schedule, ScheduleItem, Place } from "@/types/database";
 // Helpers
 // -----------------------------------------------------------------------
 
-/** 포인터/터치 이벤트에서 좌표 추출 */
-function getPointerCoords(event: Event): { x: number; y: number } | null {
-  if ("clientX" in event) {
-    return { x: (event as MouseEvent).clientX, y: (event as MouseEvent).clientY };
-  }
-  if ("touches" in event) {
-    const touch = (event as TouchEvent).touches[0];
-    if (touch) return { x: touch.clientX, y: touch.clientY };
-  }
-  return null;
-}
-
 // 원본 크기 그대로 드래그하므로 modifier 불필요
 const OVERLAY_MODIFIERS: Modifier[] = [];
 

@@ -7,8 +7,10 @@ import { Page } from '@playwright/test';
 export async function signUp(
   page: Page,
   email: string,
-  password: string,
-  name: string
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _password: string,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _name: string
 ) {
   await page.goto('/login');
   await page.getByLabel('이메일').fill(email);

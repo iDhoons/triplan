@@ -167,7 +167,8 @@ export const GET = withTripMember(
             .update({ weather_fetched_at: now })
             .eq("id", s.id);
         }
-        const { date: _, ...summary } = forecast;
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { date: _date, ...summary } = forecast;
         return supabase
           .from("schedules")
           .update({

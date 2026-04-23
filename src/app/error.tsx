@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 
 export default function Error({
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Next.js error boundary required signature
   error,
   reset,
 }: {
@@ -21,3 +22,4 @@ export default function Error({
     </div>
   );
 }
+ 

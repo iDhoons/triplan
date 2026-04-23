@@ -9,7 +9,6 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
-import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PlaceImage } from "@/components/ui/place-image";
 import { cn } from "@/lib/utils";

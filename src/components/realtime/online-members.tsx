@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { presenceEventTarget, type PresenceMember } from "./realtime-provider";
 import { cn } from "@/lib/utils";
 
@@ -84,9 +85,11 @@ export function OnlineMembers({ className }: OnlineMembersProps) {
           >
             {/* 아바타 */}
             {member.avatarUrl ? (
-              <img
+              <Image
                 src={member.avatarUrl}
                 alt={member.displayName}
+                width={32}
+                height={32}
                 className="w-8 h-8 rounded-full border-2 border-background object-cover"
               />
             ) : (

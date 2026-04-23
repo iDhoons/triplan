@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { format, parseISO } from "date-fns";
 import { ko } from "date-fns/locale";
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/hooks/query-keys";
 import {
   ArrowLeft,
   MapPin,
@@ -77,42 +79,45 @@ export default function PlaceDetailPage() {
   const supabase = createClient();
   const user = useAuthStore((s) => s.user);
 
-  const [place, setPlace] = useState<Place | null>(null);
-  const [votes, setVotes] = useState<(PlaceVote & { profile?: Profile })[]>([]);
-  const [schedules, setSchedules] = useState<Schedule[]>([]);
-  const [loading, setLoading] = useState(true);
   const [photoIndex, setPhotoIndex] = useState(0);
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
   const [selectedScheduleId, setSelectedScheduleId] = useState("");
   const [comment, setComment] = useState("");
   const [submittingComment, setSubmittingComment] = useState(false);
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    const [placeRes, votesRes, schedulesRes] = await Promise.all([
-      supabase.from("places").select("*").eq("id", placeId).single(),
-      supabase
-        .from("place_votes")
-        .select("*, profile:profiles(*)")
-        .eq("place_id", placeId)
-        .order("created_at", { ascending: false }),
-      supabase
-        .from("schedules")
-        .select("id, trip_id, date")
-        .eq("trip_id", tripId)
-        .order("date"),
-    ]);
+  const { data: detail, isLoading: loading, refetch } = useQuery({
+    queryKey: queryKeys.places.detail(placeId),
+    queryFn: async () => {
+      const [placeRes, votesRes, schedulesRes] = await Promise.all([
+        supabase.from("places").select("*").eq("id", placeId).single(),
+        supabase
+          .from("place_votes")
+          .select("*, profile:profiles(*)")
+          .eq("place_id", placeId)
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("schedules")
+          .select("id, trip_id, date")
+          .eq("trip_id", tripId)
+          .order("date"),
+      ]);
 
-    if (placeRes.data) setPlace(placeRes.data as Place);
-    if (votesRes.data)
-      setVotes(votesRes.data as (PlaceVote & { profile?: Profile })[]);
-    if (schedulesRes.data) setSchedules(schedulesRes.data as Schedule[]);
-    setLoading(false);
-  }, [placeId, tripId, supabase]);
+      if (placeRes.error) throw placeRes.error;
 
-  useEffect(() => {
-    void fetchData();
-  }, [fetchData]);
+      return {
+        place: placeRes.data as Place,
+        votes: (votesRes.data ?? []) as (PlaceVote & { profile?: Profile })[],
+        schedules: (schedulesRes.data ?? []) as Schedule[],
+      };
+    },
+    enabled: !!placeId,
+  });
+
+  const place = detail?.place ?? null;
+  const votes = detail?.votes ?? [];
+  const schedules = detail?.schedules ?? [];
+
+  const fetchData = () => { void refetch(); };
 
   async function handleDelete() {
     if (!place) return;

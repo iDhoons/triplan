@@ -65,6 +65,7 @@ export function handlePlacesChange(
       const updated = payload.new as Place;
       if (userId && updated.added_by === userId) return;
 
+      queryClient.invalidateQueries({ queryKey: queryKeys.places.detail(updated.id) });
       queryClient.setQueryData<Place[]>(placesKey, (old) => {
         if (!old) return old;
         return old.map((p) => (p.id === updated.id ? { ...p, ...updated } : p));
@@ -97,6 +98,7 @@ export function handlePlacesChange(
         queryClient.invalidateQueries({ queryKey: scheduleDataKey });
         return;
       }
+      queryClient.invalidateQueries({ queryKey: queryKeys.places.detail(deleted.id) });
       queryClient.setQueryData<Place[]>(placesKey, (old) =>
         old?.filter((p) => p.id !== deleted.id),
       );

@@ -14,6 +14,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 interface GuestPlace {
   id: string;
@@ -129,9 +130,11 @@ export function GuestTripPreview({ inviteCode }: { inviteCode: string }) {
                 <Card key={place.id}>
                   <CardContent className="flex items-center gap-3 py-3 px-4">
                     {place.image_url ? (
-                      <img
+                      <Image
                         src={place.image_url}
                         alt={place.name}
+                        width={40}
+                        height={40}
                         className="h-10 w-10 rounded-md object-cover shrink-0"
                       />
                     ) : (

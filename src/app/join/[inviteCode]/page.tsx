@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/auth-store";
 import { Button } from "@/components/ui/button";
@@ -176,10 +177,11 @@ export default function JoinPage() {
         <Card className="shadow-md">
           {trip.cover_image_url && (
             <div className="w-full h-40 overflow-hidden rounded-t-xl">
-              <img
+              <Image
                 src={trip.cover_image_url}
                 alt={trip.title}
-                className="w-full h-full object-cover"
+                fill
+                className="object-cover"
               />
             </div>
           )}

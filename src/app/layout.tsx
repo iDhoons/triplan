@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Geist_Mono } from "next/font/google";
-import { headers } from "next/headers";
 import "./globals.css";
 import { Providers } from "./providers";
 
@@ -57,9 +56,6 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // headers()로 모든 하위 route를 dynamic 렌더링으로 전환
-  await headers();
-
   return (
     <html lang="ko">
       <head>

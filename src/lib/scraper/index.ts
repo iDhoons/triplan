@@ -94,6 +94,7 @@ function parseJsonLds(html: string): Record<string, unknown>[] {
 
 // ─── 범용 파서 ───────────────────────────────────────────────────────────────
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function parseGeneric(html: string, _url: string): ScrapedPlace {
   const jsonLds = parseJsonLds(html);
 

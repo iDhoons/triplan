@@ -44,11 +44,6 @@ export function DayPickerSheet({
 }: DayPickerSheetProps) {
   const triggerRef = useRef<HTMLElement | null>(null);
 
-  /** 트리거 요소를 저장 (포커스 복귀용) */
-  function setTriggerElement(el: HTMLElement | null) {
-    triggerRef.current = el;
-  }
-
   function handleSelect(scheduleId: string) {
     if (!place) return;
     onSelect(scheduleId, place);

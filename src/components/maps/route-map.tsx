@@ -95,11 +95,6 @@ export function RouteMap({ scheduleItems, className }: RouteMapProps) {
   );
 }
 
-interface ValidItem {
-  lat: number;
-  lng: number;
-}
-
 interface InnerProps {
   scheduleItems: ScheduleItem[];
   validItems: ScheduleItem[];
@@ -164,6 +159,7 @@ function RouteMapInner({
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- refs and setState are stable across renders
   }, []);
 
   // validItems 변경 시 마커/폴리라인 갱신
@@ -262,6 +258,7 @@ function RouteMapInner({
     } else {
       mapInstanceRef.current!.fitBounds(bounds, 60);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- refs and setState are stable across renders
   }, [loaded, validItems]);
 
   if (error) {

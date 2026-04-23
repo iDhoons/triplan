@@ -5,6 +5,7 @@ export const queryKeys = {
   },
   places: {
     byTrip: (tripId: string) => ["places", tripId] as const,
+    detail: (placeId: string) => ["place-detail", placeId] as const,
   },
   placeVotes: {
     byTrip: (tripId: string) => ["place_votes", tripId] as const,

@@ -23,7 +23,7 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
 
-Deno.serve(async (_req) => {
+Deno.serve(async () => {
   try {
     const now = new Date();
     const windowEnd = new Date(now.getTime() + 60_000); // 1분 윈도우

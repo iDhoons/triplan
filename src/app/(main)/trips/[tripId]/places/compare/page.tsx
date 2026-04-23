@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useCallback, useEffect, useState } from "react";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeftIcon, StarIcon, TrophyIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -104,7 +104,7 @@ export default function ComparePageWrapper() {
 }
 
 function ComparePage() {
-  const { tripId } = useParams<{ tripId: string }>();
+  // tripId는 route segment에서 소비됨
   const searchParams = useSearchParams();
   const router = useRouter();
   const supabase = createClient();
