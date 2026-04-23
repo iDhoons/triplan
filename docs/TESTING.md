@@ -55,6 +55,12 @@ pnpm test:e2e tests/e2e/auth.spec.ts
 
 # Run specific test
 pnpm test:e2e --grep "should allow new user to create account"
+
+# Record a browser interaction and copy a locator
+pnpm playwright:codegen
+
+# Click an element and print locator, size, and style info
+pnpm playwright:inspect
 ```
 
 ### Unit Tests (Vitest)
@@ -232,6 +238,57 @@ test.describe('Feature Name', () => {
    await expect(element).toBeVisible();
    await page.waitForURL('/dashboard');
    ```
+
+### Browser-to-Locator Workflow
+
+Use the code generator when you want to click a real element in the browser and copy a resilient locator back into code:
+
+```bash
+# Open codegen against the local app
+pnpm playwright:codegen
+
+# Or point it at a different URL
+pnpm playwright:codegen http://localhost:5173
+```
+
+The generated locator should usually be narrowed toward `getByRole`, `getByLabel`, or `getByTestId` before it lands in a test or automation script.
+
+Use the inspector when you want to identify one specific element for a Codex/Claude prompt:
+
+```bash
+pnpm pwi
+```
+
+The inspector chooses an available local port by default, starts this project's dev server there, and opens a browser. In the opened browser, `Option/Alt-click` the target element. The terminal prints a recommended locator, fallback locator options, element dimensions, and key computed styles. Paste the prompt snippet into the CLI, then add the requested change. Close the inspect tab or browser window when you want to stop the session.
+
+You can also target a specific running server:
+
+```bash
+pnpm pwi 5173
+pnpm pwi localhost:5173
+pnpm pwi http://localhost:5173 --no-server
+pnpm pwi --profile google-login
+pnpm pwi --bundled
+pnpm pwi --profiles
+pnpm pwi:profiles
+PLAYWRIGHT_INSPECT_PORT=5173 pnpm playwright:inspect
+PLAYWRIGHT_INSPECT_URL=http://localhost:5173 pnpm playwright:inspect
+```
+
+`pwi` uses Chrome channel by default and stores persistent browser profiles under `.playwright-pwi/`. The default profile name is the current folder name, so each worktree gets its own browser state label. Cookies and local storage survive across runs for the same profile and origin. Override the label when you need a separate login state:
+
+```bash
+pnpm pwi --profile personal
+pnpm pwi --profile test-user
+```
+
+If the same profile is opened on a different origin, for example a different localhost port, `pwi` prints a warning. Cookies may survive across localhost ports, but `localStorage` and `sessionStorage` are origin-specific; use a fixed port for the most predictable login state.
+
+To inspect saved profile labels and their last opened origins:
+
+```bash
+pnpm pwi:profiles
+```
 
 ## Performance Monitoring
 

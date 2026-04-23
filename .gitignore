@@ -75,3 +75,6 @@ travel-planner-*.md
 
 # Playwright MCP generated files
 .playwright-mcp/
+
+# Playwright inspector browser profiles
+.playwright-pwi/
