@@ -128,7 +128,7 @@ test.describe('Quality Gates', () => {
       await page.goto('/dashboard');
       await page.waitForURL(/\/login/, { timeout: 10000 });
       await expect(
-        page.getByRole('button', { name: '로그인 링크 보내기' })
+        page.getByRole('button', { name: 'Google로 로그인' })
       ).toBeVisible();
     });
   });

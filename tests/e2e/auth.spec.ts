@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { signIn } from '../fixtures/auth-helper';
+import { canBootstrapSession, signIn } from '../fixtures/auth-helper';
 
 /**
  * Authentication smoke tests for the current auth UI.
@@ -12,12 +12,8 @@ test.describe('Authentication', () => {
     await expect(
       page.getByRole('heading', { name: '여행 플래너' })
     ).toBeVisible();
-    await expect(page.getByLabel('이메일')).toBeVisible();
     await expect(
-      page.getByRole('button', { name: '로그인 링크 보내기' })
-    ).toBeVisible();
-    await expect(
-      page.getByText('처음 사용하시면 자동으로 가입됩니다.')
+      page.getByRole('button', { name: 'Google로 로그인' })
     ).toBeVisible();
   });
 
@@ -35,20 +31,16 @@ test.describe('Authentication', () => {
     await page.goto('/dashboard');
     await page.waitForURL(/\/login/, { timeout: 10000 });
     await expect(
-      page.getByRole('button', { name: '로그인 링크 보내기' })
+      page.getByRole('button', { name: 'Google로 로그인' })
     ).toBeVisible();
   });
 
-  test('dev quick login can access dashboard when available', async ({
+  test('fixture session bootstrap can access dashboard', async ({
     page,
   }) => {
-    await page.goto('/login');
-    const devQuickLoginButton = page.getByRole('button', {
-      name: /Dev 빠른 로그인/,
-    });
     test.skip(
-      (await devQuickLoginButton.count()) === 0,
-      'requires development quick login button'
+      !canBootstrapSession(),
+      'requires Supabase test env for session bootstrap'
     );
 
     await signIn(
@@ -62,5 +54,4 @@ test.describe('Authentication', () => {
       page.getByRole('button', { name: '새 여행 만들기' })
     ).toBeVisible();
   });
-
 });

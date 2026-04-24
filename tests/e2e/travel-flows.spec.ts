@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { signIn } from '../fixtures/auth-helper';
+import { canBootstrapSession, signIn } from '../fixtures/auth-helper';
 
 /**
  * Authenticated trip management smoke tests.
@@ -10,15 +10,9 @@ test.describe('Travel Planning Flows', () => {
   test('seeded user can open the create-trip dialog from dashboard', async ({
     page,
   }) => {
-    await page.goto('/login');
-    const hasDevQuickLogin =
-      (await page.getByRole('button', { name: /Dev 빠른 로그인/ }).count()) > 0;
-    const hasSeededCredentials =
-      !!process.env.E2E_AUTH_EMAIL && !!process.env.E2E_AUTH_PASSWORD;
-
     test.skip(
-      !hasDevQuickLogin && !hasSeededCredentials,
-      'requires dev quick login button or seeded E2E auth credentials'
+      !canBootstrapSession(),
+      'requires Supabase test env for session bootstrap'
     );
 
     await signIn(

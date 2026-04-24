@@ -11,11 +11,12 @@ test.describe('Fixture Account QA', () => {
   }) => {
     await page.goto('/login');
 
-    const devQuickLoginButton = page.getByRole('button', {
-      name: /Dev 빠른 로그인/,
-    });
-    await expect(devQuickLoginButton).toBeVisible();
-    await expect(devQuickLoginButton).toContainText(fixtureEmail);
+    await expect(
+      page.getByRole('heading', { name: '여행 플래너' })
+    ).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Google로 로그인' })
+    ).toBeVisible();
 
     await signIn(page, fixtureEmail, fixturePassword);
     await expect(page).toHaveURL(/\/dashboard/);
