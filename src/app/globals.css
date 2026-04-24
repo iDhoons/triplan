@@ -1,6 +1,7 @@
 /* Pretendard — layout.tsx에서 <link rel="stylesheet"> 로 로드 (렌더 블로킹 제거) */
 
-@import "tailwindcss";
+/* Keep Tailwind's scanner in src; repo tooling symlinks can break Turbopack. */
+@import "tailwindcss" source("../");
 
 /* PWA 모바일 안정화 */
 html {
